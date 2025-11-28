@@ -1,6 +1,12 @@
-export { default } from "next-auth/middleware";
+import { withAuth } from "next-auth/middleware";
 
-// Bekçinin koruyacağı yollar
+// Kısayol yerine, fonksiyonu açıkça çağırıp dışa aktarıyoruz
+export default withAuth({
+  pages: {
+    signIn: "/login", // Giriş yapmamış kişiyi buraya at
+  },
+});
+
 export const config = {
-  matcher: ["/dashboard/:path*"] // /dashboard ve altındaki her şeyi koru
+  matcher: ["/dashboard/:path*"], // Korunacak yollar
 };
