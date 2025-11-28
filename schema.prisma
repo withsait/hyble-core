@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // <-- BU SATIRI EKLE
+}
+
+// KULLANICI ROLLERİ
+enum Role {
+  ADMIN
+  CLIENT
+  TEAM
+}
+
+// KULLANICI TABLOSU
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Hashlenmiş şifre
+  fullName  String?
+  company   String?  // Şirket adı
+  role      Role     @default(CLIENT)
+  createdAt DateTime @default(now())
+  
+  projects  Project[]
+  tickets   Ticket[]
+  invoices  Invoice[]
+}
+
+// PROJELER
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      String   @default("PENDING") // PENDING, ACTIVE, COMPLETED
+  progress    Int      @default(0) // %0 ile %100 arası
+  price       Decimal?
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// DESTEK TALEPLERİ
+model Ticket {
+  id        String   @id @default(cuid())
+  subject   String
+  message   String
+  status    String   @default("OPEN") // OPEN, IN_PROGRESS, CLOSED
+  priority  String   @default("NORMAL")
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  createdAt DateTime @default(now())
+}
+
+// FATURALAR
+model Invoice {
+  id        String   @id @default(cuid())
+  amount    Decimal
+  status    String   @default("UNPAID") // UNPAID, PAID
+  pdfUrl    String?  // Oluşturulan PDF linki
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  createdAt DateTime @default(now())
+}
