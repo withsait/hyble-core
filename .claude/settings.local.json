@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm --version:*)",
+      "Bash(dir:*)",
+      "Bash(findstr:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm approve-builds:*)",
+      "Bash(tree:*)",
+      "Bash(done)",
+      "Bash(cat:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cat > /home/hyble/apps/hyble/apps/admin/.env << ''EOF''\nDATABASE_URL=\"\"postgresql://hyble:HybleDB2024!Secure@localhost:5432/hyble_core\"\"\nNEXTAUTH_SECRET=\"\"hyble-super-secret-key-2025-production\"\"\nNEXTAUTH_URL=\"\"https://admin.hyble.co\"\"\nWEB_URL=\"\"https://hyble.co\"\"\nID_URL=\"\"https://id.hyble.co\"\"\nEOF\nchown hyble:hyble /home/hyble/apps/hyble/apps/admin/.env\")",
+      "Bash(ssh:*)",
+      "Bash(curl:*)",
+      "Bash(ren \"C:\\Users\\PC\\projects\\hyble-platform\\tooling\\docker\\Dockerfile.core\" Dockerfile.panel)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)",
+      "Bash(xargs sed:*)",
+      "Bash(pnpm build:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
