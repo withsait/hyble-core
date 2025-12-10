@@ -1,4 +1,4 @@
-import NextAuth, { type NextAuthConfig } from "next-auth";
+import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
@@ -10,7 +10,7 @@ import { authenticator } from "otplib";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 
-const authConfig: NextAuthConfig = {
+export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
   session: {
     strategy: "jwt",
@@ -63,6 +63,7 @@ const authConfig: NextAuthConfig = {
           const twoFactorCode = credentials.twoFactorCode as string | undefined;
           const isBackupCode = credentials.isBackupCode === "true";
 
+          // If no 2FA code provided, reject login (frontend should have redirected to 2FA page)
           if (!twoFactorCode) {
             throw new Error("2FA code required");
           }
@@ -70,12 +71,14 @@ const authConfig: NextAuthConfig = {
           let is2FAValid = false;
 
           if (isBackupCode) {
+            // Verify backup code
             for (const backupCode of user.backupCodes) {
               const matches = await bcrypt.compare(
                 twoFactorCode.toUpperCase(),
                 backupCode.code
               );
               if (matches) {
+                // Mark backup code as used
                 await prisma.backupCode.update({
                   where: { id: backupCode.id },
                   data: {
@@ -88,6 +91,7 @@ const authConfig: NextAuthConfig = {
               }
             }
           } else {
+            // Verify TOTP code
             is2FAValid = authenticator.verify({
               token: twoFactorCode,
               secret: user.twoFactorAuth.secret,
@@ -95,6 +99,7 @@ const authConfig: NextAuthConfig = {
           }
 
           if (!is2FAValid) {
+            // Log failed attempt
             await prisma.securityLog.create({
               data: {
                 userId: user.id,
@@ -105,6 +110,16 @@ const authConfig: NextAuthConfig = {
             });
             throw new Error("Invalid 2FA code");
           }
+
+          // Log successful 2FA
+          await prisma.securityLog.create({
+            data: {
+              userId: user.id,
+              action: "LOGIN",
+              status: "SUCCESS",
+              metadata: { method: isBackupCode ? "backup_code" : "totp" },
+            },
+          });
         }
 
         return {
@@ -137,9 +152,11 @@ const authConfig: NextAuthConfig = {
       if (user) {
         token.id = user.id as string;
         token.role = (user as any).role as string;
+        // Generate unique session token for tracking
         token.sessionToken = uuidv4();
       }
 
+      // Handle session updates
       if (trigger === "update" && session) {
         token.name = session.name;
         token.image = session.image;
@@ -159,6 +176,7 @@ const authConfig: NextAuthConfig = {
   events: {
     async signIn({ user, isNewUser }) {
       if (isNewUser) {
+        // Create default wallet for new users
         await prisma.wallet.create({
           data: {
             userId: user.id!,
@@ -170,11 +188,4 @@ const authConfig: NextAuthConfig = {
     },
   },
   trustHost: true,
-};
-
-const nextAuth = NextAuth(authConfig);
-
-export const handlers = nextAuth.handlers;
-export const signIn = nextAuth.signIn;
-export const signOut = nextAuth.signOut;
-export const auth = nextAuth.auth;
+});

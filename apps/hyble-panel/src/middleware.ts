@@ -1,59 +1,44 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Domain to route group mapping
-const DOMAIN_ROUTES: Record<string, string> = {
-  // God Panel (Admin only)
-  "dev.hyble.net": "/admin",
-  "localhost:3000": "/admin", // Local development
-
-  // Auth Hub (All users)
-  "id.hyble.co": "/auth",
-
-  // API
-  "api.hyble.co": "/api",
-};
-
 export function middleware(request: NextRequest) {
-  const host = request.headers.get("host") || "";
-  const pathname = request.nextUrl.pathname;
+  const { pathname } = request.nextUrl;
 
-  // Skip internal Next.js routes and static files
+  // Skip static files and API routes
   if (
-    pathname.startsWith("/_next") ||
+    pathname.startsWith("/_next/") ||
     pathname.startsWith("/api/") ||
-    pathname.includes(".") // static files
+    pathname.includes(".")
   ) {
     return NextResponse.next();
   }
 
-  // Find matching domain
-  let routePrefix = "";
-  for (const [domain, prefix] of Object.entries(DOMAIN_ROUTES)) {
-    const domainWithoutPort = domain.split(":")[0] ?? domain;
-    if (host.includes(domainWithoutPort)) {
-      routePrefix = prefix;
-      break;
-    }
+  // Check for session token (both secure and non-secure versions)
+  const sessionToken =
+    request.cookies.get("__Secure-authjs.session-token")?.value ||
+    request.cookies.get("authjs.session-token")?.value;
+
+  const isLoggedIn = !!sessionToken;
+
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname.startsWith("/forgot-password") ||
+    pathname.startsWith("/reset-password") ||
+    pathname.startsWith("/verify-2fa") ||
+    pathname.startsWith("/verify-email");
+
+  const isPublicRoute = pathname === "/";
+
+  // Redirect logged-in users away from auth pages (except verify-2fa)
+  // verify-2fa needs to be accessible even with a partial session
+  if (isAuthPage && isLoggedIn && !pathname.startsWith("/verify-2fa")) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // If no specific domain matched, default to auth for id.hyble.co pattern
-  // or admin for dev/ops pattern
-  if (!routePrefix) {
-    if (host.includes("id.")) {
-      routePrefix = "/auth";
-    } else if (host.includes("dev.") || host.includes("ops.") || host.includes("admin.")) {
-      routePrefix = "/admin";
-    } else if (host.includes("api.")) {
-      routePrefix = "/api";
-    }
-  }
-
-  // If we have a route prefix and the path doesn't already start with it
-  if (routePrefix && !pathname.startsWith(routePrefix)) {
-    const url = request.nextUrl.clone();
-    url.pathname = `${routePrefix}${pathname}`;
-    return NextResponse.rewrite(url);
+  // Protect private routes
+  if (!isLoggedIn && !isAuthPage && !isPublicRoute) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();
@@ -61,13 +46,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

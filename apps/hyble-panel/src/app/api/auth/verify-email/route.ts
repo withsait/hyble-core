@@ -1,66 +1,87 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@hyble/db";
 
+// Hardcoded production URL - never use localhost
+const BASE_URL = "https://id.hyble.co";
+
 export async function GET(request: NextRequest) {
+  const token = request.nextUrl.searchParams.get("token");
+
+  console.log("[verify-email] Received token:", token);
+
+  if (!token) {
+    console.log("[verify-email] No token provided");
+    return NextResponse.redirect(`${BASE_URL}/login?error=invalid-token`);
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const token = searchParams.get("token");
-
-    if (!token) {
-      return NextResponse.redirect(new URL("/login?error=InvalidToken", request.url));
-    }
-
-    // Find verification token
+    // Find the verification token by token field
     const verificationToken = await prisma.verificationToken.findFirst({
-      where: { token },
+      where: {
+        token: token,
+        type: "email",
+      },
     });
+
+    console.log("[verify-email] Found token in DB:", verificationToken ? {
+      id: verificationToken.id,
+      identifier: verificationToken.identifier,
+      token: verificationToken.token.substring(0, 8) + "...",
+      expires: verificationToken.expires,
+    } : null);
 
     if (!verificationToken) {
-      return NextResponse.redirect(new URL("/login?error=InvalidToken", request.url));
+      console.log("[verify-email] Token not found in database");
+      return NextResponse.redirect(`${BASE_URL}/login?error=invalid-token`);
     }
 
-    // Check if token is expired
+    // Check if token is expired (24 hours)
     if (verificationToken.expires < new Date()) {
+      console.log("[verify-email] Token expired:", verificationToken.expires);
+
+      // Delete expired token
       await prisma.verificationToken.delete({
-        where: {
-          identifier_token: {
-            identifier: verificationToken.identifier,
-            token: verificationToken.token,
-          },
-        },
+        where: { id: verificationToken.id },
       });
-      return NextResponse.redirect(new URL("/login?error=TokenExpired", request.url));
+
+      return NextResponse.redirect(`${BASE_URL}/login?error=token-expired`);
     }
 
-    // Update user
-    const user = await prisma.user.update({
+    // Find user by email (identifier)
+    const user = await prisma.user.findUnique({
       where: { email: verificationToken.identifier },
-      data: { emailVerified: new Date() },
     });
 
-    // Delete verification token
-    await prisma.verificationToken.delete({
-      where: {
-        identifier_token: {
-          identifier: verificationToken.identifier,
-          token: verificationToken.token,
-        },
-      },
-    });
+    console.log("[verify-email] Found user:", user ? { id: user.id, email: user.email } : null);
 
-    // Log security event
-    await prisma.securityLog.create({
+    if (!user) {
+      console.log("[verify-email] User not found for identifier:", verificationToken.identifier);
+      return NextResponse.redirect(`${BASE_URL}/login?error=user-not-found`);
+    }
+
+    // Update user verification status
+    await prisma.user.update({
+      where: { id: user.id },
       data: {
-        userId: user.id,
-        action: "EMAIL_VERIFIED",
-        status: "SUCCESS",
-        metadata: {},
+        emailVerified: new Date(),
+        emailVerifiedAt: new Date(),
+        trustLevel: "VERIFIED",
       },
     });
 
-    return NextResponse.redirect(new URL("/login?verified=true", request.url));
+    console.log("[verify-email] User verified successfully:", user.id);
+
+    // Delete the used token
+    await prisma.verificationToken.delete({
+      where: { id: verificationToken.id },
+    });
+
+    console.log("[verify-email] Token deleted, redirecting to dashboard");
+
+    // Redirect to dashboard with success message
+    return NextResponse.redirect(`${BASE_URL}/dashboard?verified=true`);
   } catch (error) {
-    console.error("Email verification error:", error);
-    return NextResponse.redirect(new URL("/login?error=VerificationFailed", request.url));
+    console.error("[verify-email] Error:", error);
+    return NextResponse.redirect(`${BASE_URL}/login?error=verification-failed`);
   }
 }

@@ -1,64 +1,70 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@hyble/db";
-import { sendPasswordResetEmail } from "@hyble/email";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
+import { sendPasswordResetEmail } from "@/lib/email";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    const body = await request.json();
+    const { email } = body;
 
     if (!email) {
       return NextResponse.json(
-        { error: "Email adresi gerekli" },
+        { error: "Email is required" },
         { status: 400 }
       );
     }
 
-    // Find user
+    // Always return success message for security (don't reveal if email exists)
+    const successResponse = {
+      success: true,
+      message: "Şifre sıfırlama linki email adresinize gönderildi.",
+    };
+
+    // Find user by email
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase() },
     });
 
-    // Always return success to prevent email enumeration
+    // If user doesn't exist, still return success (security)
     if (!user) {
-      return NextResponse.json({ success: true });
+      return NextResponse.json(successResponse);
     }
 
-    // Delete existing password reset tokens
+    // Delete any existing password reset tokens for this user
     await prisma.passwordResetToken.deleteMany({
       where: { userId: user.id },
     });
 
-    // Create new password reset token
-    const token = uuidv4();
-    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    // Create new password reset token (15 minutes validity)
+    const token = randomUUID();
+    const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     await prisma.passwordResetToken.create({
       data: {
-        userId: user.id,
         token,
+        userId: user.id,
         expires,
       },
     });
 
     // Send password reset email
-    await sendPasswordResetEmail(email, token, "hyble");
+    console.log("[forgot-password] Sending reset email to:", email);
+    console.log("[forgot-password] Token:", token);
 
-    // Log security event
-    await prisma.securityLog.create({
-      data: {
-        userId: user.id,
-        action: "PASSWORD_RESET_REQUEST",
-        status: "SUCCESS",
-        metadata: {},
-      },
-    });
+    try {
+      const emailResult = await sendPasswordResetEmail(email, token);
+      console.log("[forgot-password] Email result:", JSON.stringify(emailResult));
+    } catch (emailError) {
+      console.error("[forgot-password] Email send error:", emailError);
+      throw emailError;
+    }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(successResponse);
   } catch (error) {
-    console.error("Password reset request error:", error);
+    console.error("[forgot-password] Error:", error);
     return NextResponse.json(
-      { error: "Bir hata oluştu" },
+      { error: "Şifre sıfırlama işlemi başarısız oldu. Lütfen tekrar deneyin." },
       { status: 500 }
     );
   }

@@ -1,23 +1,24 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 import { prisma } from "@hyble/db";
-import { sendVerificationEmail } from "@hyble/email";
-import { v4 as uuidv4 } from "uuid";
+import { sendVerificationEmail } from "@/lib/email";
+import crypto from "crypto";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const { name, email, password } = await request.json();
 
-    if (!name || !email || !password) {
+    // Validation
+    if (!email || !password) {
       return NextResponse.json(
-        { error: "Tüm alanları doldurun" },
+        { error: "Email and password are required" },
         { status: 400 }
       );
     }
 
     if (password.length < 8) {
       return NextResponse.json(
-        { error: "Şifre en az 8 karakter olmalıdır" },
+        { error: "Password must be at least 8 characters" },
         { status: 400 }
       );
     }
@@ -29,8 +30,8 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "Bu email adresi zaten kayıtlı" },
-        { status: 400 }
+        { error: "An account with this email already exists" },
+        { status: 409 }
       );
     }
 
@@ -43,11 +44,10 @@ export async function POST(request: Request) {
         name,
         email,
         password: hashedPassword,
-        emailVerified: null,
       },
     });
 
-    // Create wallet
+    // Create default wallet
     await prisma.wallet.create({
       data: {
         userId: user.id,
@@ -56,36 +56,39 @@ export async function POST(request: Request) {
       },
     });
 
-    // Create verification token
-    const verificationToken = uuidv4();
-    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    // Create verification token (24 hours validity)
+    const token = crypto.randomUUID();
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await prisma.verificationToken.create({
       data: {
         identifier: email,
-        token: verificationToken,
+        token,
+        type: "email",
         expires,
       },
     });
 
-    // Send verification email
-    await sendVerificationEmail(email, verificationToken, "hyble");
-
-    // Log security event
-    await prisma.securityLog.create({
-      data: {
-        userId: user.id,
-        action: "REGISTER",
-        status: "SUCCESS",
-        metadata: {},
-      },
+    // Send verification email (non-blocking)
+    sendVerificationEmail(email, token).catch((error) => {
+      console.error("Failed to send verification email:", error);
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      {
+        message: "Account created successfully. Please check your email to verify your account.",
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(
-      { error: "Kayıt işlemi başarısız" },
+      { error: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }
