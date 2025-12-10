@@ -1,0 +1,347 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  FROZEN
+}
+
+enum TrustLevel {
+  GUEST
+  VERIFIED
+  SECURE
+}
+
+enum AddressType {
+  HOME
+  WORK
+  BILLING
+  SHIPPING
+  OTHER
+}
+
+enum SecurityAction {
+  LOGIN
+  LOGOUT
+  PASSWORD_CHANGE
+  EMAIL_CHANGE
+  PHONE_CHANGE
+  TWO_FACTOR_ENABLE
+  TWO_FACTOR_DISABLE
+  ACCOUNT_LOCK
+  ACCOUNT_UNLOCK
+  SESSION_REVOKE
+  API_KEY_CREATE
+  API_KEY_REVOKE
+}
+
+enum SecurityStatus {
+  SUCCESS
+  FAILURE
+  BLOCKED
+}
+
+enum OrganizationRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model User {
+  id              String     @id @default(cuid())
+  email           String     @unique
+  name            String?
+  password        String?
+  emailVerified   DateTime?
+  emailVerifiedAt DateTime?
+  image           String?
+  role            String     @default("user")
+  status          UserStatus @default(ACTIVE)
+  trustLevel      TrustLevel @default(GUEST)
+  phoneNumber     String?
+  phoneVerified   Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  // Relations
+  accounts           Account[]
+  sessions           Session[]
+  userSessions       UserSession[]
+  wallets            Wallet[]
+  profile            UserProfile?
+  addresses          UserAddress[]
+  passwordHistory    PasswordHistory[]
+  securityLogs       SecurityLog[]
+  passwordResetToken PasswordResetToken?
+  twoFactorAuth      TwoFactorAuth?
+  backupCodes        BackupCode[]
+  organizations      OrganizationMember[]
+}
+
+model UserProfile {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  firstName  String?
+  lastName   String?
+  avatar     String?
+  position   String?
+  language   String   @default("en")
+  currency   String   @default("USD")
+  timezone   String   @default("UTC")
+  dateFormat String   @default("DD/MM/YYYY")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserAddress {
+  id         String      @id @default(cuid())
+  userId     String
+  type       AddressType @default(HOME)
+  title      String?
+  line1      String
+  line2      String?
+  city       String
+  state      String?
+  country    String
+  postalCode String?
+  isDefault  Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PasswordHistory {
+  id           String   @id @default(cuid())
+  userId       String
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  email      String
+  ipAddress  String?
+  userAgent  String?
+  success    Boolean
+  failReason String?
+  createdAt  DateTime @default(now())
+
+  @@index([email])
+  @@index([ipAddress])
+  @@index([createdAt])
+}
+
+model SecurityLog {
+  id        String         @id @default(cuid())
+  userId    String
+  action    SecurityAction
+  ipAddress String?
+  device    String?
+  location  String?
+  status    SecurityStatus
+  metadata  Json?
+  createdAt DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum DeviceType {
+  DESKTOP
+  MOBILE
+  TABLET
+  UNKNOWN
+}
+
+model UserSession {
+  id             String     @id @default(cuid())
+  userId         String
+  sessionToken   String     @unique
+  deviceName     String?
+  deviceType     DeviceType @default(UNKNOWN)
+  browser        String?
+  browserVersion String?
+  os             String?
+  osVersion      String?
+  ipAddress      String?
+  location       String?
+  lastActiveAt   DateTime   @default(now())
+  createdAt      DateTime   @default(now())
+  expiresAt      DateTime
+  isRevoked      Boolean    @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([lastActiveAt])
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String
+  balance   Decimal  @default(0) @db.Decimal(18, 8)
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, currency])
+  @@index([userId])
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String
+  token      String   @unique
+  type       String   @default("email")
+  expires    DateTime
+  createdAt  DateTime @default(now())
+
+  @@unique([identifier, token])
+  @@index([identifier])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TwoFactorAuth {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  secret    String
+  enabled   Boolean  @default(false)
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model BackupCode {
+  id        String    @id @default(cuid())
+  userId    String
+  code      String
+  used      Boolean   @default(false)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Organization Models
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  logo        String?
+  description String?
+  website     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members OrganizationMember[]
+  invites OrganizationInvite[]
+}
+
+model OrganizationMember {
+  id             String           @id @default(cuid())
+  organizationId String
+  userId         String
+  role           OrganizationRole @default(MEMBER)
+  joinedAt       DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model OrganizationInvite {
+  id             String           @id @default(cuid())
+  organizationId String
+  email          String
+  role           OrganizationRole @default(MEMBER)
+  status         InviteStatus     @default(PENDING)
+  invitedBy      String
+  token          String           @unique @default(cuid())
+  expiresAt      DateTime
+  createdAt      DateTime         @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+  @@index([token])
+}

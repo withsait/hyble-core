@@ -1,0 +1,14 @@
+{
+  "name": "@hyble/config",
+  "version": "1.0.0",
+  "private": true,
+  "files": [
+    "eslint",
+    "typescript",
+    "tailwind"
+  ],
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.7.2"
+  }
+}

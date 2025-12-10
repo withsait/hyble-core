@@ -1,0 +1,70 @@
+services:
+  hyble-panel:
+    build:
+      context: ../..
+      dockerfile: tooling/docker/Dockerfile.panel
+    container_name: hyble-panel
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - DISCORD_CLIENT_SECRET=${DISCORD_CLIENT_SECRET}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+    networks:
+      - hyble-network
+    depends_on:
+      - postgres
+      - redis
+
+  hyble-web:
+    build:
+      context: ../..
+      dockerfile: tooling/docker/Dockerfile.web
+    container_name: hyble-web
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    networks:
+      - hyble-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: hyble-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-hyble}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-hyble}
+      - POSTGRES_DB=${POSTGRES_DB:-hyble_core}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - hyble-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: hyble-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - hyble-network
+
+networks:
+  hyble-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

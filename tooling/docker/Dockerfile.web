@@ -1,0 +1,43 @@
+FROM node:20-alpine AS base
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Builder stage
+FROM base AS builder
+WORKDIR /app
+
+# Copy workspace files
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY packages/ ./packages/
+COPY apps/hyble-web/ ./apps/hyble-web/
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Build the app
+RUN pnpm --filter @hyble/web build
+
+# Runner stage
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Copy built assets
+COPY --from=builder /app/apps/hyble-web/.next/standalone ./
+COPY --from=builder /app/apps/hyble-web/.next/static ./apps/hyble-web/.next/static
+COPY --from=builder /app/apps/hyble-web/public ./apps/hyble-web/public
+
+USER nextjs
+
+EXPOSE 3001
+
+ENV PORT=3001
+ENV HOSTNAME="0.0.0.0"
+
+CMD ["node", "apps/hyble-web/server.js"]
