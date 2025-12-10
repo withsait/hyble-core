@@ -207,3 +207,224 @@ export async function sendWelcomeEmail(
 
   return data;
 }
+
+export async function sendOrganizationInviteEmail(
+  email: string,
+  organizationName: string,
+  inviterName: string,
+  token: string,
+  brand: Brand = "hyble"
+) {
+  const config = BRAND_CONFIG[brand];
+  const inviteUrl = `${config.baseUrl}/invites/${token}`;
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #fff; font-size: 24px; font-weight: 600;">Organizasyona Davet</h2>
+    <p style="margin: 0 0 24px; color: #9ca3af; font-size: 16px; line-height: 1.6;">
+      <strong style="color: #fff;">${inviterName}</strong> sizi <strong style="color: ${config.color};">${organizationName}</strong> organizasyonuna katılmaya davet etti.
+    </p>
+    <p style="margin: 0; color: #6b7280; font-size: 14px;">
+      Bu davet 7 gün geçerlidir.
+    </p>
+  `;
+
+  const html = getEmailTemplate(
+    "Organizasyon Daveti",
+    content,
+    "Daveti Kabul Et",
+    inviteUrl,
+    brand
+  );
+
+  const { data, error } = await resend.emails.send({
+    from: config.fromEmail,
+    to: email,
+    subject: `${organizationName} Organizasyonuna Davet - ${config.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error("Failed to send organization invite email:", error);
+    throw new Error("Failed to send organization invite email");
+  }
+
+  return data;
+}
+
+export async function sendSecurityAlertEmail(
+  email: string,
+  alertType: "new_login" | "password_changed" | "2fa_enabled" | "2fa_disabled" | "account_frozen",
+  details: {
+    device?: string;
+    location?: string;
+    ip?: string;
+    time?: string;
+  },
+  brand: Brand = "hyble"
+) {
+  const config = BRAND_CONFIG[brand];
+
+  const alertMessages = {
+    new_login: {
+      title: "Yeni Giriş Tespit Edildi",
+      message: "Hesabınıza yeni bir cihazdan giriş yapıldı.",
+    },
+    password_changed: {
+      title: "Şifreniz Değiştirildi",
+      message: "Hesabınızın şifresi başarıyla değiştirildi.",
+    },
+    "2fa_enabled": {
+      title: "İki Faktörlü Doğrulama Aktif",
+      message: "Hesabınızda iki faktörlü doğrulama etkinleştirildi.",
+    },
+    "2fa_disabled": {
+      title: "İki Faktörlü Doğrulama Devre Dışı",
+      message: "Hesabınızda iki faktörlü doğrulama devre dışı bırakıldı.",
+    },
+    account_frozen: {
+      title: "Hesabınız Donduruldu",
+      message: "Hesabınız güvenlik nedeniyle donduruldu.",
+    },
+  };
+
+  const alert = alertMessages[alertType];
+  const detailsHtml = Object.entries(details)
+    .filter(([_, v]) => v)
+    .map(([key, value]) => {
+      const labels: Record<string, string> = {
+        device: "Cihaz",
+        location: "Konum",
+        ip: "IP Adresi",
+        time: "Zaman",
+      };
+      return `<p style="margin: 4px 0; color: #9ca3af; font-size: 14px;"><strong>${labels[key] || key}:</strong> ${value}</p>`;
+    })
+    .join("");
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #fff; font-size: 24px; font-weight: 600;">${alert.title}</h2>
+    <p style="margin: 0 0 24px; color: #9ca3af; font-size: 16px; line-height: 1.6;">
+      ${alert.message}
+    </p>
+    ${detailsHtml ? `<div style="margin: 20px 0; padding: 16px; background: #1a1a1a; border-radius: 8px;">${detailsHtml}</div>` : ""}
+    <p style="margin: 0; color: #ef4444; font-size: 14px;">
+      Bu işlemi siz yapmadıysanız, lütfen hemen şifrenizi değiştirin ve destek ekibimizle iletişime geçin.
+    </p>
+  `;
+
+  const html = getEmailTemplate(
+    alert.title,
+    content,
+    "Hesap Güvenliğini Kontrol Et",
+    `${config.baseUrl}/security`,
+    brand
+  );
+
+  const { data, error } = await resend.emails.send({
+    from: config.fromEmail,
+    to: email,
+    subject: `⚠️ ${alert.title} - ${config.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error("Failed to send security alert email:", error);
+    throw new Error("Failed to send security alert email");
+  }
+
+  return data;
+}
+
+export async function sendBirthdayEmail(
+  email: string,
+  name: string,
+  brand: Brand = "hyble"
+) {
+  const config = BRAND_CONFIG[brand];
+
+  const content = `
+    <div style="text-align: center;">
+      <div style="font-size: 64px; margin-bottom: 16px;">🎂</div>
+      <h2 style="margin: 0 0 20px; color: #fff; font-size: 28px; font-weight: 600;">
+        Doğum Günün Kutlu Olsun, ${name}!
+      </h2>
+      <p style="margin: 0 0 24px; color: #9ca3af; font-size: 16px; line-height: 1.6;">
+        ${config.name} ailesi olarak bu özel günde sana en güzel dileklerimizi iletiyoruz!
+        Mutlu, sağlıklı ve başarılı bir yıl diliyoruz.
+      </p>
+      <p style="margin: 0; color: ${config.color}; font-size: 18px; font-weight: 500;">
+        🎉 Nice mutlu yıllara! 🎉
+      </p>
+    </div>
+  `;
+
+  const html = getEmailTemplate(
+    "Doğum Günü Kutlaması",
+    content,
+    "Teşekkürler!",
+    `${config.baseUrl}/dashboard`,
+    brand
+  );
+
+  const { data, error } = await resend.emails.send({
+    from: config.fromEmail,
+    to: email,
+    subject: `🎂 Doğum Günün Kutlu Olsun, ${name}! - ${config.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error("Failed to send birthday email:", error);
+    throw new Error("Failed to send birthday email");
+  }
+
+  return data;
+}
+
+export async function sendAnniversaryEmail(
+  email: string,
+  name: string,
+  years: number,
+  brand: Brand = "hyble"
+) {
+  const config = BRAND_CONFIG[brand];
+  const yearText = years === 1 ? "1 yıldır" : `${years} yıldır`;
+
+  const content = `
+    <div style="text-align: center;">
+      <div style="font-size: 64px; margin-bottom: 16px;">🎊</div>
+      <h2 style="margin: 0 0 20px; color: #fff; font-size: 28px; font-weight: 600;">
+        ${yearText} Birlikteyiz, ${name}!
+      </h2>
+      <p style="margin: 0 0 24px; color: #9ca3af; font-size: 16px; line-height: 1.6;">
+        ${config.name} ailesinin bir parçası olduğunuz için teşekkür ederiz!
+        Bu süre zarfında bize olan güveniniz için minnettarız.
+      </p>
+      <p style="margin: 0; color: ${config.color}; font-size: 18px; font-weight: 500;">
+        ⭐ Birlikte daha nice yıllara! ⭐
+      </p>
+    </div>
+  `;
+
+  const html = getEmailTemplate(
+    "Yıl Dönümü Kutlaması",
+    content,
+    "Dashboard'a Git",
+    `${config.baseUrl}/dashboard`,
+    brand
+  );
+
+  const { data, error } = await resend.emails.send({
+    from: config.fromEmail,
+    to: email,
+    subject: `🎊 ${yearText} Birlikteyiz! - ${config.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error("Failed to send anniversary email:", error);
+    throw new Error("Failed to send anniversary email");
+  }
+
+  return data;
+}

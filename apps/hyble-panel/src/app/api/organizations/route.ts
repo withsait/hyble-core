@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
         slug,
         description: description?.trim() || null,
         website: website?.trim() || null,
+        ownerId: session.user.id,
         members: {
           create: {
             userId: session.user.id,

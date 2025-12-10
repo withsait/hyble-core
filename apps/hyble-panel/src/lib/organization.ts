@@ -29,8 +29,10 @@ export async function generateUniqueSlug(name: string): Promise<string> {
 }
 
 const roleHierarchy: Record<OrganizationRole, number> = {
-  OWNER: 4,
-  ADMIN: 3,
+  OWNER: 6,
+  ADMIN: 5,
+  MANAGER: 4,
+  BILLING: 3,
   MEMBER: 2,
   VIEWER: 1,
 };
@@ -113,6 +115,8 @@ export function getRoleLabel(role: OrganizationRole): string {
   const labels: Record<OrganizationRole, string> = {
     OWNER: "Sahip",
     ADMIN: "Yönetici",
+    MANAGER: "Müdür",
+    BILLING: "Muhasebe",
     MEMBER: "Üye",
     VIEWER: "İzleyici",
   };

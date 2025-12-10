@@ -8,17 +8,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums
+// ==================== ENUMS ====================
+
 enum UserStatus {
   ACTIVE
   SUSPENDED
   FROZEN
+  PENDING_DELETION
 }
 
 enum TrustLevel {
-  GUEST
-  VERIFIED
-  SECURE
+  GUEST      // Level 0: Unverified
+  VERIFIED   // Level 1: Email verified
+  SECURE     // Level 2: 2FA enabled
+  CORPORATE  // Level 3: Corporate verified
+}
+
+enum Platform {
+  HYBLE
+  MINEBLE
+  BOTH
 }
 
 enum AddressType {
@@ -41,11 +50,37 @@ enum SecurityAction {
   PHONE_CHANGE
   TWO_FACTOR_ENABLE
   TWO_FACTOR_DISABLE
+  TWO_FACTOR_VERIFY
+  BACKUP_CODE_USED
   ACCOUNT_LOCK
   ACCOUNT_UNLOCK
+  ACCOUNT_FREEZE
+  ACCOUNT_UNFREEZE
+  ACCOUNT_DELETE_REQUEST
+  ACCOUNT_DELETE_CANCEL
   SESSION_REVOKE
+  SESSION_REVOKE_ALL
+  DEVICE_TRUST
+  DEVICE_UNTRUST
   API_KEY_CREATE
   API_KEY_REVOKE
+  API_KEY_UPDATE
+  API_KEY_REGENERATE
+  OAUTH_CONNECT
+  OAUTH_DISCONNECT
+  ORG_CREATE
+  ORG_JOIN
+  ORG_LEAVE
+  ORG_INVITE_SEND
+  ORG_INVITE_ACCEPT
+  ORG_MEMBER_ROLE_CHANGE
+  ORG_MEMBER_REMOVE
+  IMPERSONATION_START
+  IMPERSONATION_END
+  ACCOUNT_BAN
+  ACCOUNT_UNBAN
+  ADMIN_IMPERSONATION
+  GHOST_ACCOUNT_CLEANUP
 }
 
 enum SecurityStatus {
@@ -57,7 +92,9 @@ enum SecurityStatus {
 enum OrganizationRole {
   OWNER
   ADMIN
+  MANAGER
   MEMBER
+  BILLING
   VIEWER
 }
 
@@ -66,7 +103,30 @@ enum InviteStatus {
   ACCEPTED
   DECLINED
   EXPIRED
+  CANCELLED
 }
+
+enum BanType {
+  TEMPORARY    // Temporary suspension
+  PERMANENT    // Permanent termination
+  SHADOW       // Shadow ban (user doesn't know)
+}
+
+enum CalendarEventType {
+  BIRTHDAY
+  ANNIVERSARY
+  COMPANY_FOUNDING
+  PARTNERSHIP_ANNIVERSARY
+}
+
+enum AccountDeletionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+// ==================== USER ====================
 
 model User {
   id              String     @id @default(cuid())
@@ -81,37 +141,60 @@ model User {
   trustLevel      TrustLevel @default(GUEST)
   phoneNumber     String?
   phoneVerified   Boolean    @default(false)
+  lastActiveAt    DateTime?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
   // Relations
-  accounts           Account[]
-  sessions           Session[]
-  userSessions       UserSession[]
-  wallets            Wallet[]
-  profile            UserProfile?
-  addresses          UserAddress[]
-  passwordHistory    PasswordHistory[]
-  securityLogs       SecurityLog[]
-  passwordResetToken PasswordResetToken?
-  twoFactorAuth      TwoFactorAuth?
-  backupCodes        BackupCode[]
-  organizations      OrganizationMember[]
+  accounts              Account[]
+  sessions              Session[]
+  userSessions          UserSession[]
+  wallets               Wallet[]
+  profile               UserProfile?
+  addresses             UserAddress[]
+  passwordHistory       PasswordHistory[]
+  securityLogs          SecurityLog[]
+  passwordResetToken    PasswordResetToken?
+  twoFactorAuth         TwoFactorAuth?
+  backupCodes           BackupCode[]
+  trustedDevices        TrustedDevice[]
+  apiKeys               ApiKey[]
+  calendarEvents        ClientCalendar[]
+  notificationPrefs     NotificationPreferences?
+  ownedOrganizations    Organization[]         @relation("OrgOwner")
+  memberships           OrganizationMember[]
+  freezes               AccountFreeze[]
+  deletionRequest       AccountDeletion?
+  bans                  UserBan[]
+  connectedAccounts     ConnectedAccount[]
+  bansIssued            UserBan[]              @relation("BannedByUser")
+  bansLifted            UserBan[]              @relation("UnbannedByUser")
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+  @@index([lastActiveAt])
 }
 
 model UserProfile {
-  id         String   @id @default(cuid())
-  userId     String   @unique
-  firstName  String?
-  lastName   String?
-  avatar     String?
-  position   String?
-  language   String   @default("en")
-  currency   String   @default("USD")
-  timezone   String   @default("UTC")
-  dateFormat String   @default("DD/MM/YYYY")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                  String    @id @default(cuid())
+  userId              String    @unique
+  firstName           String?
+  lastName            String?
+  avatar              String?
+  bio                 String?
+  position            String?
+  birthDate           DateTime?
+  birthMonth          Int?      // 1-12 for birthday celebrations
+  birthDay            Int?      // 1-31 for birthday celebrations
+  birthDateChangedAt  DateTime? // Max 1 change per year
+  birthDateVisibility String    @default("private") // private, friends, public
+  language            String    @default("tr")
+  currency            String    @default("EUR")
+  timezone            String    @default("Europe/Istanbul")
+  dateFormat          String    @default("DD/MM/YYYY")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -120,6 +203,7 @@ model UserAddress {
   id         String      @id @default(cuid())
   userId     String
   type       AddressType @default(HOME)
+  label      String?     // Custom label like "Office", "Home"
   title      String?
   line1      String
   line2      String?
@@ -154,11 +238,14 @@ model LoginAttempt {
   userAgent  String?
   success    Boolean
   failReason String?
+  platform   Platform @default(HYBLE)
   createdAt  DateTime @default(now())
 
   @@index([email])
   @@index([ipAddress])
   @@index([createdAt])
+  @@index([email, createdAt])
+  @@index([ipAddress, createdAt])
 }
 
 model SecurityLog {
@@ -166,8 +253,10 @@ model SecurityLog {
   userId    String
   action    SecurityAction
   ipAddress String?
+  userAgent String?
   device    String?
   location  String?
+  platform  Platform       @default(HYBLE)
   status    SecurityStatus
   metadata  Json?
   createdAt DateTime       @default(now())
@@ -177,6 +266,7 @@ model SecurityLog {
   @@index([userId])
   @@index([action])
   @@index([createdAt])
+  @@index([userId, createdAt])
 }
 
 model Account {
@@ -229,6 +319,7 @@ model UserSession {
   osVersion      String?
   ipAddress      String?
   location       String?
+  platform       Platform   @default(HYBLE)
   lastActiveAt   DateTime   @default(now())
   createdAt      DateTime   @default(now())
   expiresAt      DateTime
@@ -302,19 +393,38 @@ model BackupCode {
   @@index([userId])
 }
 
-// Organization Models
+// ==================== ORGANIZATION ====================
+
 model Organization {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
+  ownerId     String
   name        String
-  slug        String   @unique
+  slug        String    @unique
   logo        String?
   description String?
   website     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  members OrganizationMember[]
-  invites OrganizationInvite[]
+  // Business info
+  taxId         String?
+  vatNumber     String?
+  vatVerified   Boolean   @default(false)
+  vatVerifiedAt DateTime?
+  foundingDate  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  owner          User                 @relation("OrgOwner", fields: [ownerId], references: [id])
+  members        OrganizationMember[]
+  invites        OrganizationInvite[]
+  domains        OrganizationDomain[]
+  apiKeys        ApiKey[]
+  ssoConfig      SsoConfiguration?
+  calendarEvents ClientCalendar[]
+
+  @@index([slug])
+  @@index([ownerId])
 }
 
 model OrganizationMember {
@@ -322,6 +432,7 @@ model OrganizationMember {
   organizationId String
   userId         String
   role           OrganizationRole @default(MEMBER)
+  invitedBy      String?
   joinedAt       DateTime         @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -341,11 +452,282 @@ model OrganizationInvite {
   invitedBy      String
   token          String           @unique @default(cuid())
   expiresAt      DateTime
+  acceptedAt     DateTime?
   createdAt      DateTime         @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  @@unique([organizationId, email])
   @@index([organizationId])
   @@index([email])
   @@index([token])
+}
+
+model OrganizationDomain {
+  id                String    @id @default(cuid())
+  organizationId    String
+  domain            String    @unique
+  verified          Boolean   @default(false)
+  verificationToken String
+  verifiedAt        DateTime?
+  createdAt         DateTime  @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+}
+
+// ==================== TRUSTED DEVICES ====================
+
+model TrustedDevice {
+  id          String   @id @default(cuid())
+  userId      String
+  fingerprint String
+  name        String   // "Windows 10 - Chrome"
+  lastUsed    DateTime @default(now())
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, fingerprint])
+  @@index([userId])
+}
+
+// ==================== API KEYS ====================
+
+model ApiKey {
+  id                 String    @id @default(cuid())
+  userId             String?
+  organizationId     String?
+  name               String
+  keyHash            String    @unique
+  keyPrefix          String    // First 8 chars for identification
+  scopes             String[]
+  ipWhitelist        String[]
+  allowedIps         String[]
+  allowedOrigins     String[]
+  rateLimitPerMinute Int       @default(60)
+  rateLimitPerDay    Int       @default(10000)
+  lastUsed           DateTime?
+  lastUsedAt         DateTime?
+  expiresAt          DateTime?
+  revokedAt          DateTime?
+  createdAt          DateTime  @default(now())
+
+  user         User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  usageLogs    ApiKeyUsage[]
+
+  @@index([keyHash])
+  @@index([userId])
+  @@index([organizationId])
+  @@index([revokedAt])
+}
+
+model ApiKeyUsage {
+  id           String   @id @default(cuid())
+  apiKeyId     String
+  endpoint     String
+  method       String
+  ipAddress    String?
+  statusCode   Int
+  responseTime Int?     // Response time in milliseconds
+  createdAt    DateTime @default(now())
+
+  apiKey ApiKey @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+
+  @@index([apiKeyId, createdAt])
+}
+
+// ==================== SSO CONFIGURATION ====================
+
+model SsoConfiguration {
+  id             String           @id @default(cuid())
+  organizationId String           @unique
+  provider       String           // okta, azure_ad, google, onelogin, custom_saml
+  metadataUrl    String?
+  metadataXml    String?          @db.Text
+  entityId       String?
+  ssoUrl         String?
+  certificate    String?          @db.Text
+  attributeMapping Json?
+  defaultRole    OrganizationRole @default(MEMBER)
+  jitProvisioning Boolean         @default(true)
+  enabled        Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+// ==================== APPRECIATION PROGRAM ====================
+
+model ClientCalendar {
+  id                 String            @id @default(cuid())
+  userId             String?
+  organizationId     String?
+  eventType          CalendarEventType
+  eventDate          DateTime
+  lastCelebratedYear Int?
+  celebrationCount   Int               @default(0)
+  createdAt          DateTime          @default(now())
+
+  user         User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  celebrations CelebrationLog[]
+
+  @@unique([userId, eventType])
+  @@unique([organizationId, eventType])
+  @@index([eventDate])
+}
+
+model CelebrationLog {
+  id            String    @id @default(cuid())
+  calendarId    String
+  userId        String?   // For quick lookup
+  year          Int
+  type          String    // email, panel_notification, coupon
+  emailSentAt   DateTime?
+  emailOpenedAt DateTime?
+  couponCode    String?
+  couponUsed    Boolean   @default(false)
+  couponUsedAt  DateTime?
+  createdAt     DateTime  @default(now())
+
+  calendar ClientCalendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+
+  @@index([calendarId])
+  @@index([userId, year])
+}
+
+// ==================== ACCOUNT MANAGEMENT ====================
+
+model AccountFreeze {
+  id         String    @id @default(cuid())
+  userId     String
+  reason     String    // vacation, security, other
+  note       String?
+  frozenAt   DateTime  @default(now())
+  unfrozenAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AccountDeletion {
+  id          String                @id @default(cuid())
+  userId      String                @unique
+  status      AccountDeletionStatus @default(PENDING)
+  requestedAt DateTime              @default(now())
+  scheduledAt DateTime              // 14 days from request
+  cancelledAt DateTime?
+  completedAt DateTime?
+  reason      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+// ==================== ADMIN ====================
+
+model AdminAction {
+  id           String   @id @default(cuid())
+  adminId      String
+  targetUserId String?
+  targetOrgId  String?
+  action       String   // ban, unban, impersonate, verify, etc.
+  reason       String?
+  evidence     String?
+  details      Json?
+  createdAt    DateTime @default(now())
+
+  @@index([adminId])
+  @@index([targetUserId])
+  @@index([createdAt])
+}
+
+model UserBan {
+  id           String    @id @default(cuid())
+  userId       String
+  type         BanType
+  reason       String
+  evidence     String?
+  bannedBy     String
+  active       Boolean   @default(true)
+  expiresAt    DateTime? // null for permanent
+  liftedAt     DateTime?
+  liftedBy     String?
+  unbannedAt   DateTime?
+  unbannedById String?
+  createdAt    DateTime  @default(now())
+
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bannedByUser   User? @relation("BannedByUser", fields: [bannedBy], references: [id])
+  unbannedByUser User? @relation("UnbannedByUser", fields: [unbannedById], references: [id])
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([active])
+}
+
+// ==================== NOTIFICATIONS ====================
+
+model NotificationPreferences {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Can't be turned off (always true)
+  securityEmail Boolean @default(true)
+  securityPanel Boolean @default(true)
+
+  // Default on
+  billingEmail  Boolean @default(true)
+  billingPanel  Boolean @default(true)
+  projectsEmail Boolean @default(true)
+  projectsPanel Boolean @default(true)
+  supportEmail  Boolean @default(true)
+  supportPanel  Boolean @default(true)
+
+  // Default off
+  updatesEmail   Boolean @default(false)
+  updatesPanel   Boolean @default(false)
+  marketingEmail Boolean @default(false)
+  marketingPanel Boolean @default(false)
+
+  // Discord
+  discordDm Boolean @default(false)
+
+  // Appreciation
+  appreciationEmail Boolean @default(true)
+
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==================== CONNECTED ACCOUNTS ====================
+
+model ConnectedAccount {
+  id                String   @id @default(cuid())
+  userId            String
+  provider          String   // google, github, discord, etc.
+  providerAccountId String
+  email             String?
+  name              String?
+  avatar            String?
+  accessToken       String?  @db.Text
+  refreshToken      String?  @db.Text
+  expiresAt         DateTime?
+  connectedAt       DateTime @default(now())
+  lastUsedAt        DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@index([provider])
 }
