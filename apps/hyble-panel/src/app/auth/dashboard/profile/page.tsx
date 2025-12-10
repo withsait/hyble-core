@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function ProfilePage() {
-  const { data: session, update } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
 
   const [name, setName] = useState("");
@@ -20,8 +20,21 @@ export default function ProfilePage() {
     }
   }, [session]);
 
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   if (!session?.user) {
-    router.push("/login");
     return null;
   }
 
