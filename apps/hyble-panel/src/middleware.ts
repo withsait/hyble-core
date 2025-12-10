@@ -30,7 +30,8 @@ export function middleware(request: NextRequest) {
   // Find matching domain
   let routePrefix = "";
   for (const [domain, prefix] of Object.entries(DOMAIN_ROUTES)) {
-    if (host.includes(domain.split(":")[0])) {
+    const domainWithoutPort = domain.split(":")[0] ?? domain;
+    if (host.includes(domainWithoutPort)) {
       routePrefix = prefix;
       break;
     }
