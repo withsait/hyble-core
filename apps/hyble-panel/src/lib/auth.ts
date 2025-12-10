@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthConfig } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
@@ -10,7 +10,7 @@ import { authenticator } from "otplib";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma) as any,
   session: {
     strategy: "jwt",
@@ -170,4 +170,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
   trustHost: true,
-});
+};
+
+const nextAuth = NextAuth(authConfig);
+
+export const handlers = nextAuth.handlers;
+export const signIn = nextAuth.signIn;
+export const signOut = nextAuth.signOut;
+export const auth = nextAuth.auth;
