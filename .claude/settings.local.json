@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(cat:*)",
+      "Bash(pnpm db:generate:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm test:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(ssh root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git pull origin main && pnpm install && pnpm db:generate && cd apps/hyble-panel && pnpm build && pm2 restart hyble-panel\")",
+      "Bash(ssh root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git stash && git pull origin main\")",
+      "Bash(ssh root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && pnpm install\")",
+      "Bash(ssh root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && pnpm db:generate\")",
+      "Bash(ssh root@178.63.138.97 \"cd /home/hyble/apps/hyble-core/apps/hyble-panel && pnpm build\")",
+      "Bash(ssh root@178.63.138.97 \"pm2 restart hyble-panel && pm2 status\")",
+      "Bash(curl:*)",
+      "Bash(ssh:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(git -C \"C:\\Users\\PC\\.claude-worktrees\\hyble-core\\cranky-saha\" log --oneline -10)",
+      "Bash(base64:*)",
+      "Bash(powershell -Command \"[Convert]::ToBase64String([System.IO.File]::ReadAllBytes(''''C:\\Users\\PC\\.claude-worktrees\\hyble-core\\cranky-saha\\billing-api\\page.tsx''''))\")",
+      "Bash(scp:*)",
+      "Bash(dir \"C:\\Users\\PC\\.claude-worktrees\\hyble-core\\cranky-saha\\packages\")",
+      "Bash(dir \"C:\\Users\\PC\\.claude-worktrees\\hyble-core\\cranky-saha\\packages\\email\\src\")",
+      "Bash(dir \"C:\\Users\\PC\\.claude-worktrees\\hyble-core\\cranky-saha\\billing-api\")",
+      "Bash(dir \"C:\\Users\\PC\\.claude-worktrees\\hyble-core\\cranky-saha\\billing-user\")",
+      "Bash(dir:*)",
+      "Bash(pnpm install:*)",
+      "Bash(git restore:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
