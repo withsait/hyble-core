@@ -1,6 +1,5 @@
-import Navbar from "@/components/Navbar"; 
+import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import FloatingAI from "@/components/FloatingAI";
 
 export default function MarketingLayout({
   children,
@@ -10,11 +9,10 @@ export default function MarketingLayout({
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-background">
+      <main>
         {children}
       </main>
       <Footer />
-      <FloatingAI />
     </>
   );
 }
