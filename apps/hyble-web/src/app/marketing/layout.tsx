@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "Hyble - Web Hosting & Cloud Services",
-  description: "Premium web hosting and cloud services from Hyble",
+  title: "Hyble - Build. Launch. Scale.",
+  description: "Everything you need to build and grow your software business.",
 };
 
 export default function MarketingLayout({
@@ -10,5 +12,11 @@ export default function MarketingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <Navbar />
+      <main>{children}</main>
+      <Footer />
+    </>
+  );
 }

@@ -147,9 +147,15 @@ importers:
       '@hyble/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      lucide-react:
+        specifier: ^0.561.0
+        version: 0.561.0(react@18.3.1)
       next:
         specifier: 14.2.21
         version: 14.2.21(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next-themes:
+        specifier: ^0.4.6
+        version: 0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -1475,6 +1481,11 @@ packages:
     peerDependencies:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
+  lucide-react@0.561.0:
+    resolution: {integrity: sha512-Y59gMY38tl4/i0qewcqohPdEbieBy7SovpBL9IFebhc2mDd8x4PZSOsiFRkpPcOq6bj1r/mjH/Rk73gSlIJP2A==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
     hasBin: true
@@ -1529,6 +1540,12 @@ packages:
         optional: true
       nodemailer:
         optional: true
+
+  next-themes@0.4.6:
+    resolution: {integrity: sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA==}
+    peerDependencies:
+      react: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
 
   next@14.2.21:
     resolution: {integrity: sha512-rZmLwucLHr3/zfDMYbJXbw0ZeoBpirxkXuvsJbk7UPorvPYZhP7vq7aHbKnU7dQNCYIimRrbB2pp3xmf+wsYUg==}
@@ -3207,6 +3224,10 @@ snapshots:
     dependencies:
       react: 18.3.1
 
+  lucide-react@0.561.0(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+
   lz-string@1.5.0: {}
 
   magic-string@0.30.21:
@@ -3245,6 +3266,11 @@ snapshots:
       '@auth/core': 0.41.0
       next: 14.2.21(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
+
+  next-themes@0.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   next@14.2.21(@babel/core@7.28.5)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
