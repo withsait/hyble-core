@@ -4,203 +4,138 @@ import {
   ArrowRight,
   Zap,
   Shield,
-  BarChart3,
-  Rocket,
-  Globe,
-  CheckCircle2,
-  Sparkles,
+  Cloud,
+  Activity,
+  CheckCircle,
   Server,
   Database,
-  Cpu,
-  Clock,
-  Users,
-  TrendingUp
+  Globe,
+  Lock,
+  BarChart3,
+  Cpu
 } from "lucide-react";
 import Link from "next/link";
 
-// Auth URL for external links
+// Auth URL
 const AUTH_URL = "https://id.hyble.co";
 
 const features = [
   {
+    icon: Cloud,
+    title: "Hyble Cloud",
+    description: "Scalable cloud infrastructure with automatic load balancing and global distribution.",
+  },
+  {
+    icon: Server,
+    title: "Hyble Store",
+    description: "Deploy and manage applications with our intuitive control panel and API.",
+  },
+  {
+    icon: Activity,
+    title: "Status Monitoring",
+    description: "Real-time monitoring and alerting for all your services and infrastructure.",
+  },
+  {
     icon: Shield,
     title: "Enterprise Security",
-    description: "Bank-grade encryption with SSL/TLS, DDoS protection, and automated security patches.",
-    gradient: "from-blue-500 to-cyan-500",
+    description: "Bank-grade encryption, DDoS protection, and automated security patches.",
   },
-  {
-    icon: Zap,
-    title: "Lightning Performance",
-    description: "Powered by NVMe SSDs and optimized infrastructure. 99.99% uptime guaranteed.",
-    gradient: "from-indigo-500 to-purple-500",
-  },
-  {
-    icon: Globe,
-    title: "Global CDN",
-    description: "Content delivered from 200+ edge locations worldwide for blazing fast speeds.",
-    gradient: "from-cyan-500 to-blue-500",
-  },
-  {
-    icon: Database,
-    title: "Managed Databases",
-    description: "PostgreSQL, MySQL, Redis - fully managed with automatic backups and scaling.",
-    gradient: "from-purple-500 to-pink-500",
-  },
-  {
-    icon: Cpu,
-    title: "Auto Scaling",
-    description: "Resources that grow with your business. Handle traffic spikes effortlessly.",
-    gradient: "from-blue-600 to-indigo-600",
-  },
-  {
-    icon: Clock,
-    title: "Instant Deployment",
-    description: "Deploy in seconds with our streamlined CI/CD pipeline and one-click rollbacks.",
-    gradient: "from-emerald-500 to-teal-500",
-  },
-];
-
-const stats = [
-  { value: "99.99%", label: "Uptime", icon: TrendingUp },
-  { value: "200+", label: "Edge Nodes", icon: Globe },
-  { value: "<50ms", label: "Latency", icon: Zap },
-  { value: "24/7", label: "Support", icon: Users },
 ];
 
 const benefits = [
-  "Zero-downtime deployments",
-  "SOC 2 Type II Certified",
-  "GDPR & HIPAA Compliant",
-  "24/7 Premium Support",
+  "99.9% uptime guarantee",
+  "24/7 technical support",
+  "Automatic backups",
+  "Global CDN included",
 ];
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-slate-900 dark:text-white transition-colors duration-500">
+    <div className="flex flex-col min-h-screen bg-white text-gray-900">
 
       {/* HERO SECTION */}
-      <section className="relative min-h-[90vh] flex flex-col justify-center items-center overflow-hidden px-4 pt-20 pb-12">
-
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden">
-          {/* Grid Pattern */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
-
-          {/* Gradient Orbs */}
-          <div className="absolute top-0 -left-32 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/25 via-indigo-400/15 to-transparent dark:from-blue-500/15 dark:via-indigo-500/10 blur-3xl rounded-full animate-pulse" />
-          <div className="absolute top-1/4 -right-32 w-[400px] h-[400px] bg-gradient-to-bl from-cyan-400/25 via-blue-400/15 to-transparent dark:from-cyan-500/15 dark:via-blue-500/10 blur-3xl rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute bottom-0 left-1/3 w-[350px] h-[350px] bg-gradient-to-t from-indigo-400/15 via-purple-400/10 to-transparent dark:from-indigo-500/10 dark:via-purple-500/5 blur-3xl rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+      <section className="relative pt-32 pb-20 overflow-hidden">
+        {/* Background Grid */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+          {/* Subtle gradient overlay at top */}
+          <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-blue-50/50 to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
 
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-blue-200/60 dark:border-blue-500/30 bg-white/80 dark:bg-slate-800/50 backdrop-blur-xl mb-6 shadow-sm">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-gradient-to-r from-blue-500 to-indigo-500" />
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">Next-generation cloud platform</span>
-            <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 border border-amber-200 mb-8">
+            <Zap className="w-4 h-4 text-amber-500" />
+            <span className="text-sm font-medium text-amber-700">Enterprise-Grade Hosting Solutions</span>
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] mb-5">
-            <span className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white bg-clip-text text-transparent">Build.</span>{" "}
-            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 dark:from-blue-400 dark:via-cyan-400 dark:to-blue-400 bg-clip-text text-transparent">Launch.</span>{" "}
-            <span className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white bg-clip-text text-transparent">Scale.</span>
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
+            <span className="text-gray-900">Scale Without </span>
+            <span className="text-blue-600">Limits</span>
+            <span className="text-gray-900">.</span>
           </h1>
 
           {/* Description */}
-          <p className="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed px-2">
-            The all-in-one cloud platform for modern developers. Deploy faster, scale smarter, and build the future with enterprise-grade infrastructure.
+          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Secure, reliable, and compliant infrastructure designed for modern businesses and developers.
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <a
               href={`${AUTH_URL}/register`}
-              className="group relative w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-700 hover:via-indigo-700 hover:to-blue-700 text-white font-bold text-base rounded-xl transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02] overflow-hidden"
+              className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base rounded-lg transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
             >
-              <span className="relative z-10 flex items-center justify-center gap-2">
-                Start Building Free
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </span>
+              Start Deploying
             </a>
             <Link
-              href="#features"
-              className="w-full sm:w-auto px-6 py-3 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white font-semibold text-base rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-300"
+              href="/contact"
+              className="w-full sm:w-auto px-8 py-3.5 bg-white border border-gray-300 text-gray-700 font-semibold text-base rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all"
             >
-              Explore Features
+              Contact Sales
             </Link>
-          </div>
-
-          {/* Stats Row */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-2xl mx-auto">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center p-3 rounded-xl bg-white/60 dark:bg-slate-800/40 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50">
-                <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <stat.icon className="w-4 h-4 text-blue-500" />
-                  <span className="text-xl sm:text-2xl font-black bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">
-                    {stat.value}
-                  </span>
-                </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
           </div>
 
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 animate-bounce opacity-60">
-          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Scroll</span>
-          <div className="w-5 h-8 rounded-full border-2 border-slate-300 dark:border-slate-600 flex justify-center pt-1.5">
-            <div className="w-1 h-2 bg-blue-500 rounded-full animate-pulse" />
-          </div>
+        {/* Curved divider */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 60" fill="none" className="w-full">
+            <path d="M0 60V30C240 50 480 60 720 60C960 60 1200 50 1440 30V60H0Z" fill="#f9fafb" />
+          </svg>
         </div>
       </section>
 
       {/* FEATURES SECTION */}
-      <section id="features" className="py-16 md:py-24 px-4 relative overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-50/30 to-transparent dark:via-blue-950/10" />
+      <section id="features" className="py-20 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        <div className="relative z-10 max-w-6xl mx-auto">
           {/* Section Header */}
-          <div className="text-center mb-12 md:mb-16">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-semibold mb-4">
-              <Rocket className="w-3.5 h-3.5" />
-              Powerful Features
-            </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">
-              Everything you need to{" "}
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">succeed</span>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Enterprise-Grade Features
             </h2>
-            <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
-              Build, deploy, and scale your applications with our comprehensive cloud services.
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Reliable infrastructure with 99.9% uptime guarantee and dedicated support.
             </p>
           </div>
 
           {/* Features Grid */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="group relative p-5 md:p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:border-blue-300 dark:hover:border-blue-500/50 transition-all duration-400 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1"
+                className="p-6 bg-white rounded-xl border border-gray-200 hover:border-blue-200 hover:shadow-lg transition-all duration-300"
               >
-                {/* Icon */}
-                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 shadow-md group-hover:scale-105 transition-transform duration-300`}>
-                  <feature.icon className="w-5 h-5 text-white" />
+                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
+                  <feature.icon className="w-6 h-6 text-blue-600" />
                 </div>
-
-                {/* Content */}
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p className="text-sm text-gray-600 leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -210,94 +145,61 @@ export default function Home() {
       </section>
 
       {/* WHY HYBLE SECTION */}
-      <section id="about" className="py-16 md:py-24 px-4 relative">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+      <section id="about" className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+
             {/* Left Content */}
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-semibold mb-4">
-                <Shield className="w-3.5 h-3.5" />
-                Why Choose Hyble
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-4 leading-tight">
-                Built for developers,{" "}
-                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">trusted by enterprises</span>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
+                Why businesses choose Hyble
               </h2>
-              <p className="text-base text-slate-600 dark:text-slate-400 mb-6 leading-relaxed">
-                Join thousands of companies who trust Hyble to power their mission-critical applications. From startups to Fortune 500, we scale with you.
+              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+                From startups to enterprises, thousands of companies trust Hyble to power their critical infrastructure with reliability and performance.
               </p>
 
               {/* Benefits List */}
-              <div className="space-y-3 mb-8">
+              <div className="space-y-4 mb-8">
                 {benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-center gap-2.5 text-slate-700 dark:text-slate-300">
-                    <div className="w-5 h-5 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center flex-shrink-0">
-                      <CheckCircle2 className="w-3 h-3 text-white" />
+                  <div key={index} className="flex items-center gap-3">
+                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle className="w-3.5 h-3.5 text-green-600" />
                     </div>
-                    <span className="text-sm font-medium">{benefit}</span>
+                    <span className="text-gray-700 font-medium">{benefit}</span>
                   </div>
                 ))}
               </div>
 
               <a
                 href={`${AUTH_URL}/register`}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-sm rounded-xl transition-all duration-300 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02]"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg transition-all"
               >
-                Get Started Today
+                Get Started
                 <ArrowRight className="w-4 h-4" />
               </a>
             </div>
 
-            {/* Right Visual */}
-            <div className="relative">
-              <div className="relative bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-5 md:p-6 border border-slate-200 dark:border-slate-700">
-                {/* Terminal/Dashboard Mock */}
-                <div className="bg-slate-900 dark:bg-slate-950 rounded-xl overflow-hidden shadow-xl">
-                  {/* Terminal Header */}
-                  <div className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 border-b border-slate-700">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-                    <span className="ml-3 text-slate-400 text-xs font-mono">hyble deploy</span>
-                  </div>
-                  {/* Terminal Content */}
-                  <div className="p-4 font-mono text-xs space-y-1.5">
-                    <div className="text-green-400">$ hyble deploy --production</div>
-                    <div className="text-slate-400">Building application...</div>
-                    <div className="text-slate-400">Running tests... <span className="text-green-400">passed</span></div>
-                    <div className="text-slate-400">Deploying to 12 regions...</div>
-                    <div className="text-blue-400 flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Deployed successfully in 2.3s
-                    </div>
-                    <div className="text-slate-500">https://app.hyble.co</div>
-                  </div>
-                </div>
-
-                {/* Floating Elements */}
-                <div className="absolute -top-3 -right-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                      <BarChart3 className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-slate-900 dark:text-white">99.99%</div>
-                      <div className="text-[10px] text-slate-500">Uptime</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="absolute -bottom-3 -left-3 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
-                      <Server className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-lg font-bold text-slate-900 dark:text-white">12</div>
-                      <div className="text-[10px] text-slate-500">Regions</div>
-                    </div>
-                  </div>
-                </div>
+            {/* Right Visual - Stats Cards */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-6 bg-blue-600 rounded-2xl text-white">
+                <BarChart3 className="w-8 h-8 mb-3 opacity-80" />
+                <div className="text-3xl font-bold mb-1">99.9%</div>
+                <div className="text-blue-100 text-sm">Uptime SLA</div>
+              </div>
+              <div className="p-6 bg-gray-900 rounded-2xl text-white">
+                <Globe className="w-8 h-8 mb-3 opacity-80" />
+                <div className="text-3xl font-bold mb-1">12+</div>
+                <div className="text-gray-400 text-sm">Global Regions</div>
+              </div>
+              <div className="p-6 bg-gray-100 rounded-2xl">
+                <Zap className="w-8 h-8 mb-3 text-amber-500" />
+                <div className="text-3xl font-bold text-gray-900 mb-1">&lt;50ms</div>
+                <div className="text-gray-500 text-sm">Avg Latency</div>
+              </div>
+              <div className="p-6 bg-green-50 rounded-2xl">
+                <Shield className="w-8 h-8 mb-3 text-green-600" />
+                <div className="text-3xl font-bold text-gray-900 mb-1">SOC 2</div>
+                <div className="text-gray-500 text-sm">Certified</div>
               </div>
             </div>
           </div>
@@ -305,67 +207,64 @@ export default function Home() {
       </section>
 
       {/* PRICING SECTION */}
-      <section id="pricing" className="py-16 md:py-24 px-4 relative">
-        <div className="max-w-6xl mx-auto">
+      <section id="pricing" className="py-20 bg-gray-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold mb-4">
-              <TrendingUp className="w-3.5 h-3.5" />
-              Simple Pricing
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-4">
-              Start free, scale as you grow
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Simple, transparent pricing
             </h2>
-            <p className="text-base text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
-              No hidden fees. No surprises. Pay only for what you use.
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Start free and scale as you grow. No hidden fees.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4 md:gap-6 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {/* Starter */}
-            <div className="p-5 md:p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Starter</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Perfect for side projects</p>
-              <div className="mb-4">
-                <span className="text-3xl font-black text-slate-900 dark:text-white">$0</span>
-                <span className="text-sm text-slate-500">/month</span>
+            <div className="p-6 bg-white rounded-2xl border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Starter</h3>
+              <p className="text-sm text-gray-500 mb-4">For side projects</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">$0</span>
+                <span className="text-gray-500">/month</span>
               </div>
               <a
                 href={`${AUTH_URL}/register`}
-                className="block w-full text-center py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                className="block w-full text-center py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Get Started
               </a>
             </div>
 
-            {/* Pro - Highlighted */}
-            <div className="p-5 md:p-6 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 border border-blue-500 shadow-xl shadow-blue-500/20 relative">
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-white text-blue-600 text-xs font-bold rounded-full">
+            {/* Pro */}
+            <div className="p-6 bg-blue-600 rounded-2xl text-white relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-amber-400 text-amber-900 text-xs font-bold rounded-full">
                 Popular
               </div>
-              <h3 className="text-lg font-bold text-white mb-1">Pro</h3>
-              <p className="text-sm text-blue-100 mb-4">For growing businesses</p>
-              <div className="mb-4">
-                <span className="text-3xl font-black text-white">$29</span>
-                <span className="text-sm text-blue-200">/month</span>
+              <h3 className="text-lg font-semibold mb-1">Pro</h3>
+              <p className="text-sm text-blue-100 mb-4">For growing teams</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold">$29</span>
+                <span className="text-blue-200">/month</span>
               </div>
               <a
                 href={`${AUTH_URL}/register`}
-                className="block w-full text-center py-2.5 rounded-lg bg-white text-blue-600 font-semibold text-sm hover:bg-blue-50 transition-colors"
+                className="block w-full text-center py-2.5 bg-white text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors"
               >
                 Start Free Trial
               </a>
             </div>
 
             {/* Enterprise */}
-            <div className="p-5 md:p-6 rounded-2xl bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Enterprise</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">For large organizations</p>
-              <div className="mb-4">
-                <span className="text-3xl font-black text-slate-900 dark:text-white">Custom</span>
+            <div className="p-6 bg-white rounded-2xl border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">Enterprise</h3>
+              <p className="text-sm text-gray-500 mb-4">For large orgs</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-gray-900">Custom</span>
               </div>
               <a
                 href="/contact"
-                className="block w-full text-center py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                className="block w-full text-center py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Contact Sales
               </a>
@@ -375,34 +274,27 @@ export default function Home() {
       </section>
 
       {/* CTA SECTION */}
-      <section className="py-16 md:py-24 px-4 relative overflow-hidden">
-        {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:3rem_3rem]" />
-
-        <div className="relative z-10 max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 leading-tight">
-            Ready to build the future?
+      <section className="py-20 bg-gray-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+            Ready to get started?
           </h2>
-          <p className="text-base md:text-lg text-blue-100 mb-8 max-w-xl mx-auto">
-            Join thousands of developers building amazing products with Hyble.
+          <p className="text-lg text-gray-400 mb-8 max-w-xl mx-auto">
+            Join thousands of developers and businesses building on Hyble.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href={`${AUTH_URL}/register`}
-              className="group w-full sm:w-auto px-8 py-3.5 bg-white text-blue-600 font-bold text-base rounded-xl hover:bg-blue-50 transition-all duration-300 shadow-xl hover:scale-[1.02]"
+              className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
             >
-              <span className="flex items-center justify-center gap-2">
-                Start for Free
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </span>
+              Create Free Account
             </a>
-            <Link
+            <a
               href="/docs"
-              className="w-full sm:w-auto px-8 py-3.5 bg-transparent border-2 border-white/30 text-white font-semibold text-base rounded-xl hover:bg-white/10 transition-all duration-300"
+              className="w-full sm:w-auto px-8 py-3.5 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-lg transition-all border border-gray-700"
             >
-              Read Documentation
-            </Link>
+              View Documentation
+            </a>
           </div>
         </div>
       </section>

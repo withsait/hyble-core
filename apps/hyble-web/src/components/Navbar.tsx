@@ -1,31 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { Sun, Moon, Menu, X, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
+import { ChevronDown, Menu, X } from "lucide-react";
 
 const navLinks = [
-  { name: "Features", href: "#features" },
-  { name: "Pricing", href: "#pricing" },
-  { name: "About", href: "#about" },
-  { name: "Docs", href: "/docs" },
+  {
+    name: "Cloud",
+    href: "#features",
+    hasDropdown: true
+  },
+  {
+    name: "Solutions",
+    href: "#about",
+    hasDropdown: true
+  },
+  {
+    name: "Developers",
+    href: "/docs",
+    hasDropdown: true
+  },
+  {
+    name: "Pricing",
+    href: "#pricing",
+    hasDropdown: false
+  },
 ];
 
-// Auth URLs - external links
+// Auth URLs
 const AUTH_URL = "https://id.hyble.co";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 10);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -33,116 +44,116 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       scrolled
-        ? "bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border-b border-slate-200/60 dark:border-slate-700/60 shadow-lg shadow-slate-900/5 dark:shadow-slate-900/30"
-        : "bg-transparent border-b border-transparent"
+        ? "bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm"
+        : "bg-white border-b border-gray-100"
     }`}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
 
-        {/* LOGO */}
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/25 group-hover:shadow-blue-500/40 transition-all duration-300 group-hover:scale-105">
-              <span className="text-white font-bold text-base sm:text-lg">H</span>
-            </div>
-            <div className="absolute -inset-0.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg blur opacity-25 group-hover:opacity-40 transition-opacity" />
-          </div>
-          <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent tracking-tight">
-            hyble
-          </span>
-        </Link>
-
-        {/* CENTER - Navigation Links (Desktop) */}
-        <div className="hidden md:flex items-center gap-0.5 bg-slate-100/70 dark:bg-slate-800/40 backdrop-blur-sm rounded-full px-1.5 py-1 border border-slate-200/50 dark:border-slate-700/50">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className="px-3.5 py-1.5 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-white/70 dark:hover:bg-slate-700/50 rounded-full transition-all duration-200"
-            >
-              {link.name}
+          {/* Left: Logo */}
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center gap-2.5">
+              {/* Logo Icon */}
+              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="4 17 10 11 4 5"></polyline>
+                  <line x1="12" y1="19" x2="20" y2="19"></line>
+                </svg>
+              </div>
+              <span className="text-xl font-bold text-gray-900 tracking-tight">
+                HYBLE
+              </span>
             </Link>
-          ))}
-        </div>
+          </div>
 
-        {/* RIGHT SIDE */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
-          {/* Theme Toggle */}
-          {mounted && (
-            <button
-              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-              className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all duration-200 border border-slate-200/50 dark:border-slate-700/50"
-              aria-label="Toggle theme"
-            >
-              {resolvedTheme === "dark" ? (
-                <Sun className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
-              ) : (
-                <Moon className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
-              )}
-            </button>
-          )}
-
-          {/* Login Button (Desktop) - External Link */}
-          <a
-            href={`${AUTH_URL}/login`}
-            className="hidden sm:flex px-4 py-2 text-slate-600 dark:text-slate-300 font-medium text-[13px] hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-          >
-            Login
-          </a>
-
-          {/* Register Button (Desktop) - External Link */}
-          <a
-            href={`${AUTH_URL}/register`}
-            className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 text-white font-semibold text-[13px] rounded-lg transition-all duration-300 shadow-md shadow-blue-500/25 hover:shadow-blue-500/40 hover:scale-[1.02]"
-          >
-            Get Started
-            <ChevronRight className="w-3.5 h-3.5" />
-          </a>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50"
-            aria-label="Toggle menu"
-          >
-            {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Menu */}
-      <div className={`md:hidden overflow-hidden transition-all duration-300 ${mobileMenuOpen ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}>
-        <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border-t border-slate-200/50 dark:border-slate-700/50">
-          <div className="px-4 py-4 space-y-1">
+          {/* Center: Navigation Links */}
+          <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
-                className="flex items-center justify-between text-[15px] font-medium text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors py-2.5 px-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-1 px-4 py-2 text-[15px] font-medium text-gray-600 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-50"
               >
                 {link.name}
-                <ChevronRight className="w-4 h-4 opacity-40" />
+                {link.hasDropdown && (
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                )}
               </Link>
             ))}
+          </div>
 
-            <div className="pt-3 mt-2 border-t border-slate-200 dark:border-slate-700 space-y-2">
-              <a
-                href={`${AUTH_URL}/login`}
-                className="block w-full text-center px-4 py-2.5 text-slate-700 dark:text-slate-300 font-medium text-[15px] rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Login
-              </a>
-              <a
-                href={`${AUTH_URL}/register`}
-                className="block w-full text-center px-4 py-2.5 bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white font-semibold text-[15px] rounded-lg shadow-md shadow-blue-500/25"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Get Started Free
-              </a>
-            </div>
+          {/* Right: Auth Buttons */}
+          <div className="flex items-center gap-3">
+            {/* Register Button - Outlined */}
+            <a
+              href={`${AUTH_URL}/register`}
+              className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-[14px] font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-all"
+            >
+              Register
+            </a>
+
+            {/* Login Button - Filled Dark */}
+            <a
+              href={`${AUTH_URL}/login`}
+              className="hidden sm:flex items-center px-5 py-2 text-[14px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-all"
+            >
+              Login
+            </a>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      <div className={`md:hidden transition-all duration-300 overflow-hidden ${mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="bg-white border-t border-gray-100 px-4 py-3 space-y-1">
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+              className="flex items-center justify-between py-2.5 px-3 text-[15px] font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {link.name}
+              {link.hasDropdown && (
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              )}
+            </Link>
+          ))}
+
+          <div className="pt-3 mt-2 border-t border-gray-100 space-y-2">
+            <a
+              href={`${AUTH_URL}/register`}
+              className="block w-full text-center py-2.5 text-[15px] font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Register
+            </a>
+            <a
+              href={`${AUTH_URL}/login`}
+              className="block w-full text-center py-2.5 text-[15px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Login
+            </a>
           </div>
         </div>
       </div>
