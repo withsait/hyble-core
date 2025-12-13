@@ -14,9 +14,9 @@ export default function Footer() {
   }, []);
 
   const themeOptions = [
-    { value: "light", icon: Sun, label: "Gündüz" },
-    { value: "dark", icon: Moon, label: "Gece" },
-    { value: "system", icon: Monitor, label: "Sistem" },
+    { value: "light", icon: Sun, label: "Light" },
+    { value: "dark", icon: Moon, label: "Dark" },
+    { value: "system", icon: Monitor, label: "System" },
   ];
 
   return (
@@ -28,54 +28,54 @@ export default function Footer() {
           {/* Marka */}
           <div className="col-span-1 sm:col-span-2">
             <Link href="/" className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tighter mb-4 sm:mb-6 block">
-              hyble<span className="text-primary">.</span>
+              hyble<span className="text-blue-500">.</span>
             </Link>
             <p className="text-gray-600 dark:text-gray-400 max-w-sm mb-6 sm:mb-8 text-sm sm:text-base">
-              Yapay zeka gücüyle işletmeleri ve toplulukları dönüştüren yeni nesil dijital mimarlık ofisi.
+              Next-generation digital architecture office transforming businesses and communities with the power of AI.
             </p>
             <div className="flex gap-3 sm:gap-4">
-              <a href="#" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-600 dark:text-white hover:bg-primary hover:text-black transition-all touch-target">
+              <a href="#" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-600 dark:text-white hover:bg-gray-900 dark:hover:bg-white hover:text-white dark:hover:text-gray-900 transition-all touch-target">
                 <Twitter className="w-4 h-4 sm:w-5 sm:h-5" />
               </a>
-              <a href="#" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-600 dark:text-white hover:bg-primary hover:text-black transition-all touch-target">
+              <a href="#" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-600 dark:text-white hover:bg-gray-900 dark:hover:bg-white hover:text-white dark:hover:text-gray-900 transition-all touch-target">
                 <Instagram className="w-4 h-4 sm:w-5 sm:h-5" />
               </a>
-              <a href="#" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-600 dark:text-white hover:bg-primary hover:text-black transition-all touch-target">
+              <a href="#" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-600 dark:text-white hover:bg-gray-900 dark:hover:bg-white hover:text-white dark:hover:text-gray-900 transition-all touch-target">
                 <Linkedin className="w-4 h-4 sm:w-5 sm:h-5" />
               </a>
-              <a href="#" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-600 dark:text-white hover:bg-primary hover:text-black transition-all touch-target">
+              <a href="#" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-600 dark:text-white hover:bg-gray-900 dark:hover:bg-white hover:text-white dark:hover:text-gray-900 transition-all touch-target">
                 <Github className="w-4 h-4 sm:w-5 sm:h-5" />
               </a>
             </div>
           </div>
 
-          {/* Linkler */}
+          {/* Links */}
           <div>
-            <h4 className="text-gray-900 dark:text-white font-bold mb-4 sm:mb-6 text-sm sm:text-base">Şirket</h4>
+            <h4 className="text-gray-900 dark:text-white font-bold mb-4 sm:mb-6 text-sm sm:text-base">Company</h4>
             <ul className="space-y-3 sm:space-y-4 text-gray-600 dark:text-gray-400 text-sm">
-              <li><Link href="#" className="hover:text-primary transition-colors touch-target inline-block py-1">Hakkımızda</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors touch-target inline-block py-1">Kariyer</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors touch-target inline-block py-1">Blog</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors touch-target inline-block py-1">İletişim</Link></li>
+              <li><Link href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors touch-target inline-block py-1">About Us</Link></li>
+              <li><Link href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors touch-target inline-block py-1">Careers</Link></li>
+              <li><Link href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors touch-target inline-block py-1">Blog</Link></li>
+              <li><Link href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors touch-target inline-block py-1">Contact</Link></li>
             </ul>
           </div>
 
-          {/* Linkler 2 */}
+          {/* Links 2 */}
           <div>
-            <h4 className="text-gray-900 dark:text-white font-bold mb-4 sm:mb-6 text-sm sm:text-base">Hizmetler</h4>
+            <h4 className="text-gray-900 dark:text-white font-bold mb-4 sm:mb-6 text-sm sm:text-base">Services</h4>
             <ul className="space-y-3 sm:space-y-4 text-gray-600 dark:text-gray-400 text-sm">
-              <li><Link href="#" className="hover:text-primary transition-colors touch-target inline-block py-1">Web Geliştirme</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors touch-target inline-block py-1">AI Danışmanlığı</Link></li>
-              <li><Link href="/gaming" className="hover:text-primary transition-colors touch-target inline-block py-1">Minecraft Sunucu</Link></li>
-              <li><Link href="#" className="hover:text-primary transition-colors touch-target inline-block py-1">Siber Güvenlik</Link></li>
+              <li><Link href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors touch-target inline-block py-1">Web Development</Link></li>
+              <li><Link href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors touch-target inline-block py-1">AI Consulting</Link></li>
+              <li><Link href="/gaming" className="hover:text-gray-900 dark:hover:text-white transition-colors touch-target inline-block py-1">Minecraft Server</Link></li>
+              <li><Link href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors touch-target inline-block py-1">Cyber Security</Link></li>
             </ul>
           </div>
         </div>
 
-        {/* Tema Seçici */}
+        {/* Theme Selector */}
         <div className="border-t border-gray-200 dark:border-[#1A3050] pt-6 sm:pt-8 mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <span className="text-xs sm:text-sm text-gray-500 dark:text-muted">Görünüm:</span>
+            <span className="text-xs sm:text-sm text-gray-500 dark:text-muted">Appearance:</span>
             <div className="flex items-center gap-1 p-1 rounded-full bg-gray-100 dark:bg-[#0D1E36] border border-gray-200 dark:border-[#1A3050]">
               {mounted && themeOptions.map((option) => (
                 <button
@@ -83,7 +83,7 @@ export default function Footer() {
                   onClick={() => setTheme(option.value)}
                   className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-full text-xs sm:text-sm font-medium transition-all touch-target ${
                     theme === option.value
-                      ? "bg-primary text-black shadow-sm"
+                      ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-sm"
                       : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
                   aria-label={option.label}
@@ -101,12 +101,12 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Alt Telif */}
+        {/* Copyright */}
         <div className="border-t border-gray-200 dark:border-[#1A3050] pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500 dark:text-gray-500 gap-4">
-          <p>&copy; 2025 Hyble Digital Solutions. Tüm hakları saklıdır.</p>
+          <p>&copy; 2025 Hyble Digital Solutions. All rights reserved.</p>
           <div className="flex gap-4 sm:gap-6">
-            <Link href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors touch-target py-1">Gizlilik Politikası</Link>
-            <Link href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors touch-target py-1">Kullanım Şartları</Link>
+            <Link href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors touch-target py-1">Privacy Policy</Link>
+            <Link href="#" className="hover:text-gray-900 dark:hover:text-white transition-colors touch-target py-1">Terms of Service</Link>
           </div>
         </div>
 
