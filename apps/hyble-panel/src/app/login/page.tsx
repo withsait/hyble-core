@@ -259,8 +259,14 @@ function LoginContent() {
           </div>
         </div>
 
-        {/* Theme Toggle */}
-        <div className="text-center mt-6">
+        {/* Footer */}
+        <div className="flex items-center justify-center gap-4 mt-6">
+          <a
+            href="https://hyble.co"
+            className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          >
+            ← Ana Sayfaya Dön
+          </a>
           <ThemeToggle />
         </div>
       </div>
