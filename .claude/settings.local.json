@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm db:generate:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git pull origin main && pnpm install && pnpm db:generate && pnpm db:push && pm2 restart hyble-panel\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git fetch origin && git reset --hard origin/main\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && pnpm install\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && pnpm db:generate && pnpm db:push\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && pnpm build --filter=hyble-panel\")",
+      "Bash(ssh root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && pnpm build --filter=@hyble/panel\")",
+      "Bash(ssh root@178.63.138.97 \"cat /home/hyble/apps/hyble-core/apps/hyble-panel/src/lib/email.ts | head -30\")",
+      "Bash(ssh root@178.63.138.97 \"ls -la /home/hyble/apps/hyble-core/apps/hyble-panel/src/server/\")",
+      "Bash(ssh root@178.63.138.97 \"ls -la /home/hyble/apps/hyble-core/apps/hyble-panel/src/lib/\")",
+      "Bash(ssh root@178.63.138.97:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

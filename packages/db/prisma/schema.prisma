@@ -169,6 +169,7 @@ model User {
   connectedAccounts     ConnectedAccount[]
   bansIssued            UserBan[]              @relation("BannedByUser")
   bansLifted            UserBan[]              @relation("UnbannedByUser")
+  emailLogs             EmailLog[]
 
   @@index([email])
   @@index([status])
@@ -730,4 +731,57 @@ model ConnectedAccount {
   @@unique([provider, providerAccountId])
   @@index([userId])
   @@index([provider])
+}
+
+// ==================== EMAIL LOGS ====================
+
+enum EmailStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  BOUNCED
+  COMPLAINED
+  OPENED
+  CLICKED
+}
+
+enum EmailType {
+  VERIFICATION
+  RESET_PASSWORD
+  WELCOME
+  INVOICE
+  TICKET_REPLY
+  ORG_INVITE
+  SECURITY_ALERT
+  MARKETING
+  SYSTEM_ALERT
+}
+
+model EmailLog {
+  id           String      @id @default(cuid())
+  userId       String?
+  resendId     String?     // Resend tarafından dönen ID
+  type         EmailType
+  recipient    String      // Statik email (user.email değişirse log bozulmasın)
+  subject      String
+  status       EmailStatus @default(PENDING)
+  error        String?     // Hata mesajı varsa
+  metadata     Json?       // Ek bilgiler (template data vb.)
+  openedAt     DateTime?
+  clickedAt    DateTime?
+  deliveredAt  DateTime?
+  bouncedAt    DateTime?
+  complainedAt DateTime?
+  sentAt       DateTime    @default(now())
+  createdAt    DateTime    @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([resendId])
+  @@index([recipient])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
 }
