@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { useRouter } from "next/navigation";
-import { TurnstileWidget } from "./TurnstileWidget";
+// import { TurnstileWidget } from "./TurnstileWidget";
 import { TwoFactorForm } from "./TwoFactorForm";
 
 export function LoginForm() {
@@ -149,7 +149,7 @@ export function LoginForm() {
           </label>
         </div>
 
-        <TurnstileWidget onVerify={setTurnstileToken} />
+        {/* <TurnstileWidget onVerify={setTurnstileToken} /> */}
 
         <button
           type="submit"

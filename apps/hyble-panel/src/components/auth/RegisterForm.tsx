@@ -5,7 +5,7 @@ import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import { useRouter } from "next/navigation";
 import { PasswordStrengthMeter } from "./PasswordStrengthMeter";
-import { TurnstileWidget } from "./TurnstileWidget";
+// import { TurnstileWidget } from "./TurnstileWidget";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -158,7 +158,7 @@ export function RegisterForm() {
           </label>
         </div>
 
-        <TurnstileWidget onVerify={setTurnstileToken} />
+        {/* <TurnstileWidget onVerify={setTurnstileToken} /> */}
 
         <button
           type="submit"
