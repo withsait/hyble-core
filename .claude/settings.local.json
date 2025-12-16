@@ -27,7 +27,9 @@
       "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git pull origin main && pnpm build --filter=@hyble/panel\")",
       "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"ls -la /home/hyble/apps/hyble-core/apps/hyble-panel/src/lib/trpc*\")",
       "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cat /home/hyble/apps/hyble-core/apps/hyble-panel/src/lib/trpc/index.ts\")",
-      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cat /home/hyble/apps/hyble-core/apps/hyble-panel/src/components/auth/TwoFactorForm.tsx | head -30\")"
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cat /home/hyble/apps/hyble-core/apps/hyble-panel/src/components/auth/TwoFactorForm.tsx | head -30\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core/apps/hyble-panel && pnpm add clsx tailwind-merge\")",
+      "Bash(ssh:*)"
     ],
     "deny": [],
     "ask": []
