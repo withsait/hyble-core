@@ -8,7 +8,7 @@ type Brand = "hyble" | "mineble";
 const BRAND_CONFIG = {
   hyble: {
     name: "Hyble",
-    color: "#f59e0b", // Amber
+    color: "#3B82F6", // Blue (primary brand color)
     fromEmail: "Hyble <noreply@hyble.co>",
     baseUrl: "https://id.hyble.co",
   },
@@ -37,14 +37,23 @@ function getEmailTemplate(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} - ${config.name}</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0a0a0a;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0a0a0a; padding: 40px 20px;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #F8FAFC;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8FAFC; padding: 40px 20px;">
     <tr>
       <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #111; border-radius: 12px; overflow: hidden;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; border: 1px solid #E2E8F0;">
           <tr>
             <td style="padding: 40px 40px 20px; text-align: center;">
-              <h1 style="margin: 0; color: ${config.color}; font-size: 32px; font-weight: 700;">${config.name}</h1>
+              <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                <tr>
+                  <td style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #60A5FA, #2563EB); text-align: center; vertical-align: middle;">
+                    <span style="color: #FFFFFF; font-size: 20px; font-weight: bold; line-height: 40px;">H</span>
+                  </td>
+                  <td style="padding-left: 12px; vertical-align: middle;">
+                    <span style="color: #0F172A; font-size: 24px; font-weight: 600;">${config.name}</span>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           <tr>
@@ -53,13 +62,13 @@ function getEmailTemplate(
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding: 20px 0;">
-                    <a href="${buttonUrl}" style="display: inline-block; background-color: ${config.color}; color: #000; text-decoration: none; font-weight: 600; font-size: 16px; padding: 14px 32px; border-radius: 8px;">
+                    <a href="${buttonUrl}" style="display: inline-block; background-color: ${config.color}; color: #FFFFFF; text-decoration: none; font-weight: 600; font-size: 16px; padding: 14px 32px; border-radius: 8px;">
                       ${buttonText}
                     </a>
                   </td>
                 </tr>
               </table>
-              <p style="margin: 24px 0 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+              <p style="margin: 24px 0 0; color: #64748B; font-size: 14px; line-height: 1.6;">
                 Butona tıklayamıyorsanız, aşağıdaki linki tarayıcınıza kopyalayın:
               </p>
               <p style="margin: 8px 0 0; color: ${config.color}; font-size: 14px; word-break: break-all;">
@@ -68,11 +77,11 @@ function getEmailTemplate(
             </td>
           </tr>
           <tr>
-            <td style="padding: 20px 40px; background-color: #0a0a0a; border-top: 1px solid #222;">
-              <p style="margin: 0; color: #6b7280; font-size: 12px; text-align: center;">
+            <td style="padding: 20px 40px; background-color: #F1F5F9; border-top: 1px solid #E2E8F0;">
+              <p style="margin: 0; color: #64748B; font-size: 12px; text-align: center;">
                 Bu emaili siz talep etmediyseniz, güvenle görmezden gelebilirsiniz.
               </p>
-              <p style="margin: 12px 0 0; color: #6b7280; font-size: 12px; text-align: center;">
+              <p style="margin: 12px 0 0; color: #94A3B8; font-size: 12px; text-align: center;">
                 © ${new Date().getFullYear()} ${config.name}. Tüm hakları saklıdır.
               </p>
             </td>
@@ -95,11 +104,11 @@ export async function sendVerificationEmail(
   const verifyUrl = `${config.baseUrl}/api/auth/verify-email?token=${token}`;
 
   const content = `
-    <h2 style="margin: 0 0 20px; color: #fff; font-size: 24px; font-weight: 600;">Email Adresinizi Doğrulayın</h2>
-    <p style="margin: 0 0 24px; color: #9ca3af; font-size: 16px; line-height: 1.6;">
+    <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 24px; font-weight: 600;">Email Adresinizi Doğrulayın</h2>
+    <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
       ${config.name} hesabınızı oluşturduğunuz için teşekkürler! Email adresinizi doğrulamak için aşağıdaki butona tıklayın.
     </p>
-    <p style="margin: 0; color: #6b7280; font-size: 14px;">
+    <p style="margin: 0; color: #64748B; font-size: 14px;">
       Bu link 24 saat geçerlidir.
     </p>
   `;
@@ -136,11 +145,11 @@ export async function sendPasswordResetEmail(
   const resetUrl = `${config.baseUrl}/reset-password?token=${token}`;
 
   const content = `
-    <h2 style="margin: 0 0 20px; color: #fff; font-size: 24px; font-weight: 600;">Şifrenizi Sıfırlayın</h2>
-    <p style="margin: 0 0 24px; color: #9ca3af; font-size: 16px; line-height: 1.6;">
+    <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 24px; font-weight: 600;">Şifrenizi Sıfırlayın</h2>
+    <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
       Şifre sıfırlama talebinde bulundunuz. Yeni şifrenizi belirlemek için aşağıdaki butona tıklayın.
     </p>
-    <p style="margin: 0; color: #6b7280; font-size: 14px;">
+    <p style="margin: 0; color: #64748B; font-size: 14px;">
       Bu link 1 saat geçerlidir.
     </p>
   `;
@@ -179,8 +188,8 @@ export async function sendWelcomeEmail(
     : "https://panel.mineble.com";
 
   const content = `
-    <h2 style="margin: 0 0 20px; color: #fff; font-size: 24px; font-weight: 600;">Hoş Geldiniz, ${name}!</h2>
-    <p style="margin: 0 0 24px; color: #9ca3af; font-size: 16px; line-height: 1.6;">
+    <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 24px; font-weight: 600;">Hoş Geldiniz, ${name}!</h2>
+    <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
       ${config.name} ailesine katıldığınız için teşekkürler! Hesabınız başarıyla oluşturuldu.
     </p>
   `;
@@ -219,11 +228,11 @@ export async function sendOrganizationInviteEmail(
   const inviteUrl = `${config.baseUrl}/invites/${token}`;
 
   const content = `
-    <h2 style="margin: 0 0 20px; color: #fff; font-size: 24px; font-weight: 600;">Organizasyona Davet</h2>
-    <p style="margin: 0 0 24px; color: #9ca3af; font-size: 16px; line-height: 1.6;">
-      <strong style="color: #fff;">${inviterName}</strong> sizi <strong style="color: ${config.color};">${organizationName}</strong> organizasyonuna katılmaya davet etti.
+    <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 24px; font-weight: 600;">Organizasyona Davet</h2>
+    <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
+      <strong style="color: #0F172A;">${inviterName}</strong> sizi <strong style="color: ${config.color};">${organizationName}</strong> organizasyonuna katılmaya davet etti.
     </p>
-    <p style="margin: 0; color: #6b7280; font-size: 14px;">
+    <p style="margin: 0; color: #64748B; font-size: 14px;">
       Bu davet 7 gün geçerlidir.
     </p>
   `;
@@ -297,17 +306,17 @@ export async function sendSecurityAlertEmail(
         ip: "IP Adresi",
         time: "Zaman",
       };
-      return `<p style="margin: 4px 0; color: #9ca3af; font-size: 14px;"><strong>${labels[key] || key}:</strong> ${value}</p>`;
+      return `<p style="margin: 4px 0; color: #475569; font-size: 14px;"><strong>${labels[key] || key}:</strong> ${value}</p>`;
     })
     .join("");
 
   const content = `
-    <h2 style="margin: 0 0 20px; color: #fff; font-size: 24px; font-weight: 600;">${alert.title}</h2>
-    <p style="margin: 0 0 24px; color: #9ca3af; font-size: 16px; line-height: 1.6;">
+    <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 24px; font-weight: 600;">${alert.title}</h2>
+    <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
       ${alert.message}
     </p>
-    ${detailsHtml ? `<div style="margin: 20px 0; padding: 16px; background: #1a1a1a; border-radius: 8px;">${detailsHtml}</div>` : ""}
-    <p style="margin: 0; color: #ef4444; font-size: 14px;">
+    ${detailsHtml ? `<div style="margin: 20px 0; padding: 16px; background: #F1F5F9; border-radius: 8px; border: 1px solid #E2E8F0;">${detailsHtml}</div>` : ""}
+    <p style="margin: 0; color: #DC2626; font-size: 14px;">
       Bu işlemi siz yapmadıysanız, lütfen hemen şifrenizi değiştirin ve destek ekibimizle iletişime geçin.
     </p>
   `;
@@ -345,10 +354,10 @@ export async function sendBirthdayEmail(
   const content = `
     <div style="text-align: center;">
       <div style="font-size: 64px; margin-bottom: 16px;">🎂</div>
-      <h2 style="margin: 0 0 20px; color: #fff; font-size: 28px; font-weight: 600;">
+      <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 28px; font-weight: 600;">
         Doğum Günün Kutlu Olsun, ${name}!
       </h2>
-      <p style="margin: 0 0 24px; color: #9ca3af; font-size: 16px; line-height: 1.6;">
+      <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
         ${config.name} ailesi olarak bu özel günde sana en güzel dileklerimizi iletiyoruz!
         Mutlu, sağlıklı ve başarılı bir yıl diliyoruz.
       </p>
@@ -393,10 +402,10 @@ export async function sendAnniversaryEmail(
   const content = `
     <div style="text-align: center;">
       <div style="font-size: 64px; margin-bottom: 16px;">🎊</div>
-      <h2 style="margin: 0 0 20px; color: #fff; font-size: 28px; font-weight: 600;">
+      <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 28px; font-weight: 600;">
         ${yearText} Birlikteyiz, ${name}!
       </h2>
-      <p style="margin: 0 0 24px; color: #9ca3af; font-size: 16px; line-height: 1.6;">
+      <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
         ${config.name} ailesinin bir parçası olduğunuz için teşekkür ederiz!
         Bu süre zarfında bize olan güveniniz için minnettarız.
       </p>

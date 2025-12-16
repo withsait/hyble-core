@@ -20,9 +20,11 @@ interface ResendWebhookEvent {
     to: string[];
     subject: string;
     created_at: string;
+    // bounce specific
     bounce?: {
       message: string;
     };
+    // click specific
     click?: {
       link: string;
       timestamp: string;
@@ -45,9 +47,24 @@ function mapEventToStatus(eventType: string): EmailStatus | null {
   return mapping[eventType] || null;
 }
 
+/**
+ * Resend Webhook Handler
+ *
+ * Handles email delivery events from Resend:
+ * - email.sent: Email was sent
+ * - email.delivered: Email was delivered to recipient
+ * - email.delivery_delayed: Email delivery was delayed
+ * - email.bounced: Email bounced
+ * - email.complained: Recipient marked as spam
+ * - email.opened: Email was opened
+ * - email.clicked: Link in email was clicked
+ *
+ * Webhook verification uses Svix (Resend's webhook signature)
+ */
 export async function POST(request: NextRequest) {
   const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
 
+  // Skip verification in development or if no secret configured
   if (!webhookSecret) {
     console.warn("RESEND_WEBHOOK_SECRET not configured - skipping signature verification");
   }
@@ -62,6 +79,7 @@ export async function POST(request: NextRequest) {
 
     let event: ResendWebhookEvent;
 
+    // Verify webhook signature if secret is configured
     if (webhookSecret) {
       try {
         const wh = new Webhook(webhookSecret);
@@ -74,6 +92,7 @@ export async function POST(request: NextRequest) {
         );
       }
     } else {
+      // Parse without verification (development only)
       event = JSON.parse(body) as ResendWebhookEvent;
     }
 
@@ -81,10 +100,12 @@ export async function POST(request: NextRequest) {
     const status = mapEventToStatus(event.type);
 
     if (!status) {
+      // Unknown event type - log and ignore
       console.log(`Unknown Resend webhook event: ${event.type}`);
       return NextResponse.json({ received: true });
     }
 
+    // Prepare additional data based on event type
     const additionalData: {
       openedAt?: Date;
       clickedAt?: Date;
@@ -116,7 +137,12 @@ export async function POST(request: NextRequest) {
         break;
     }
 
-    await updateEmailLogFromWebhook(resendId, status, additionalData);
+    // Update email log
+    const updated = await updateEmailLogFromWebhook(resendId, status, additionalData);
+
+    if (!updated) {
+      console.warn(`Failed to update email log for ${resendId}`);
+    }
 
     console.log(`📧 Webhook: ${event.type} for ${resendId}`);
 
@@ -130,6 +156,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// Resend uses POST for webhooks
 export async function GET() {
   return NextResponse.json({ message: "Resend webhook endpoint" });
 }

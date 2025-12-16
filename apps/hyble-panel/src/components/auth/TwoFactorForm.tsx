@@ -16,12 +16,14 @@ export function TwoFactorForm({ onSubmit, onUseBackupCode, loading, error }: Pro
   const inputs = React.useRef<(HTMLInputElement | null)[]>([]);
 
   const processInput = (value: string, index: number) => {
+    // Sadece rakam girişine izin ver
     if (value && !/^\d+$/.test(value)) return;
 
     const newCode = [...code];
-    newCode[index] = value.slice(-1);
+    newCode[index] = value.slice(-1); // Son karakteri al
     setCode(newCode);
 
+    // Bir sonraki inputa odaklan
     if (value && index < 5) {
       inputs.current[index + 1]?.focus();
     }
