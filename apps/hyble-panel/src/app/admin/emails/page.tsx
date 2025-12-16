@@ -188,11 +188,7 @@ export default function AdminEmailsPage() {
             </thead>
             <tbody>
               {filteredLogs.map((log) => {
-                const getStatus = () => {
-                  const key = log.status as keyof typeof statusColors;
-                  return statusColors[key] || statusColors.PENDING;
-                };
-                const statusStyle = getStatus();
+                const statusStyle = statusColors[log.status as keyof typeof statusColors] ?? statusColors.PENDING!;
                 return (
                   <tr key={log.id} className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                     <td className="px-6 py-4">
