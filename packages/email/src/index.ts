@@ -1,6 +1,14 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization to avoid build-time errors
+let resend: Resend | null = null;
+
+function getResend() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY || "");
+  }
+  return resend;
+}
 
 // Brand configurations
 type Brand = "hyble" | "mineble";
@@ -121,7 +129,7 @@ export async function sendVerificationEmail(
     brand
   );
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await getResend().emails.send({
     from: config.fromEmail,
     to: email,
     subject: `Email Adresinizi Doğrulayın - ${config.name}`,
@@ -162,7 +170,7 @@ export async function sendPasswordResetEmail(
     brand
   );
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await getResend().emails.send({
     from: config.fromEmail,
     to: email,
     subject: `Şifrenizi Sıfırlayın - ${config.name}`,
@@ -202,7 +210,7 @@ export async function sendWelcomeEmail(
     brand
   );
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await getResend().emails.send({
     from: config.fromEmail,
     to: email,
     subject: `Hoş Geldiniz! - ${config.name}`,
@@ -245,7 +253,7 @@ export async function sendOrganizationInviteEmail(
     brand
   );
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await getResend().emails.send({
     from: config.fromEmail,
     to: email,
     subject: `${organizationName} Organizasyonuna Davet - ${config.name}`,
@@ -329,7 +337,7 @@ export async function sendSecurityAlertEmail(
     brand
   );
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await getResend().emails.send({
     from: config.fromEmail,
     to: email,
     subject: `⚠️ ${alert.title} - ${config.name}`,
@@ -375,7 +383,7 @@ export async function sendBirthdayEmail(
     brand
   );
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await getResend().emails.send({
     from: config.fromEmail,
     to: email,
     subject: `🎂 Doğum Günün Kutlu Olsun, ${name}! - ${config.name}`,
@@ -423,7 +431,7 @@ export async function sendAnniversaryEmail(
     brand
   );
 
-  const { data, error } = await resend.emails.send({
+  const { data, error } = await getResend().emails.send({
     from: config.fromEmail,
     to: email,
     subject: `🎊 ${yearText} Birlikteyiz! - ${config.name}`,

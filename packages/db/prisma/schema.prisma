@@ -336,15 +336,117 @@ model UserSession {
 model Wallet {
   id        String   @id @default(cuid())
   userId    String
-  balance   Decimal  @default(0) @db.Decimal(18, 8)
-  currency  String   @default("USD")
+  balance   Decimal  @default(0) @db.Decimal(18, 2)
+  currency  String   @default("EUR")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
 
   @@unique([userId, currency])
   @@index([userId])
+}
+
+// ==================== BILLING ====================
+
+enum TransactionType {
+  DEPOSIT          // Para yükleme
+  CHARGE           // Hizmet ücreti
+  REFUND           // İade
+  ADJUSTMENT       // Manuel düzeltme
+  BONUS            // Bonus/Promosyon
+}
+
+enum TransactionStatus {
+  PENDING          // İşlem bekliyor
+  COMPLETED        // Tamamlandı
+  FAILED           // Başarısız
+  CANCELLED        // İptal edildi
+  REFUNDED         // İade edildi
+}
+
+enum PaymentMethod {
+  STRIPE           // Stripe ödeme
+  BANK_TRANSFER    // Banka havalesi
+  MANUAL           // Manuel (admin)
+  SYSTEM           // Sistem otomatik
+}
+
+model Transaction {
+  id              String            @id @default(cuid())
+  walletId        String
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  amount          Decimal           @db.Decimal(18, 2)
+  balanceBefore   Decimal           @db.Decimal(18, 2)
+  balanceAfter    Decimal           @db.Decimal(18, 2)
+  currency        String            @default("EUR")
+  description     String
+  reference       String?           // Stripe payment intent ID veya fatura no
+  paymentMethod   PaymentMethod?
+  metadata        Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  wallet  Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  invoice Invoice?
+
+  @@index([walletId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+  @@index([reference])
+}
+
+enum InvoiceStatus {
+  DRAFT            // Taslak
+  PENDING          // Ödeme bekliyor
+  PAID             // Ödendi
+  OVERDUE          // Gecikmiş
+  CANCELLED        // İptal edildi
+  REFUNDED         // İade edildi
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  transactionId   String?       @unique
+  invoiceNumber   String        @unique
+  userId          String
+  organizationId  String?
+  status          InvoiceStatus @default(DRAFT)
+  subtotal        Decimal       @db.Decimal(18, 2)
+  taxRate         Decimal       @default(0) @db.Decimal(5, 2)
+  taxAmount       Decimal       @default(0) @db.Decimal(18, 2)
+  total           Decimal       @db.Decimal(18, 2)
+  currency        String        @default("EUR")
+  dueDate         DateTime?
+  paidAt          DateTime?
+  notes           String?
+  billingAddress  Json?         // Snapshot of billing address at time of invoice
+  items           Json          // Array of line items
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  transaction Transaction? @relation(fields: [transactionId], references: [id])
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([invoiceNumber])
+}
+
+model StripeCustomer {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  stripeCustomerId String   @unique
+  defaultPaymentMethod String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([stripeCustomerId])
 }
 
 model VerificationToken {

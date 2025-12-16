@@ -5,6 +5,7 @@ import { securityRouter } from "./security";
 import { organizationRouter } from "./organization";
 import { adminRouter } from "./admin";
 import { apiKeyRouter } from "./apikey";
+import { walletRouter } from "./wallet";
 
 /**
  * Main tRPC router for hyble-panel
@@ -17,6 +18,7 @@ export const appRouter = createTRPCRouter({
   organization: organizationRouter,
   admin: adminRouter,
   apiKey: apiKeyRouter,
+  wallet: walletRouter,
 });
 
 // Export type for client usage
@@ -30,4 +32,5 @@ export {
   organizationRouter,
   adminRouter,
   apiKeyRouter,
+  walletRouter,
 };
