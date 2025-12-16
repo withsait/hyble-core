@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { api } from "@/lib/trpc";
+import { trpc } from "@/lib/trpc";
 import { useRouter } from "next/navigation";
 import { TurnstileWidget } from "./TurnstileWidget";
 import { TwoFactorForm } from "./TwoFactorForm";
@@ -17,7 +17,7 @@ export function LoginForm() {
   const [show2FA, setShow2FA] = useState(false);
   const [pendingToken, setPendingToken] = useState("");
 
-  const loginMutation = api.auth.login.useMutation({
+  const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (data) => {
       if (data.requires2FA && data.pendingToken) {
         setPendingToken(data.pendingToken);

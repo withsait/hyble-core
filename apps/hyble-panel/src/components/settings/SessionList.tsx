@@ -1,17 +1,17 @@
 "use client";
 
 import React from "react";
-import { api } from "@/lib/trpc";
+import { trpc } from "@/lib/trpc";
 import { Monitor, Smartphone, Tablet, Globe, Trash2, LogOut } from "lucide-react";
 
 export function SessionList() {
-  const { data: sessions, isLoading, refetch } = api.security.getSessions.useQuery();
+  const { data: sessions, isLoading, refetch } = trpc.security.getSessions.useQuery();
 
-  const revokeSessionMutation = api.security.revokeSession.useMutation({
+  const revokeSessionMutation = trpc.security.revokeSession.useMutation({
     onSuccess: () => refetch(),
   });
 
-  const revokeAllMutation = api.security.revokeAllSessions.useMutation({
+  const revokeAllMutation = trpc.security.revokeAllSessions.useMutation({
     onSuccess: () => refetch(),
   });
 

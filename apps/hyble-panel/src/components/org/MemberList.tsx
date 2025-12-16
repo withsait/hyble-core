@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { api } from "@/lib/trpc";
+import { trpc } from "@/lib/trpc";
 import { MoreVertical, UserMinus, Shield, Crown } from "lucide-react";
 
 interface MemberListProps {
@@ -29,16 +29,16 @@ const ROLE_COLORS: Record<string, string> = {
 export function MemberList({ orgId }: MemberListProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
-  const { data: members, isLoading, refetch } = api.organization.getMembers.useQuery({ orgId });
+  const { data: members, isLoading, refetch } = trpc.organization.getMembers.useQuery({ orgId });
 
-  const updateRoleMutation = api.organization.updateMemberRole.useMutation({
+  const updateRoleMutation = trpc.organization.updateMemberRole.useMutation({
     onSuccess: () => {
       refetch();
       setOpenMenuId(null);
     },
   });
 
-  const removeMemberMutation = api.organization.removeMember.useMutation({
+  const removeMemberMutation = trpc.organization.removeMember.useMutation({
     onSuccess: () => refetch(),
   });
 
