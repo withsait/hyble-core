@@ -11,6 +11,9 @@ import {
   ExternalLink,
   Monitor,
   Building2,
+  Package,
+  ShoppingCart,
+  FileText,
 } from "lucide-react";
 import { prisma } from "@hyble/db";
 import { VerificationBanner } from "@/components/VerificationBanner";
@@ -234,7 +237,19 @@ export default async function DashboardPage({
               icon: Wallet,
               title: "Cüzdan",
               description: "Bakiye ve işlemler",
-              href: "/wallet",
+              href: "/dashboard/wallet",
+            },
+            {
+              icon: Package,
+              title: "Ürün Yönetimi",
+              description: "PIM - Ürünler ve kategoriler",
+              href: "/dashboard/pim",
+            },
+            {
+              icon: FileText,
+              title: "Faturalar",
+              description: "Fatura ve ödemeler",
+              href: "/dashboard/billing",
             },
           ].map((action) => (
             <Link
