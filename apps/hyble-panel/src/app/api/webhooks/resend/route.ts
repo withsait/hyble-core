@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Webhook } from "svix";
 import { updateEmailLogFromWebhook } from "@/lib/email";
-import type { EmailStatus } from "@prisma/client";
+import type { EmailStatus } from "@hyble/db";
 
 // Resend webhook event types
 interface ResendWebhookEvent {
