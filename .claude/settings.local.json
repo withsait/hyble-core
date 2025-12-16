@@ -14,7 +14,17 @@
       "Bash(ssh root@178.63.138.97 \"cat /home/hyble/apps/hyble-core/apps/hyble-panel/src/lib/email.ts | head -30\")",
       "Bash(ssh root@178.63.138.97 \"ls -la /home/hyble/apps/hyble-core/apps/hyble-panel/src/server/\")",
       "Bash(ssh root@178.63.138.97 \"ls -la /home/hyble/apps/hyble-core/apps/hyble-panel/src/lib/\")",
-      "Bash(ssh root@178.63.138.97:*)"
+      "Bash(ssh root@178.63.138.97:*)",
+      "Bash(mkdir:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git fetch:*)",
+      "Bash(git stash:*)",
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git pull origin main\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git stash && git pull origin main\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && rm -f apps/hyble-panel/src/lib/utils.ts && git pull origin main\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && pnpm build --filter=@hyble/panel\")",
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git pull origin main && pnpm build --filter=@hyble/panel\")"
     ],
     "deny": [],
     "ask": []

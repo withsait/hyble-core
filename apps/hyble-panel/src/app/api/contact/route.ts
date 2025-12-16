@@ -40,7 +40,8 @@ async function verifyTurnstile(token: string | undefined): Promise<boolean> {
 function getClientIP(request: NextRequest): string | null {
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) {
-    return forwardedFor.split(",")[0].trim();
+    const firstIp = forwardedFor.split(",")[0];
+    return firstIp ? firstIp.trim() : null;
   }
   return request.headers.get("x-real-ip") || null;
 }
