@@ -44,13 +44,44 @@ export function LoginForm() {
     });
   };
 
+  const verify2FAMutation = trpc.auth.verify2FA.useMutation({
+    onSuccess: () => {
+      router.push("/dashboard");
+    },
+    onError: (err) => {
+      setError(err.message);
+    },
+  });
+
   if (show2FA) {
     return (
-      <TwoFactorForm
-        pendingToken={pendingToken}
-        onSuccess={() => router.push("/dashboard")}
-        onCancel={() => setShow2FA(false)}
-      />
+      <div className="w-full max-w-md p-8 space-y-6 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <h2 className="text-2xl font-bold text-center text-slate-900 dark:text-white">
+          İki Faktörlü Doğrulama
+        </h2>
+        <p className="text-center text-slate-600 dark:text-slate-400">
+          Authenticator uygulamanızdaki 6 haneli kodu girin
+        </p>
+        {error && (
+          <div className="p-3 text-sm text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 rounded-lg">
+            {error}
+          </div>
+        )}
+        <TwoFactorForm
+          onSubmit={async (code) => {
+            await verify2FAMutation.mutateAsync({ pendingToken, code });
+          }}
+          loading={verify2FAMutation.isPending}
+          error={verify2FAMutation.error?.message}
+        />
+        <button
+          type="button"
+          onClick={() => setShow2FA(false)}
+          className="w-full text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+        >
+          Geri Dön
+        </button>
+      </div>
     );
   }
 
