@@ -59,9 +59,14 @@ export const walletRouter = createTRPCRouter({
   // Get wallet balance
   getBalance: protectedProcedure.query(async ({ ctx }) => {
     const wallet = await getOrCreateWallet(ctx.user.id);
+    const balance = parseFloat(wallet.balance.toString());
     return {
       balance: wallet.balance.toString(),
       currency: wallet.currency,
+      // Extended balance fields (for FAZ2)
+      mainBalance: balance,
+      bonusBalance: 0,
+      promoBalance: 0,
     };
   }),
 

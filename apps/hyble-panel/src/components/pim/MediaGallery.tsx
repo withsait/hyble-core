@@ -1,0 +1,267 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import { trpc } from "@/lib/trpc/client";
+import { Button, Input } from "@hyble/ui";
+import { Upload, Trash2, Star, StarOff, Loader2, ImageIcon, X } from "lucide-react";
+
+interface MediaGalleryProps {
+  productId: string;
+}
+
+export function MediaGallery({ productId }: MediaGalleryProps) {
+  const utils = trpc.useUtils();
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const { data: product, isLoading } = trpc.pim.getProductById.useQuery({ id: productId });
+  const images = product?.media || [];
+
+  const addImage = trpc.pim.addMedia.useMutation({
+    onSuccess: () => {
+      utils.pim.getProductById.invalidate({ id: productId });
+    },
+    onError: (error) => alert(`Hata: ${error.message}`),
+  });
+
+  const removeImage = trpc.pim.deleteMedia.useMutation({
+    onSuccess: () => {
+      utils.pim.getProductById.invalidate({ id: productId });
+    },
+    onError: (error) => alert(`Hata: ${error.message}`),
+  });
+
+  const setPrimaryImage = trpc.pim.setPrimaryMedia.useMutation({
+    onSuccess: () => {
+      utils.pim.getProductById.invalidate({ id: productId });
+    },
+    onError: (error) => alert(`Hata: ${error.message}`),
+  });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Lütfen bir görsel dosyası seçin");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Dosya boyutu 5MB'dan küçük olmalı");
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      // Convert to base64 for upload
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result as string;
+
+        // In a real app, you'd upload to a storage service (S3, Cloudflare R2, etc.)
+        // For now, we'll use a placeholder URL or the base64 directly
+        // This is a simplified version - in production, implement proper file upload
+
+        await addImage.mutateAsync({
+          productId,
+          type: "image",
+          url: base64, // In production, this would be the uploaded file URL
+          alt: file.name,
+          isPrimary: images.length === 0, // First image is primary by default
+        });
+
+        setUploading(false);
+      };
+      reader.onerror = () => {
+        alert("Dosya okunamadı");
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      setUploading(false);
+    }
+  };
+
+  const handleAddUrl = () => {
+    const url = window.prompt("Görsel URL'si girin:");
+    if (!url) return;
+
+    // Basic URL validation
+    try {
+      new URL(url);
+    } catch {
+      alert("Geçersiz URL");
+      return;
+    }
+
+    addImage.mutate({
+      productId,
+      type: "image",
+      url,
+      alt: "Ürün görseli",
+      isPrimary: images.length === 0,
+    });
+  };
+
+  const handleRemove = (imageId: string) => {
+    if (window.confirm("Bu görseli silmek istediğinize emin misiniz?")) {
+      removeImage.mutate({ id: imageId });
+    }
+  };
+
+  const handleSetPrimary = (imageId: string) => {
+    setPrimaryImage.mutate({ productId, id: imageId });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8 text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+        Yükleniyor...
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Upload Actions */}
+      <div className="flex flex-wrap gap-2">
+        <div className="relative">
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            disabled={uploading}
+            className="absolute inset-0 opacity-0 cursor-pointer"
+          />
+          <Button variant="outline" size="sm" disabled={uploading}>
+            {uploading ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4 mr-2" />
+            )}
+            {uploading ? "Yükleniyor..." : "Dosya Yükle"}
+          </Button>
+        </div>
+
+        <Button variant="outline" size="sm" onClick={handleAddUrl} disabled={addImage.isPending}>
+          <ImageIcon className="h-4 w-4 mr-2" />
+          URL ile Ekle
+        </Button>
+      </div>
+
+      {/* Image Grid */}
+      {images.length > 0 ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {images.map((image) => (
+            <div
+              key={image.id}
+              className={`relative group rounded-lg overflow-hidden border-2 transition-colors ${
+                image.isPrimary
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-transparent hover:border-muted-foreground/30"
+              }`}
+            >
+              {/* Image */}
+              <div className="aspect-square relative bg-muted">
+                {image.url.startsWith("data:") ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={image.url}
+                    alt={image.alt || "Ürün görseli"}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Image
+                    src={image.url}
+                    alt={image.alt || "Ürün görseli"}
+                    fill
+                    className="object-cover"
+                  />
+                )}
+
+                {/* Primary Badge */}
+                {image.isPrimary && (
+                  <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded">
+                    Ana Görsel
+                  </div>
+                )}
+              </div>
+
+              {/* Hover Actions */}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                {!image.isPrimary && (
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => handleSetPrimary(image.id)}
+                    title="Ana görsel yap"
+                  >
+                    <Star className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => handleRemove(image.id)}
+                  disabled={removeImage.isPending}
+                  title="Sil"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-12 text-muted-foreground border rounded-lg border-dashed">
+          <ImageIcon className="h-12 w-12 mb-3 opacity-30" />
+          <p className="text-sm font-medium">Henüz görsel yok</p>
+          <p className="text-xs mt-1">Dosya yükleyin veya URL ekleyin</p>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-4 right-4 text-white hover:bg-white/20"
+            onClick={() => setPreviewUrl(null)}
+          >
+            <X className="h-6 w-6" />
+          </Button>
+          <div className="max-w-4xl max-h-[90vh] relative">
+            {previewUrl.startsWith("data:") ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="max-w-full max-h-[90vh] object-contain"
+              />
+            ) : (
+              <Image
+                src={previewUrl}
+                alt="Preview"
+                width={1200}
+                height={800}
+                className="max-w-full max-h-[90vh] object-contain"
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

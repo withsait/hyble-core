@@ -7,6 +7,11 @@ import { adminRouter } from "./admin";
 import { apiKeyRouter } from "./apikey";
 import { walletRouter } from "./wallet";
 import { pimRouter } from "./pim";
+import { paymentRouter } from "./payment";
+import { invoiceRouter } from "./invoice";
+import { cartRouter } from "./cart";
+import { voucherRouter } from "./voucher";
+import { subscriptionRouter } from "./subscription";
 
 /**
  * Main tRPC router for hyble-panel
@@ -21,6 +26,11 @@ export const appRouter = createTRPCRouter({
   apiKey: apiKeyRouter,
   wallet: walletRouter,
   pim: pimRouter,
+  payment: paymentRouter,
+  invoice: invoiceRouter,
+  cart: cartRouter,
+  voucher: voucherRouter,
+  subscription: subscriptionRouter,
 });
 
 // Export type for client usage
@@ -36,4 +46,9 @@ export {
   apiKeyRouter,
   walletRouter,
   pimRouter,
+  paymentRouter,
+  invoiceRouter,
+  cartRouter,
+  voucherRouter,
+  subscriptionRouter,
 };

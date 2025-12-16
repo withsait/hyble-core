@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
+    "@hookform/resolvers": "^5.2.2",
     "@hyble/db": "workspace:*",
     "@hyble/email": "workspace:*",
     "@hyble/ui": "workspace:*",
@@ -21,6 +22,7 @@
     "@trpc/server": "^11.0.0-rc.532",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "framer-motion": "^12.23.25",
     "ioredis": "^5.8.2",
     "lucide-react": "^0.556.0",
@@ -30,6 +32,7 @@
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.68.0",
     "resend": "^4.8.0",
     "stripe": "^20.0.0",
     "superjson": "^2.2.1",

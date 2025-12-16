@@ -1,0 +1,283 @@
+"use client";
+
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { trpc } from "@/lib/trpc/client";
+import { Button, Input } from "@hyble/ui";
+import { Loader2, Search, Globe, AlertCircle, CheckCircle2 } from "lucide-react";
+
+const seoSchema = z.object({
+  metaTitleTr: z.string().max(60, "Meta başlık 60 karakteri geçmemeli").optional(),
+  metaTitleEn: z.string().max(60, "Meta title should not exceed 60 characters").optional(),
+  metaDescriptionTr: z.string().max(160, "Meta açıklama 160 karakteri geçmemeli").optional(),
+  metaDescriptionEn: z.string().max(160, "Meta description should not exceed 160 characters").optional(),
+  slug: z.string().min(2, "Slug en az 2 karakter olmalı").regex(/^[a-z0-9-]+$/, "Slug sadece küçük harf, rakam ve tire içerebilir"),
+});
+
+type SEOFormData = z.infer<typeof seoSchema>;
+
+interface SEOMetaFormProps {
+  productId: string;
+}
+
+export function SEOMetaForm({ productId }: SEOMetaFormProps) {
+  const utils = trpc.useUtils();
+
+  const { data: product, isLoading } = trpc.pim.getProductById.useQuery({ id: productId });
+
+  const updateProduct = trpc.pim.updateProduct.useMutation({
+    onSuccess: () => {
+      utils.pim.getProductById.invalidate({ id: productId });
+    },
+    onError: (error) => alert(`Hata: ${error.message}`),
+  });
+
+  const updateMeta = trpc.pim.updateMeta.useMutation({
+    onSuccess: () => {
+      utils.pim.getProductById.invalidate({ id: productId });
+    },
+    onError: (error) => alert(`Hata: ${error.message}`),
+  });
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isDirty },
+  } = useForm<SEOFormData>({
+    resolver: zodResolver(seoSchema),
+    defaultValues: {
+      metaTitleTr: "",
+      metaTitleEn: "",
+      metaDescriptionTr: "",
+      metaDescriptionEn: "",
+      slug: "",
+    },
+  });
+
+  // Populate form when product loads
+  useEffect(() => {
+    if (product) {
+      setValue("metaTitleTr", product.meta?.metaTitleTr || "");
+      setValue("metaTitleEn", product.meta?.metaTitleEn || "");
+      setValue("metaDescriptionTr", product.meta?.metaDescTr || "");
+      setValue("metaDescriptionEn", product.meta?.metaDescEn || "");
+      setValue("slug", product.slug || "");
+    }
+  }, [product, setValue]);
+
+  const metaTitleTr = watch("metaTitleTr") || "";
+  const metaTitleEn = watch("metaTitleEn") || "";
+  const metaDescriptionTr = watch("metaDescriptionTr") || "";
+  const metaDescriptionEn = watch("metaDescriptionEn") || "";
+  const slug = watch("slug") || "";
+
+  const onSubmit = (data: SEOFormData) => {
+    // Update slug
+    updateProduct.mutate({
+      id: productId,
+      slug: data.slug,
+    });
+
+    // Update meta
+    updateMeta.mutate({
+      productId,
+      metaTitleTr: data.metaTitleTr || undefined,
+      metaTitleEn: data.metaTitleEn || undefined,
+      metaDescTr: data.metaDescriptionTr || undefined,
+      metaDescEn: data.metaDescriptionEn || undefined,
+    });
+  };
+
+  const getCharacterStatus = (current: number, max: number) => {
+    const percentage = (current / max) * 100;
+    if (percentage > 100) return "text-destructive";
+    if (percentage > 80) return "text-yellow-600 dark:text-yellow-400";
+    return "text-muted-foreground";
+  };
+
+  const getCharacterIcon = (current: number, max: number) => {
+    if (current > max) return <AlertCircle className="h-3 w-3 text-destructive" />;
+    if (current > 0 && current <= max) return <CheckCircle2 className="h-3 w-3 text-green-600" />;
+    return null;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8 text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+        Yükleniyor...
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      {/* Slug */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium flex items-center gap-2">
+          <Globe className="h-4 w-4" />
+          URL Slug
+        </label>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">hyble.co/products/</span>
+          <Input
+            {...register("slug")}
+            placeholder="urun-adi"
+            className="flex-1"
+          />
+        </div>
+        {errors.slug && (
+          <p className="text-xs text-destructive">{errors.slug.message}</p>
+        )}
+      </div>
+
+      {/* Turkish SEO */}
+      <div className="space-y-4 p-4 rounded-lg border bg-muted/20">
+        <h3 className="font-medium text-sm flex items-center gap-2">
+          <span className="text-lg">🇹🇷</span> Türkçe SEO
+        </h3>
+
+        {/* Meta Title TR */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Meta Başlık</label>
+            <div className="flex items-center gap-1">
+              {getCharacterIcon(metaTitleTr.length, 60)}
+              <span className={`text-xs ${getCharacterStatus(metaTitleTr.length, 60)}`}>
+                {metaTitleTr.length}/60
+              </span>
+            </div>
+          </div>
+          <Input
+            {...register("metaTitleTr")}
+            placeholder="Ürün başlığı - arama sonuçlarında görünür"
+            maxLength={70}
+          />
+          {errors.metaTitleTr && (
+            <p className="text-xs text-destructive">{errors.metaTitleTr.message}</p>
+          )}
+        </div>
+
+        {/* Meta Description TR */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Meta Açıklama</label>
+            <div className="flex items-center gap-1">
+              {getCharacterIcon(metaDescriptionTr.length, 160)}
+              <span className={`text-xs ${getCharacterStatus(metaDescriptionTr.length, 160)}`}>
+                {metaDescriptionTr.length}/160
+              </span>
+            </div>
+          </div>
+          <textarea
+            {...register("metaDescriptionTr")}
+            placeholder="Ürünü kısaca tanımlayın - arama sonuçlarında başlığın altında görünür"
+            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            maxLength={170}
+          />
+          {errors.metaDescriptionTr && (
+            <p className="text-xs text-destructive">{errors.metaDescriptionTr.message}</p>
+          )}
+        </div>
+
+        {/* Preview TR */}
+        {(metaTitleTr || metaDescriptionTr) && (
+          <div className="p-3 rounded border bg-background">
+            <p className="text-xs text-muted-foreground mb-1">Google Önizleme</p>
+            <div className="space-y-1">
+              <p className="text-blue-600 dark:text-blue-400 text-base hover:underline cursor-pointer truncate">
+                {metaTitleTr || product?.nameTr || "Sayfa Başlığı"}
+              </p>
+              <p className="text-green-700 dark:text-green-500 text-xs">
+                hyble.co/products/{slug || "urun-slug"}
+              </p>
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                {metaDescriptionTr || "Meta açıklama buraya gelecek..."}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* English SEO */}
+      <div className="space-y-4 p-4 rounded-lg border bg-muted/20">
+        <h3 className="font-medium text-sm flex items-center gap-2">
+          <span className="text-lg">🇬🇧</span> English SEO
+        </h3>
+
+        {/* Meta Title EN */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Meta Title</label>
+            <div className="flex items-center gap-1">
+              {getCharacterIcon(metaTitleEn.length, 60)}
+              <span className={`text-xs ${getCharacterStatus(metaTitleEn.length, 60)}`}>
+                {metaTitleEn.length}/60
+              </span>
+            </div>
+          </div>
+          <Input
+            {...register("metaTitleEn")}
+            placeholder="Product title - shown in search results"
+            maxLength={70}
+          />
+          {errors.metaTitleEn && (
+            <p className="text-xs text-destructive">{errors.metaTitleEn.message}</p>
+          )}
+        </div>
+
+        {/* Meta Description EN */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium">Meta Description</label>
+            <div className="flex items-center gap-1">
+              {getCharacterIcon(metaDescriptionEn.length, 160)}
+              <span className={`text-xs ${getCharacterStatus(metaDescriptionEn.length, 160)}`}>
+                {metaDescriptionEn.length}/160
+              </span>
+            </div>
+          </div>
+          <textarea
+            {...register("metaDescriptionEn")}
+            placeholder="Briefly describe the product - shown below the title in search results"
+            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            maxLength={170}
+          />
+          {errors.metaDescriptionEn && (
+            <p className="text-xs text-destructive">{errors.metaDescriptionEn.message}</p>
+          )}
+        </div>
+
+        {/* Preview EN */}
+        {(metaTitleEn || metaDescriptionEn) && (
+          <div className="p-3 rounded border bg-background">
+            <p className="text-xs text-muted-foreground mb-1">Google Preview</p>
+            <div className="space-y-1">
+              <p className="text-blue-600 dark:text-blue-400 text-base hover:underline cursor-pointer truncate">
+                {metaTitleEn || product?.nameEn || "Page Title"}
+              </p>
+              <p className="text-green-700 dark:text-green-500 text-xs">
+                hyble.co/products/{slug || "product-slug"}
+              </p>
+              <p className="text-sm text-muted-foreground line-clamp-2">
+                {metaDescriptionEn || "Meta description will appear here..."}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Submit Button */}
+      <div className="flex justify-end">
+        <Button type="submit" disabled={!isDirty || updateProduct.isPending}>
+          {updateProduct.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+          SEO Ayarlarını Kaydet
+        </Button>
+      </div>
+    </form>
+  );
+}
