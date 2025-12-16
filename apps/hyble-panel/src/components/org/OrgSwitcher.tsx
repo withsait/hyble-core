@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { api } from "@/lib/trpc";
+import { trpc } from "@/lib/trpc";
 import { ChevronDown, Plus, Building2 } from "lucide-react";
 
 interface OrgSwitcherProps {
@@ -12,7 +12,7 @@ interface OrgSwitcherProps {
 
 export function OrgSwitcher({ currentOrgId, onOrgChange }: OrgSwitcherProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: orgs, isLoading } = api.organization.list.useQuery();
+  const { data: orgs, isLoading } = trpc.organization.list.useQuery();
 
   const currentOrg = orgs?.find((o) => o.id === currentOrgId) || orgs?.[0];
 

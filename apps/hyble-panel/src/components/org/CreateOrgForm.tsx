@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { api } from "@/lib/trpc";
+import { trpc } from "@/lib/trpc";
 import { useRouter } from "next/navigation";
 import { Building2, Check, X, Loader2 } from "lucide-react";
 
@@ -24,12 +24,12 @@ export function CreateOrgForm() {
   }, [name]);
 
   const { data: slugCheck, isLoading: checkingSlug } =
-    api.organization.checkSlugAvailability.useQuery(
+    trpc.organization.checkSlugAvailability.useQuery(
       { slug },
       { enabled: slug.length >= 3 }
     );
 
-  const createMutation = api.organization.create.useMutation({
+  const createMutation = trpc.organization.create.useMutation({
     onSuccess: (data) => {
       router.push(`/org/${data.organization.slug}`);
     },

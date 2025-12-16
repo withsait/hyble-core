@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { api } from "@/lib/trpc";
+import { trpc } from "@/lib/trpc";
 import { useRouter } from "next/navigation";
 import { PasswordStrengthMeter } from "./PasswordStrengthMeter";
 import { TurnstileWidget } from "./TurnstileWidget";
@@ -17,7 +17,7 @@ export function RegisterForm() {
   const [turnstileToken, setTurnstileToken] = useState("");
   const [error, setError] = useState("");
 
-  const registerMutation = api.auth.register.useMutation({
+  const registerMutation = trpc.auth.register.useMutation({
     onSuccess: () => {
       router.push("/login?registered=true");
     },

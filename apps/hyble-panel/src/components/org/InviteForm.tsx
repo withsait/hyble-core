@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { api } from "@/lib/trpc";
+import { trpc } from "@/lib/trpc";
 import { Send, X, Clock, Mail } from "lucide-react";
 
 interface InviteFormProps {
@@ -23,9 +23,9 @@ export function InviteForm({ orgId }: InviteFormProps) {
   const [success, setSuccess] = useState("");
 
   const { data: pendingInvites, refetch: refetchInvites } =
-    api.organization.getPendingInvites.useQuery({ orgId });
+    trpc.organization.getPendingInvites.useQuery({ orgId });
 
-  const inviteMutation = api.organization.inviteMember.useMutation({
+  const inviteMutation = trpc.organization.inviteMember.useMutation({
     onSuccess: () => {
       setEmail("");
       setRole("MEMBER");
@@ -40,7 +40,7 @@ export function InviteForm({ orgId }: InviteFormProps) {
     },
   });
 
-  const cancelInviteMutation = api.organization.cancelInvite.useMutation({
+  const cancelInviteMutation = trpc.organization.cancelInvite.useMutation({
     onSuccess: () => refetchInvites(),
   });
 
