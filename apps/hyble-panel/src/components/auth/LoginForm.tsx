@@ -69,7 +69,7 @@ export function LoginForm() {
         )}
         <TwoFactorForm
           onSubmit={async (code) => {
-            await verify2FAMutation.mutateAsync({ pendingToken, code });
+            await verify2FAMutation.mutateAsync({ token: pendingToken, code });
           }}
           loading={verify2FAMutation.isPending}
           error={verify2FAMutation.error?.message}
