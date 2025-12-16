@@ -887,3 +887,222 @@ model EmailLog {
   @@index([status])
   @@index([createdAt])
 }
+
+// ==================== FAZ2-PIM: PRODUCT INFORMATION MANAGEMENT ====================
+
+enum ProductType {
+  DIGITAL       // Dijital ürün (tema, SDK, dosya)
+  SUBSCRIPTION  // Abonelik bazlı hizmet
+  BUNDLE        // Paket ürün
+  SERVICE       // Tek seferlik hizmet
+}
+
+enum ProductStatus {
+  DRAFT         // Taslak (yayında değil)
+  ACTIVE        // Aktif (satışta)
+  ARCHIVED      // Arşivlenmiş (satışta değil)
+}
+
+enum StockType {
+  UNLIMITED     // Sınırsız stok (dijital ürünler)
+  LIMITED       // Sınırlı stok
+  CAPACITY      // Kapasite bazlı (örn: max 100 kullanıcı)
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("CategoryTree")
+
+  nameTr      String
+  nameEn      String
+  slug        String     @unique
+  icon        String?    // Lucide icon name
+  description String?    @db.Text
+
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+
+  products    Product[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([parentId])
+  @@index([slug])
+  @@index([sortOrder])
+}
+
+model Product {
+  id            String        @id @default(cuid())
+  type          ProductType
+  status        ProductStatus @default(DRAFT)
+
+  categoryId    String?
+  category      Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  // Temel Bilgiler (i18n - Türkçe/İngilizce)
+  nameTr        String
+  nameEn        String
+  slug          String        @unique
+  descriptionTr String?       @db.Text
+  descriptionEn String?       @db.Text
+  shortDescTr   String?       // Kısa açıklama (liste görünümü için)
+  shortDescEn   String?
+
+  // Hedef Kitle ve Etiketler
+  targetAudience String[]     // ["startup", "smb", "enterprise"]
+  tags           String[]
+
+  // Fiyatlandırma (Varyant yoksa baz fiyat)
+  basePrice     Decimal?      @db.Decimal(10, 2)
+  currency      String        @default("EUR")
+  taxRate       Decimal       @db.Decimal(5, 2) @default(20)
+
+  // Öne Çıkarma
+  isFeatured    Boolean       @default(false)
+  featuredOrder Int?
+
+  // Relations
+  variants      ProductVariant[]
+  media         ProductMedia[]
+  meta          ProductMeta?
+  relations     ProductRelation[] @relation("SourceProduct")
+  relatedTo     ProductRelation[] @relation("RelatedProduct")
+
+  // Bundle için
+  bundleItems   BundleItem[]  @relation("BundleProduct")
+  includedIn    BundleItem[]  @relation("IncludedProduct")
+
+  // Audit
+  createdBy     String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([categoryId])
+  @@index([status])
+  @@index([type])
+  @@index([slug])
+  @@index([isFeatured])
+}
+
+model ProductVariant {
+  id            String    @id @default(cuid())
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  sku           String    @unique
+  name          String    // "Starter", "Business", "Enterprise"
+
+  price         Decimal   @db.Decimal(10, 2)
+  currency      String    @default("EUR")
+
+  // Özellik matrisi (JSON) - örn: { "ram": "4GB", "disk": "50GB", "ssl": true }
+  features      Json?
+
+  // Stok Yönetimi
+  stockType     StockType @default(UNLIMITED)
+  stockQty      Int?      // LIMITED için mevcut stok
+  reservedQty   Int       @default(0) // Sepette bekleyen
+
+  // Abonelik için
+  billingPeriod String?   // monthly, quarterly, annually
+
+  // Sıralama ve Varsayılan
+  sortOrder     Int       @default(0)
+  isDefault     Boolean   @default(false)
+  isActive      Boolean   @default(true)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([productId])
+  @@index([sku])
+  @@index([isActive])
+}
+
+model ProductMedia {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  type        String   // image, video, thumbnail, banner, icon
+  url         String   // R2 URL veya external URL
+  alt         String?  // SEO için alt text
+  title       String?  // Hover title
+
+  width       Int?     // Görsel boyutları
+  height      Int?
+  fileSize    Int?     // Byte cinsinden
+
+  sortOrder   Int      @default(0)
+  isPrimary   Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+
+  @@index([productId])
+  @@index([type])
+  @@index([sortOrder])
+}
+
+model ProductMeta {
+  id            String  @id @default(cuid())
+  productId     String  @unique
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // SEO Meta Tags (i18n)
+  metaTitleTr   String?
+  metaTitleEn   String?
+  metaDescTr    String?
+  metaDescEn    String?
+
+  // Open Graph
+  ogImage       String?
+
+  // Schema.org Product (JSON-LD)
+  schemaJson    Json?
+
+  // Canonical URL (duplicate content önlemi)
+  canonicalUrl  String?
+
+  // Anahtar Kelimeler
+  keywordsTr    String[]
+  keywordsEn    String[]
+}
+
+model ProductRelation {
+  id          String  @id @default(cuid())
+
+  productId   String
+  product     Product @relation("SourceProduct", fields: [productId], references: [id], onDelete: Cascade)
+
+  relatedId   String
+  relatedProduct Product @relation("RelatedProduct", fields: [relatedId], references: [id], onDelete: Cascade)
+
+  type        String  // upsell, crosssell, accessory, similar
+
+  sortOrder   Int     @default(0)
+
+  @@unique([productId, relatedId, type])
+  @@index([productId])
+  @@index([relatedId])
+}
+
+model BundleItem {
+  id                String  @id @default(cuid())
+
+  bundleProductId   String
+  bundleProduct     Product @relation("BundleProduct", fields: [bundleProductId], references: [id], onDelete: Cascade)
+
+  includedProductId String
+  includedProduct   Product @relation("IncludedProduct", fields: [includedProductId], references: [id], onDelete: Restrict)
+
+  quantity          Int     @default(1)
+  individualValue   Decimal @db.Decimal(10, 2) // Bireysel değer (tasarruf hesabı için)
+
+  sortOrder         Int     @default(0)
+
+  @@unique([bundleProductId, includedProductId])
+  @@index([bundleProductId])
+}
