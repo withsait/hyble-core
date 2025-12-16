@@ -188,8 +188,11 @@ export default function AdminEmailsPage() {
             </thead>
             <tbody>
               {filteredLogs.map((log) => {
-                const statusKey = log.status as keyof typeof statusColors;
-                const status = statusKey in statusColors ? statusColors[statusKey] : statusColors.PENDING;
+                const getStatus = () => {
+                  const key = log.status as keyof typeof statusColors;
+                  return statusColors[key] || statusColors.PENDING;
+                };
+                const statusStyle = getStatus();
                 return (
                   <tr key={log.id} className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                     <td className="px-6 py-4">
@@ -204,8 +207,8 @@ export default function AdminEmailsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status.bg} ${status.text}`}>
-                        {status.icon}
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+                        {statusStyle.icon}
                         {log.status}
                       </span>
                     </td>
