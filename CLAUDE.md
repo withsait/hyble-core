@@ -15,7 +15,7 @@ UK-registered hosting platform with two brands:
 │  │                    hyble-panel                          │   │
 │  │                  (Container #1)                          │   │
 │  │                                                          │   │
-│  │  dev.hyble.net    → (admin)   God Panel                 │   │
+│  │  secret.hyble.net → (admin)   God Panel                 │   │
 │  │  id.hyble.co      → (auth)    Unified Auth Hub          │   │
 │  │  api.hyble.co     → /api      tRPC API                  │   │
 │  │                                                          │   │
@@ -62,7 +62,7 @@ hyble-core/
 │   ├── hyble-panel/         # Container 1: God Panel + Auth + API
 │   │   ├── src/
 │   │   │   ├── app/
-│   │   │   │   ├── admin/   # dev.hyble.net routes
+│   │   │   │   ├── admin/   # secret.hyble.net routes
 │   │   │   │   ├── auth/    # id.hyble.co routes
 │   │   │   │   └── api/     # api.hyble.co
 │   │   │   ├── server/      # tRPC routers & services
@@ -129,7 +129,7 @@ pnpm db:studio                # Open Prisma Studio
 
 | Domain | Port | App | Description |
 |--------|------|-----|-------------|
-| dev.hyble.net | 3000 | hyble-panel | God Panel (admin only) |
+| secret.hyble.net | 3000 | hyble-panel | God Panel (admin only) |
 | id.hyble.co | 3000 | hyble-panel | Auth Hub (all users) |
 | api.hyble.co | 3000 | hyble-panel | tRPC API |
 | hyble.co | 3001 | hyble-web | Marketing site |
@@ -146,5 +146,5 @@ pnpm db:studio                # Open Prisma Studio
 
 ## Admin Access
 
-- **URL**: https://dev.hyble.net
+- **URL**: https://secret.hyble.net
 - **Email**: sait@hyble.co
