@@ -42,8 +42,19 @@ function ThemeToggle() {
   );
 }
 
+// Default redirect URL after registration
+const getDefaultRedirect = () => {
+  if (typeof window !== "undefined") {
+    return process.env.NODE_ENV === "production"
+      ? "https://panel.hyble.co/dashboard"
+      : "http://localhost:3001/dashboard";
+  }
+  return "/dashboard";
+};
+
 export default function RegisterPage() {
   const router = useRouter();
+  const defaultCallback = getDefaultRedirect();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -103,8 +114,8 @@ export default function RegisterPage() {
         return;
       }
 
-      router.push("/dashboard");
-      router.refresh();
+      // Redirect to panel after successful registration
+      window.location.href = defaultCallback;
     } catch {
       setError("Bir hata oluştu. Lütfen tekrar deneyin.");
       setLoading(false);
@@ -144,7 +155,7 @@ export default function RegisterPage() {
           <div className="space-y-3 mb-6">
             <button
               type="button"
-              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              onClick={() => signIn("google", { callbackUrl: defaultCallback })}
               className="w-full py-3 bg-white dark:bg-slate-700 hover:bg-slate-50 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-900 dark:text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-3"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -158,7 +169,7 @@ export default function RegisterPage() {
 
             <button
               type="button"
-              onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+              onClick={() => signIn("github", { callbackUrl: defaultCallback })}
               className="w-full py-3 bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-3"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -169,7 +180,7 @@ export default function RegisterPage() {
 
             <button
               type="button"
-              onClick={() => signIn("discord", { callbackUrl: "/dashboard" })}
+              onClick={() => signIn("discord", { callbackUrl: defaultCallback })}
               className="w-full py-3 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-3"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
