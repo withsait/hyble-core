@@ -20,6 +20,7 @@ const mockCart = {
   subtotal: 0,
   discount: 0,
   total: 0,
+  currency: "EUR",
 };
 
 interface CartDrawerProps {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { trpc } from "@/lib/trpc/client";
 import { Button } from "@hyble/ui";
 import {
   ChevronRight,
@@ -26,17 +25,44 @@ interface Category {
   children?: Category[];
 }
 
+// Mock categories - will be replaced with tRPC when pim router is ready
+const mockCategories: Category[] = [
+  {
+    id: "1",
+    nameTr: "Web Hosting",
+    nameEn: "Web Hosting",
+    slug: "web-hosting",
+    isActive: true,
+    _count: { products: 5 },
+  },
+  {
+    id: "2",
+    nameTr: "VPS Sunucular",
+    nameEn: "VPS Servers",
+    slug: "vps-servers",
+    isActive: true,
+    _count: { products: 3 },
+  },
+  {
+    id: "3",
+    nameTr: "Domain",
+    nameEn: "Domain",
+    slug: "domain",
+    isActive: true,
+    _count: { products: 0 },
+  },
+];
+
 interface CategoryTreeProps {
   onEdit?: (category: Category) => void;
   onAdd?: (parentId?: string) => void;
 }
 
 export function CategoryTree({ onEdit, onAdd }: CategoryTreeProps) {
-  const { data, isLoading, refetch } = trpc.pim.listCategories.useQuery();
-  const deleteCategory = trpc.pim.deleteCategory.useMutation({
-    onSuccess: () => refetch(),
-    onError: (error) => alert(`Hata: ${error.message}`),
-  });
+  // TODO: Replace with tRPC query when pim router is ready
+  const isLoading = false;
+  const data = mockCategories;
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
@@ -50,9 +76,12 @@ export function CategoryTree({ onEdit, onAdd }: CategoryTreeProps) {
     setExpandedIds(newExpanded);
   };
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`"${name}" kategorisini silmek istediğinize emin misiniz?`)) {
-      deleteCategory.mutate({ id });
+      setIsDeleting(true);
+      // TODO: Replace with tRPC mutation when pim router is ready
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setIsDeleting(false);
     }
   };
 
@@ -150,7 +179,7 @@ export function CategoryTree({ onEdit, onAdd }: CategoryTreeProps) {
               className="h-7 w-7 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
               onClick={() => handleDelete(category.id, category.nameTr)}
               title="Sil"
-              disabled={deleteCategory.isPending}
+              disabled={isDeleting}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>

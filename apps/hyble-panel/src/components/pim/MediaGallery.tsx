@@ -2,42 +2,30 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { trpc } from "@/lib/trpc/client";
 import { Button, Input } from "@hyble/ui";
 import { Upload, Trash2, Star, StarOff, Loader2, ImageIcon, X } from "lucide-react";
+
+interface MediaItem {
+  id: string;
+  url: string;
+  alt?: string;
+  isPrimary: boolean;
+}
 
 interface MediaGalleryProps {
   productId: string;
 }
 
 export function MediaGallery({ productId }: MediaGalleryProps) {
-  const utils = trpc.useUtils();
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [images, setImages] = useState<MediaItem[]>([]);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [isSettingPrimary, setIsSettingPrimary] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
 
-  const { data: product, isLoading } = trpc.pim.getProductById.useQuery({ id: productId });
-  const images = product?.media || [];
-
-  const addImage = trpc.pim.addMedia.useMutation({
-    onSuccess: () => {
-      utils.pim.getProductById.invalidate({ id: productId });
-    },
-    onError: (error) => alert(`Hata: ${error.message}`),
-  });
-
-  const removeImage = trpc.pim.deleteMedia.useMutation({
-    onSuccess: () => {
-      utils.pim.getProductById.invalidate({ id: productId });
-    },
-    onError: (error) => alert(`Hata: ${error.message}`),
-  });
-
-  const setPrimaryImage = trpc.pim.setPrimaryMedia.useMutation({
-    onSuccess: () => {
-      utils.pim.getProductById.invalidate({ id: productId });
-    },
-    onError: (error) => alert(`Hata: ${error.message}`),
-  });
+  // TODO: Replace with tRPC query when pim router is ready
+  const isLoading = false;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -67,13 +55,15 @@ export function MediaGallery({ productId }: MediaGalleryProps) {
         // For now, we'll use a placeholder URL or the base64 directly
         // This is a simplified version - in production, implement proper file upload
 
-        await addImage.mutateAsync({
-          productId,
-          type: "image",
-          url: base64, // In production, this would be the uploaded file URL
+        // TODO: Replace with tRPC mutation when pim router is ready
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const newImage: MediaItem = {
+          id: Date.now().toString(),
+          url: base64,
           alt: file.name,
-          isPrimary: images.length === 0, // First image is primary by default
-        });
+          isPrimary: images.length === 0,
+        };
+        setImages(prev => [...prev, newImage]);
 
         setUploading(false);
       };
@@ -99,23 +89,38 @@ export function MediaGallery({ productId }: MediaGalleryProps) {
       return;
     }
 
-    addImage.mutate({
-      productId,
-      type: "image",
+    setIsAdding(true);
+    // TODO: Replace with tRPC mutation when pim router is ready
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const newImage: MediaItem = {
+      id: Date.now().toString(),
       url,
       alt: "Ürün görseli",
       isPrimary: images.length === 0,
-    });
+    };
+    setImages(prev => [...prev, newImage]);
+    setIsAdding(false);
   };
 
-  const handleRemove = (imageId: string) => {
+  const handleRemove = async (imageId: string) => {
     if (window.confirm("Bu görseli silmek istediğinize emin misiniz?")) {
-      removeImage.mutate({ id: imageId });
+      setIsRemoving(true);
+      // TODO: Replace with tRPC mutation when pim router is ready
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setImages(prev => prev.filter(img => img.id !== imageId));
+      setIsRemoving(false);
     }
   };
 
-  const handleSetPrimary = (imageId: string) => {
-    setPrimaryImage.mutate({ productId, id: imageId });
+  const handleSetPrimary = async (imageId: string) => {
+    setIsSettingPrimary(true);
+    // TODO: Replace with tRPC mutation when pim router is ready
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setImages(prev => prev.map(img => ({
+      ...img,
+      isPrimary: img.id === imageId,
+    })));
+    setIsSettingPrimary(false);
   };
 
   if (isLoading) {
@@ -149,7 +154,7 @@ export function MediaGallery({ productId }: MediaGalleryProps) {
           </Button>
         </div>
 
-        <Button variant="outline" size="sm" onClick={handleAddUrl} disabled={addImage.isPending}>
+        <Button variant="outline" size="sm" onClick={handleAddUrl} disabled={isAdding}>
           <ImageIcon className="h-4 w-4 mr-2" />
           URL ile Ekle
         </Button>
@@ -211,7 +216,7 @@ export function MediaGallery({ productId }: MediaGalleryProps) {
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => handleRemove(image.id)}
-                  disabled={removeImage.isPending}
+                  disabled={isRemoving}
                   title="Sil"
                 >
                   <Trash2 className="h-4 w-4" />

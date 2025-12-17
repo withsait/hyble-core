@@ -1,6 +1,6 @@
 "use client";
 
-import { trpc } from "@/lib/trpc/client";
+import { useState } from "react";
 import { Card, Button } from "@hyble/ui";
 import {
   FileText,
@@ -46,17 +46,51 @@ function DetailSkeleton() {
   );
 }
 
-export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
-  const { data: invoice, isLoading, error } = trpc.invoice.get.useQuery({ id: invoiceId });
+// Mock invoice - will be replaced with tRPC when invoice router is ready
+const mockInvoice = {
+  id: "1",
+  number: "INV-2024-001",
+  status: "PENDING" as const,
+  total: 25.00,
+  subtotal: 25.00,
+  taxAmount: 0,
+  taxRate: 0,
+  discount: 0,
+  currency: "EUR",
+  createdAt: new Date("2024-12-15"),
+  dueDate: new Date("2024-12-30"),
+  paidAt: null,
+  billingName: "Demo User",
+  billingAddress: {
+    line1: "123 Test Street",
+    city: "London",
+    postalCode: "WC2H 9JQ",
+    country: "United Kingdom",
+  },
+  user: {
+    name: "Demo User",
+    email: "demo@example.com",
+  },
+  items: [
+    { name: "Hyble Pro Hosting", description: "Monthly subscription", quantity: 1, unitPrice: 25.00, total: 25.00 },
+  ],
+};
 
-  const downloadPDF = trpc.invoice.downloadPDF.useMutation({
-    onSuccess: (data) => {
-      // Open PDF in new tab or trigger download
-      if (data.url) {
-        window.open(data.url, "_blank");
-      }
-    },
-  });
+export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  // TODO: Replace with tRPC query when invoice router is ready
+  const invoice = mockInvoice;
+  const isLoading = false;
+  const error = null;
+
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true);
+    // TODO: Replace with tRPC mutation when invoice router is ready
+    await new Promise(resolve => setTimeout(resolve, 500));
+    alert("PDF download would start here");
+    setIsDownloading(false);
+  };
 
   if (isLoading) {
     return <DetailSkeleton />;
@@ -202,10 +236,10 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
       <div className="flex flex-wrap gap-3">
         <Button
           variant="outline"
-          onClick={() => downloadPDF.mutate({ id: invoiceId })}
-          disabled={downloadPDF.isPending}
+          onClick={handleDownloadPDF}
+          disabled={isDownloading}
         >
-          {downloadPDF.isPending ? (
+          {isDownloading ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (
             <Download className="h-4 w-4 mr-2" />

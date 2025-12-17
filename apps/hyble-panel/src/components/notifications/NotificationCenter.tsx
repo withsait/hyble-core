@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { trpc } from "@/lib/trpc/client";
 import { Button } from "@hyble/ui";
 import {
   Bell,
@@ -31,6 +30,29 @@ interface Notification {
   createdAt: Date;
 }
 
+// Mock notifications - will be replaced with tRPC when notifications router is ready
+const mockNotifications: Notification[] = [
+  {
+    id: "1",
+    title: "Fatura oluşturuldu",
+    body: "INV-2024-001 numaralı faturanız hazır",
+    channel: "IN_APP",
+    status: "SENT",
+    data: { type: "invoice" },
+    createdAt: new Date("2024-12-16"),
+  },
+  {
+    id: "2",
+    title: "Ödeme alındı",
+    body: "€25.00 tutarındaki ödemeniz başarıyla alındı",
+    channel: "IN_APP",
+    status: "SENT",
+    data: { type: "billing" },
+    readAt: new Date("2024-12-15"),
+    createdAt: new Date("2024-12-15"),
+  },
+];
+
 const notificationIcons: Record<string, React.ReactNode> = {
   invoice: <FileText className="h-4 w-4" />,
   billing: <CreditCard className="h-4 w-4" />,
@@ -42,23 +64,14 @@ const notificationIcons: Record<string, React.ReactNode> = {
 
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+  const [localNotifications, setLocalNotifications] = useState(mockNotifications);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading, refetch } = trpc.notifications.list.useQuery(
-    { limit: 10 },
-    { enabled: isOpen }
-  );
-
-  const markAsRead = trpc.notifications.markAsRead.useMutation({
-    onSuccess: () => refetch(),
-  });
-
-  const markAllAsRead = trpc.notifications.markAllAsRead.useMutation({
-    onSuccess: () => refetch(),
-  });
-
-  const notifications = data?.notifications || [];
-  const unreadCount = data?.unreadCount || 0;
+  // TODO: Replace with tRPC query when notifications router is ready
+  const isLoading = false;
+  const notifications = localNotifications;
+  const unreadCount = localNotifications.filter(n => !n.readAt).length;
 
   // Close on click outside
   useEffect(() => {
@@ -109,10 +122,15 @@ export function NotificationCenter() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => markAllAsRead.mutate()}
-                  disabled={markAllAsRead.isPending}
+                  onClick={async () => {
+                    setIsMarkingAllRead(true);
+                    await new Promise(r => setTimeout(r, 300));
+                    setLocalNotifications(prev => prev.map(n => ({ ...n, readAt: new Date() })));
+                    setIsMarkingAllRead(false);
+                  }}
+                  disabled={isMarkingAllRead}
                 >
-                  {markAllAsRead.isPending ? (
+                  {isMarkingAllRead ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <CheckCheck className="h-4 w-4 mr-1" />
@@ -149,7 +167,9 @@ export function NotificationCenter() {
                     }`}
                     onClick={() => {
                       if (!notification.readAt) {
-                        markAsRead.mutate({ notificationId: notification.id });
+                        setLocalNotifications(prev => prev.map(n =>
+                          n.id === notification.id ? { ...n, readAt: new Date() } : n
+                        ));
                       }
                     }}
                   >

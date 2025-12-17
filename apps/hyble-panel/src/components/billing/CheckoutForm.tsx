@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button, Input } from "@hyble/ui";
 import {
   CreditCard,
@@ -13,6 +12,15 @@ import {
   ChevronRight,
   AlertCircle
 } from "lucide-react";
+
+// Mock data - will be replaced with tRPC when payment router is ready
+const mockWallet = {
+  mainBalance: 50.00,
+  bonusBalance: 10.00,
+  promoBalance: 5.00,
+};
+
+const mockSavedCards: any[] = [];
 
 interface CheckoutFormProps {
   orderId: string;
@@ -27,63 +35,31 @@ export function CheckoutForm({ orderId, amount, currency, onSuccess }: CheckoutF
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("wallet");
   const [useWalletPartial, setUseWalletPartial] = useState(false);
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { data: wallet } = trpc.wallet.getBalance.useQuery();
-  const { data: savedCards } = trpc.payment.listMethods.useQuery();
-
-  const payWithWallet = trpc.payment.payWithWallet.useMutation({
-    onSuccess: () => {
-      onSuccess?.();
-    },
-    onError: (error) => {
-      alert(`Ödeme hatası: ${error.message}`);
-    },
-  });
-
-  const createCheckout = trpc.payment.createCheckout.useMutation({
-    onSuccess: (data) => {
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    },
-    onError: (error) => {
-      alert(`Ödeme hatası: ${error.message}`);
-    },
-  });
-
-  const chargeCard = trpc.payment.chargeCard.useMutation({
-    onSuccess: () => {
-      onSuccess?.();
-    },
-    onError: (error) => {
-      alert(`Ödeme hatası: ${error.message}`);
-    },
-  });
+  // TODO: Replace with tRPC queries when payment router is ready
+  const wallet = mockWallet;
+  const savedCards = mockSavedCards;
 
   const currencySymbol = currency === "EUR" ? "€" : currency === "USD" ? "$" : "₺";
   const totalBalance = (wallet?.mainBalance ?? 0) + (wallet?.bonusBalance ?? 0) + (wallet?.promoBalance ?? 0);
   const canPayWithWallet = totalBalance >= amount;
   const remainingAfterWallet = Math.max(0, amount - totalBalance);
 
-  const isLoading = payWithWallet.isPending || createCheckout.isPending || chargeCard.isPending;
+  const handlePayment = async () => {
+    setIsLoading(true);
+    // TODO: Replace with tRPC mutations when payment router is ready
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-  const handlePayment = () => {
     if (paymentMethod === "wallet") {
-      payWithWallet.mutate({ orderId, amount });
+      onSuccess?.();
     } else if (paymentMethod === "card") {
-      createCheckout.mutate({
-        orderId,
-        amount: useWalletPartial ? remainingAfterWallet : amount,
-        useWalletBalance: useWalletPartial,
-      });
+      // Redirect to checkout
+      alert("Stripe checkout would open here");
     } else if (paymentMethod === "saved_card" && selectedCardId) {
-      chargeCard.mutate({
-        orderId,
-        cardId: selectedCardId,
-        amount: useWalletPartial ? remainingAfterWallet : amount,
-        useWalletBalance: useWalletPartial,
-      });
+      onSuccess?.();
     }
+    setIsLoading(false);
   };
 
   return (

@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { trpc } from "@/lib/trpc/client";
 import { Button, Input } from "@hyble/ui";
 import { Plus, Trash2, Edit, X, Loader2, Package } from "lucide-react";
 
@@ -19,41 +18,29 @@ const variantSchema = z.object({
 
 type VariantFormData = z.infer<typeof variantSchema>;
 
+interface Variant {
+  id: string;
+  sku: string;
+  name: string;
+  price: number;
+  currency: string;
+  billingPeriod?: string | null;
+  isDefault: boolean;
+}
+
 interface VariantEditorProps {
   productId: string;
 }
 
 export function VariantEditor({ productId }: VariantEditorProps) {
-  const utils = trpc.useUtils();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [isPending, setIsPending] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const { data: product, isLoading } = trpc.pim.getProductById.useQuery({ id: productId });
-  const variants = product?.variants || [];
-
-  const createVariant = trpc.pim.createVariant.useMutation({
-    onSuccess: () => {
-      utils.pim.getProductById.invalidate({ id: productId });
-      setIsAdding(false);
-      reset();
-    },
-    onError: (error) => alert(`Hata: ${error.message}`),
-  });
-
-  const updateVariant = trpc.pim.updateVariant.useMutation({
-    onSuccess: () => {
-      utils.pim.getProductById.invalidate({ id: productId });
-      setEditingId(null);
-    },
-    onError: (error) => alert(`Hata: ${error.message}`),
-  });
-
-  const deleteVariant = trpc.pim.deleteVariant.useMutation({
-    onSuccess: () => {
-      utils.pim.getProductById.invalidate({ id: productId });
-    },
-    onError: (error) => alert(`Hata: ${error.message}`),
-  });
+  // TODO: Replace with tRPC query when pim router is ready
+  const isLoading = false;
 
   const {
     register,
@@ -68,8 +55,10 @@ export function VariantEditor({ productId }: VariantEditorProps) {
     },
   });
 
-  const onSubmit = (data: VariantFormData) => {
-    const payload = {
+  const onSubmit = async (data: VariantFormData) => {
+    setIsPending(true);
+    const payload: Variant = {
+      id: editingId || Date.now().toString(),
       sku: data.sku,
       name: data.name,
       price: parseFloat(data.price),
@@ -78,20 +67,21 @@ export function VariantEditor({ productId }: VariantEditorProps) {
       billingPeriod: data.billingPeriod || undefined,
     };
 
+    // TODO: Replace with tRPC mutations when pim router is ready
+    await new Promise(resolve => setTimeout(resolve, 300));
+
     if (editingId) {
-      updateVariant.mutate({
-        id: editingId,
-        ...payload,
-      });
+      setVariants(prev => prev.map(v => v.id === editingId ? payload : v));
+      setEditingId(null);
     } else {
-      createVariant.mutate({
-        productId,
-        ...payload,
-      });
+      setVariants(prev => [...prev, payload]);
+      setIsAdding(false);
+      reset();
     }
+    setIsPending(false);
   };
 
-  const handleEdit = (variant: typeof variants[0]) => {
+  const handleEdit = (variant: Variant) => {
     setEditingId(variant.id);
     reset({
       sku: variant.sku,
@@ -103,9 +93,13 @@ export function VariantEditor({ productId }: VariantEditorProps) {
     });
   };
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`"${name}" varyantını silmek istediğinize emin misiniz?`)) {
-      deleteVariant.mutate({ id });
+      setIsDeleting(true);
+      // TODO: Replace with tRPC mutation when pim router is ready
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setVariants(prev => prev.filter(v => v.id !== id));
+      setIsDeleting(false);
     }
   };
 
@@ -122,7 +116,6 @@ export function VariantEditor({ productId }: VariantEditorProps) {
     });
   };
 
-  const isPending = createVariant.isPending || updateVariant.isPending;
 
   if (isLoading) {
     return (
@@ -188,7 +181,7 @@ export function VariantEditor({ productId }: VariantEditorProps) {
                         size="icon"
                         className="h-7 w-7 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                         onClick={() => handleDelete(variant.id, variant.name)}
-                        disabled={deleteVariant.isPending}
+                        disabled={isDeleting}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
