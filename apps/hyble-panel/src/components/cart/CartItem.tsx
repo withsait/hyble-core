@@ -1,8 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { trpc } from "@/lib/trpc/client";
 import { Button } from "@hyble/ui";
 import { Minus, Plus, Trash2, Loader2 } from "lucide-react";
 
@@ -21,30 +21,29 @@ interface CartItemProps {
 }
 
 export function CartItem({ item }: CartItemProps) {
-  const utils = trpc.useUtils();
+  const [localQuantity, setLocalQuantity] = useState(item.quantity);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
 
-  const updateQuantity = trpc.cart.updateQuantity.useMutation({
-    onSuccess: () => {
-      utils.cart.get.invalidate();
-    },
-  });
-
-  const removeItem = trpc.cart.removeItem.useMutation({
-    onSuccess: () => {
-      utils.cart.get.invalidate();
-    },
-  });
-
-  const isUpdating = updateQuantity.isPending;
-  const isRemoving = removeItem.isPending;
-
-  const handleQuantityChange = (delta: number) => {
-    const newQuantity = item.quantity + delta;
+  // TODO: Replace with tRPC mutations when cart router is ready
+  const handleQuantityChange = async (delta: number) => {
+    const newQuantity = localQuantity + delta;
     if (newQuantity < 1) {
-      removeItem.mutate({ itemId: item.id });
+      setIsRemoving(true);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setIsRemoving(false);
     } else {
-      updateQuantity.mutate({ itemId: item.id, quantity: newQuantity });
+      setIsUpdating(true);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      setLocalQuantity(newQuantity);
+      setIsUpdating(false);
     }
+  };
+
+  const handleRemove = async () => {
+    setIsRemoving(true);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setIsRemoving(false);
   };
 
   return (
@@ -93,7 +92,7 @@ export function CartItem({ item }: CartItemProps) {
               {isUpdating ? (
                 <Loader2 className="h-3 w-3 animate-spin mx-auto" />
               ) : (
-                item.quantity
+                localQuantity
               )}
             </span>
             <Button
@@ -110,9 +109,9 @@ export function CartItem({ item }: CartItemProps) {
           {/* Price */}
           <div className="text-right">
             <p className="font-semibold text-sm">
-              €{(item.price * item.quantity).toFixed(2)}
+              €{(item.price * localQuantity).toFixed(2)}
             </p>
-            {item.quantity > 1 && (
+            {localQuantity > 1 && (
               <p className="text-xs text-muted-foreground">
                 €{item.price.toFixed(2)} / adet
               </p>
@@ -126,7 +125,7 @@ export function CartItem({ item }: CartItemProps) {
         variant="ghost"
         size="icon"
         className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
-        onClick={() => removeItem.mutate({ itemId: item.id })}
+        onClick={handleRemove}
         disabled={isRemoving}
       >
         {isRemoving ? (

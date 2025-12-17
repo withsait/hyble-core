@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { trpc } from "@/lib/trpc/client";
 import { Button } from "@hyble/ui";
 import {
   X,
@@ -15,21 +14,31 @@ import {
 import { CartItem } from "./CartItem";
 import { CouponInput } from "./CouponInput";
 
+// Mock cart data - will be replaced with tRPC query when cart router is implemented
+const mockCart = {
+  items: [],
+  subtotal: 0,
+  discount: 0,
+  total: 0,
+};
+
 interface CartDrawerProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const { data: cart, isLoading } = trpc.cart.get.useQuery(undefined, {
-    enabled: isOpen,
-  });
+  // TODO: Replace with tRPC query when cart router is ready
+  // const { data: cart, isLoading } = trpc.cart.get.useQuery(undefined, { enabled: isOpen });
+  const cart = mockCart;
+  const isLoading = false;
+  const [isClearing, setIsClearing] = useState(false);
 
-  const clearCart = trpc.cart.clear.useMutation({
-    onSuccess: () => {
-      // Cart will be refetched automatically
-    },
-  });
+  const handleClearCart = async () => {
+    setIsClearing(true);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setIsClearing(false);
+  };
 
   // Close on escape key
   useEffect(() => {
@@ -113,10 +122,10 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                 variant="ghost"
                 size="sm"
                 className="text-destructive hover:text-destructive w-full"
-                onClick={() => clearCart.mutate()}
-                disabled={clearCart.isPending}
+                onClick={handleClearCart}
+                disabled={isClearing}
               >
-                {clearCart.isPending ? (
+                {isClearing ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
                   <Trash2 className="h-4 w-4 mr-2" />

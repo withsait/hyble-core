@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { trpc } from "@/lib/trpc/client";
 import { Button, Input } from "@hyble/ui";
 import { 
   Plus, 
@@ -17,28 +16,37 @@ import {
   Wrench 
 } from "lucide-react";
 
+// Mock data - will be replaced with tRPC query when pim router is implemented
+const mockProducts = [
+  {
+    id: "1",
+    nameTr: "Hyble Pro Hosting",
+    nameEn: "Hyble Pro Hosting",
+    slug: "hyble-pro-hosting",
+    type: "SUBSCRIPTION",
+    status: "ACTIVE",
+    basePrice: 9.99,
+    lowestPrice: 9.99,
+    currency: "EUR",
+    images: [],
+  },
+];
+
 export function ProductList() {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  
-  // Debounce search could be added here, but keeping it simple for now
-  const { data, isLoading, refetch } = trpc.pim.listProducts.useQuery({
-    search: search || undefined,
-    limit: 50, // Fetch a reasonable amount for the table
-  });
 
-  const deleteProduct = trpc.pim.deleteProduct.useMutation({
-    onSuccess: () => {
-      refetch();
-    },
-    onError: (error) => {
-      alert(`Hata: ${error.message}`);
-    },
-  });
+  // TODO: Replace with tRPC query when pim router is ready
+  // const { data, isLoading, refetch } = trpc.pim.listProducts.useQuery({ search, limit: 50 });
+  const isLoading = false;
+
+  const products = mockProducts.filter(p =>
+    p.nameTr.toLowerCase().includes(search.toLowerCase())
+  );
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Bu ürünü silmek istediğinize emin misiniz?")) {
-      deleteProduct.mutate({ id });
+      alert("Demo: Ürün silindi");
     }
   };
 
@@ -117,14 +125,14 @@ export function ProductList() {
                     Yükleniyor...
                   </td>
                 </tr>
-              ) : data?.products.length === 0 ? (
+              ) : products.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
                     Ürün bulunamadı.
                   </td>
                 </tr>
               ) : (
-                data?.products.map((product) => (
+                products.map((product) => (
                   <tr 
                     key={product.id} 
                     className="border-b last:border-0 hover:bg-muted/50 transition-colors"
@@ -170,7 +178,7 @@ export function ProductList() {
                           className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                           onClick={() => handleDelete(product.id)}
                           title="Sil"
-                          disabled={deleteProduct.isPending}
+                          disabled={false}
                         >
                           <Trash2 className="h-4 w-4" />
                           <span className="sr-only">Sil</span>
