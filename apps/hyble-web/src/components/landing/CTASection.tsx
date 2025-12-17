@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, CheckCircle2, Gift, Zap, Shield, Clock, Star, Rocket, PartyPopper } from "lucide-react";
+import { ArrowRight, CheckCircle2, Gift, Zap, Shield, Clock, Star, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -73,36 +73,6 @@ export function CTASection() {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* New Year Campaign Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-12"
-        >
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-red-500/20 border border-amber-500/30 p-6 md:p-8">
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#fff0_0%,#fff1_50%,#fff0_100%)] animate-shimmer" />
-            <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/25">
-                  <PartyPopper className="w-7 h-7 text-white" />
-                </div>
-                <div className="text-center md:text-left">
-                  <p className="text-xl md:text-2xl font-bold text-white">2025 Yeni Yıl Kampanyası</p>
-                  <p className="text-amber-200/80">Yıllık planlarda <span className="font-bold text-amber-300">%30 indirim</span> - 31 Ocak'a kadar geçerli!</p>
-                </div>
-              </div>
-              <a
-                href="https://id.hyble.co/register?promo=newyear2025"
-                className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white rounded-xl font-semibold transition-all shadow-lg shadow-amber-500/25 whitespace-nowrap"
-              >
-                Kampanyayı Yakala
-                <ArrowRight className="w-5 h-5" />
-              </a>
-            </div>
-          </div>
-        </motion.div>
-
         {/* Main CTA Content */}
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left Column - Static Content */}
@@ -122,7 +92,7 @@ export function CTASection() {
               <span>Hemen Başlayın</span>
             </motion.div>
 
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight">
               Projenizi{" "}
               <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
                 Bugün Başlatın
@@ -255,63 +225,7 @@ export function CTASection() {
           </motion.div>
         </div>
 
-        {/* Bottom Section - Trust & Partners */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="mt-20 pt-12 border-t border-white/10"
-        >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            {/* User count */}
-            <div className="flex items-center gap-4">
-              <div className="flex -space-x-3">
-                {["A", "B", "C", "D", "E"].map((letter, i) => (
-                  <div
-                    key={letter}
-                    className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 border-2 border-slate-900 flex items-center justify-center text-white text-sm font-medium"
-                    style={{ zIndex: 5 - i }}
-                  >
-                    {letter}
-                  </div>
-                ))}
-              </div>
-              <div>
-                <p className="text-white font-semibold">500+ Aktif Kullanıcı</p>
-                <p className="text-sm text-slate-400">Son 30 günde katılan</p>
-              </div>
-            </div>
-
-            {/* Partners */}
-            <div className="flex items-center gap-8">
-              <span className="text-sm text-slate-500 uppercase tracking-wider">Güvenilir Altyapı</span>
-              <div className="flex items-center gap-6">
-                {["Stripe", "Hetzner", "Cloudflare"].map((partner) => (
-                  <span
-                    key={partner}
-                    className="text-slate-500 font-semibold hover:text-slate-300 transition-colors cursor-default"
-                  >
-                    {partner}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
       </div>
-
-      {/* CSS for shimmer animation */}
-      <style jsx>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        .animate-shimmer {
-          animation: shimmer 3s infinite;
-        }
-      `}</style>
     </section>
   );
 }

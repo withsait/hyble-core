@@ -5,49 +5,83 @@ import { useTheme } from "next-themes";
 import {
   Sun, Moon, Menu, X, ChevronDown,
   Shield, Wallet, Cloud, Key, Activity, Wrench,
-  BookOpen, Headphones, FileText, Users, Gamepad2
+  BookOpen, Headphones, FileText, Users, Gamepad2,
+  Server, CreditCard, ArrowUpRight
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-// Ürünler - Ana ürünler
-const mainProducts = [
+// Ürün kategorileri - Vercel tarzı
+const productCategories = [
   {
-    icon: Shield,
-    name: "Hyble ID",
-    description: "Kimlik doğrulama ve SSO",
-    href: "/products/id",
+    title: "Kimlik & Güvenlik",
+    products: [
+      {
+        icon: Shield,
+        name: "Hyble ID",
+        description: "OAuth 2.0, MFA, SSO",
+        href: "/products/id",
+      },
+      {
+        icon: Key,
+        name: "Hyble License",
+        description: "Yazılım lisanslama",
+        href: "/products/license",
+      },
+    ],
   },
   {
-    icon: Wallet,
-    name: "Hyble Wallet",
-    description: "Ödeme ve cüzdan sistemi",
-    href: "/products/wallet",
+    title: "Ödeme & Finans",
+    products: [
+      {
+        icon: CreditCard,
+        name: "Hyble Wallet",
+        description: "Ödeme ve cüzdan",
+        href: "/products/wallet",
+      },
+    ],
   },
   {
-    icon: Key,
-    name: "Hyble License",
-    description: "Yazılım lisanslama",
-    href: "/products/license",
+    title: "Altyapı & Hosting",
+    products: [
+      {
+        icon: Cloud,
+        name: "Hyble Cloud",
+        description: "VPS ve web hosting",
+        href: "/products/cloud",
+        badge: "Yakında",
+      },
+      {
+        icon: Gamepad2,
+        name: "Hyble Gaming",
+        description: "Game server hosting",
+        href: "/products/gaming",
+        badge: "Popüler",
+      },
+      {
+        icon: Server,
+        name: "Hyble CDN",
+        description: "İçerik dağıtım",
+        href: "/products/cdn",
+        badge: "Yakında",
+      },
+    ],
   },
   {
-    icon: Activity,
-    name: "Hyble Status",
-    description: "Uptime monitoring",
-    href: "/products/status",
-  },
-  {
-    icon: Cloud,
-    name: "Hyble Cloud",
-    description: "VPS ve hosting",
-    href: "/products/cloud",
-    badge: "Yakında",
-  },
-  {
-    icon: Gamepad2,
-    name: "HybleGaming",
-    description: "Game server hosting",
-    href: "https://game.hyble.co",
-    external: true,
+    title: "İzleme & Araçlar",
+    products: [
+      {
+        icon: Activity,
+        name: "Hyble Status",
+        description: "Uptime monitoring",
+        href: "/products/status",
+      },
+      {
+        icon: Wrench,
+        name: "Hyble Tools",
+        description: "Geliştirici araçları",
+        href: "/tools",
+      },
+    ],
   },
 ];
 
@@ -94,7 +128,7 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80">
+    <header className="sticky top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -122,41 +156,69 @@ export function SiteHeader() {
                 <ChevronDown className={`w-4 h-4 transition-transform duration-150 ${activeDropdown === "products" ? "rotate-180" : ""}`} />
               </button>
 
-              {/* Products Dropdown */}
+              {/* Products Dropdown - Kategorili */}
               <div
                 className={`absolute top-full left-0 pt-2 transition-all duration-150 ${
                   activeDropdown === "products" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"
                 }`}
               >
-                <div className="w-[320px] bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden p-2">
-                  {mainProducts.map((product) => (
-                    <Link
-                      key={product.name}
-                      href={product.href}
-                      target={product.external ? "_blank" : undefined}
-                      onClick={() => setActiveDropdown(null)}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
-                    >
-                      <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-slate-700 transition-colors">
-                        <product.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                            {product.name}
-                          </span>
-                          {"badge" in product && product.badge && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded font-medium">
-                              {product.badge}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {product.description}
+                <div className="w-[560px] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+                  <div className="grid grid-cols-2 gap-0">
+                    {productCategories.map((category, catIndex) => (
+                      <div
+                        key={category.title}
+                        className={`p-4 ${catIndex % 2 === 1 ? "border-l border-slate-200 dark:border-slate-700/50" : ""} ${catIndex >= 2 ? "border-t border-slate-200 dark:border-slate-700/50" : ""}`}
+                      >
+                        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+                          {category.title}
                         </p>
+                        <div className="space-y-1">
+                          {category.products.map((product) => (
+                            <Link
+                              key={product.name}
+                              href={product.href}
+                              onClick={() => setActiveDropdown(null)}
+                              className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-300 dark:group-hover:border-blue-500/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 transition-all">
+                                <product.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                    {product.name}
+                                  </span>
+                                  {"badge" in product && product.badge && (
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                                      product.badge === "Popüler"
+                                        ? "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
+                                        : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                                    }`}>
+                                      {product.badge}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-slate-500 dark:text-slate-500">
+                                  {product.description}
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                  {/* Footer */}
+                  <div className="border-t border-slate-200 dark:border-slate-700/50 p-3 bg-slate-50 dark:bg-slate-800/50">
+                    <Link
+                      href="/products"
+                      onClick={() => setActiveDropdown(null)}
+                      className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                      <span>Tüm ürünleri keşfet</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
                     </Link>
-                  ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -176,46 +238,64 @@ export function SiteHeader() {
                 <ChevronDown className={`w-4 h-4 transition-transform duration-150 ${activeDropdown === "resources" ? "rotate-180" : ""}`} />
               </button>
 
-              {/* Resources Dropdown */}
+              {/* Resources Dropdown - Ürünler gibi stillendirilmiş */}
               <div
                 className={`absolute top-full left-0 pt-2 transition-all duration-150 ${
                   activeDropdown === "resources" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"
                 }`}
               >
-                <div className="w-[280px] bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden p-2">
-                  {resources.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={() => setActiveDropdown(null)}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
-                    >
-                      <item.icon className="w-5 h-5 text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors" />
-                      <div>
-                        <span className="text-sm font-medium text-slate-900 dark:text-white block">
-                          {item.name}
-                        </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">{item.description}</span>
-                      </div>
-                    </Link>
-                  ))}
-                  <div className="border-t border-slate-100 dark:border-slate-800 mt-2 pt-2">
-                    {tools.map((tool) => (
-                      <Link
-                        key={tool.name}
-                        href={tool.href}
-                        onClick={() => setActiveDropdown(null)}
-                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
-                      >
-                        <tool.icon className="w-5 h-5 text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors" />
-                        <div>
-                          <span className="text-sm font-medium text-slate-900 dark:text-white block">
-                            {tool.name}
-                          </span>
-                          <span className="text-xs text-slate-500 dark:text-slate-400">{tool.description}</span>
-                        </div>
-                      </Link>
-                    ))}
+                <div className="w-[320px] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+                  {/* Kaynaklar */}
+                  <div className="p-4">
+                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+                      Kaynaklar
+                    </p>
+                    <div className="space-y-1">
+                      {resources.map((item) => (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={() => setActiveDropdown(null)}
+                          className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-300 dark:group-hover:border-blue-500/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 transition-all">
+                            <item.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors block">
+                              {item.name}
+                            </span>
+                            <span className="text-xs text-slate-500 dark:text-slate-500">{item.description}</span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Araçlar */}
+                  <div className="border-t border-slate-200 dark:border-slate-700/50 p-4">
+                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+                      Araçlar
+                    </p>
+                    <div className="space-y-1">
+                      {tools.map((tool) => (
+                        <Link
+                          key={tool.name}
+                          href={tool.href}
+                          onClick={() => setActiveDropdown(null)}
+                          className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-300 dark:group-hover:border-blue-500/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 transition-all">
+                            <tool.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors block">
+                              {tool.name}
+                            </span>
+                            <span className="text-xs text-slate-500 dark:text-slate-500">{tool.description}</span>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -284,27 +364,34 @@ export function SiteHeader() {
         {mobileMenuOpen && (
           <div className="lg:hidden py-4 border-t border-slate-200 dark:border-slate-800">
             <nav className="flex flex-col gap-1">
-              {/* Ürünler */}
-              <div className="mb-4">
-                <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Ürünler</p>
-                {mainProducts.map((product) => (
-                  <Link
-                    key={product.name}
-                    href={product.href}
-                    target={product.external ? "_blank" : undefined}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
-                  >
-                    <product.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{product.name}</span>
-                    {"badge" in product && product.badge && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded">
-                        {product.badge}
-                      </span>
-                    )}
-                  </Link>
-                ))}
-              </div>
+              {/* Ürünler - Kategorili */}
+              {productCategories.map((category) => (
+                <div key={category.title} className="mb-4">
+                  <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    {category.title}
+                  </p>
+                  {category.products.map((product) => (
+                    <Link
+                      key={product.name}
+                      href={product.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
+                    >
+                      <product.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{product.name}</span>
+                      {"badge" in product && product.badge && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                          product.badge === "Popüler"
+                            ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
+                            : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                        }`}>
+                          {product.badge}
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              ))}
 
               {/* Kaynaklar */}
               <div className="mb-4">

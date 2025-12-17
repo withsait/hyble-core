@@ -2,59 +2,58 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowRight, CheckCircle2, Play, Shield, Zap, Globe,
-  CreditCard, Key, Activity, Sparkles
+  ArrowRight, CheckCircle2, Eye, Shield, Zap,
+  Sparkles, Headphones, Globe, ShoppingCart, Gamepad2, Settings
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-// Dinamik kelime döngüsü
+// Dinamik kelime döngüsü - Her biri farklı gradient ile
 const rotatingWords = [
-  { text: "Büyüt", color: "text-blue-600" },
-  { text: "Ölçekle", color: "text-emerald-600" },
-  { text: "Yönet", color: "text-purple-600" },
-  { text: "Güvende Tut", color: "text-cyan-600" },
+  { text: "Büyüt", gradient: "from-blue-500 via-cyan-500 to-blue-600" },
+  { text: "Ölçekle", gradient: "from-emerald-500 via-green-500 to-teal-500" },
+  { text: "Yönet", gradient: "from-purple-500 via-violet-500 to-indigo-500" },
+  { text: "Güvende Tut", gradient: "from-amber-500 via-orange-500 to-red-500" },
 ];
 
-// Soru bazlı onboarding seçenekleri
-const onboardingOptions = [
+// Yeni wizard seçenekleri - Pazarlama odaklı, kullanıcı dostu
+const wizardOptions = [
   {
-    icon: Shield,
-    question: "Kullanıcı girişi sistemi kurmak",
-    product: "Hyble ID",
-    href: "/products/id",
+    icon: Globe,
+    title: "Web Sitesi Kurmak",
+    description: "5 dakikada yayında",
+    href: "/products/hosting",
+    highlight: "En Popüler",
+    stats: "2.500+ site",
   },
   {
-    icon: CreditCard,
-    question: "Ödeme almak",
-    product: "Hyble Wallet",
-    href: "/products/wallet",
+    icon: ShoppingCart,
+    title: "Online Satış Başlatmak",
+    description: "Hemen satışa geç",
+    href: "/products/ecommerce",
+    stats: "€0 kurulum",
   },
   {
-    icon: Key,
-    question: "Yazılımımı lisanslamak",
-    product: "Hyble License",
-    href: "/products/license",
+    icon: Gamepad2,
+    title: "Oyun Sunucusu Açmak",
+    description: "Minecraft, FiveM, Rust",
+    href: "/products/gaming",
+    highlight: "Yeni",
+    stats: "99.9% uptime",
   },
   {
-    icon: Activity,
-    question: "Sunucu durumu takibi",
-    product: "Hyble Status",
-    href: "/products/status",
+    icon: Settings,
+    title: "Özel Proje Geliştirmek",
+    description: "Size özel çözümler",
+    href: "/contact",
+    stats: "7/24 destek",
   },
 ];
 
-// Mini badge'ler
+// Mini badge'ler - Genel kitleye hitap eden
 const badges = [
-  { icon: Shield, text: "Güvenli" },
-  { icon: Zap, text: "Hızlı" },
-  { icon: Globe, text: "Global CDN" },
-];
-
-// Alt istatistikler
-const stats = [
-  { value: "99.9%", label: "Uptime" },
-  { value: "10ms", label: "Response" },
-  { value: "24/7", label: "Support" },
+  { icon: Shield, text: "Güvenli Altyapı" },
+  { icon: Zap, text: "Anında Kurulum" },
+  { icon: Headphones, text: "7/24 Destek" },
 ];
 
 export function HeroSection() {
@@ -68,7 +67,7 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex items-center pt-16 pb-16 overflow-hidden">
+    <section className="relative min-h-[calc(100vh-120px)] flex items-center pt-8 pb-12 lg:pt-12 lg:pb-16 overflow-hidden">
       {/* Background - Açık mavi gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/80 via-white to-cyan-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
         {/* Grid Pattern */}
@@ -105,13 +104,15 @@ export function HeroSection() {
             >
               <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                Geliştiriciler için hepsi bir arada platform
+                Hepsi bir arada dijital platform
               </span>
             </motion.div>
 
-            {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white leading-[1.1] mb-2">
-              İnşa Et. Başlat.
+            {/* Main Headline - Gradient efektli */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] mb-2">
+              <span className="bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white bg-clip-text text-transparent">
+                İnşa Et. Başlat.
+              </span>
             </h1>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
               <AnimatePresence mode="wait">
@@ -121,7 +122,7 @@ export function HeroSection() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
-                  className={rotatingWords[currentWordIndex]?.color ?? "text-blue-600"}
+                  className={`bg-gradient-to-r ${rotatingWords[currentWordIndex]?.gradient ?? "from-blue-500 to-cyan-500"} bg-clip-text text-transparent`}
                 >
                   {rotatingWords[currentWordIndex]?.text ?? "Büyüt"}.
                 </motion.span>
@@ -130,8 +131,8 @@ export function HeroSection() {
 
             {/* Description */}
             <p className="text-lg text-slate-600 dark:text-slate-400 max-w-lg mb-8 leading-relaxed">
-              Yazılım işinizi kurmak ve büyütmek için ihtiyacınız olan her şey.
-              Kimlik doğrulama, ödeme, bulut altyapısı ve izleme — hepsi tek bir yerde.
+              Hızlı kurulum, kolay yönetim. Dakikalar içinde başlayın,
+              tek panel üzerinden tüm hizmetlerinizi yönetin. Hosting, ödeme, kimlik doğrulama — hepsi hazır.
             </p>
 
             {/* Mini Badges */}
@@ -160,8 +161,8 @@ export function HeroSection() {
                 href="#how-it-works"
                 className="group flex items-center gap-2 px-6 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-300 dark:hover:border-blue-600 rounded-xl font-semibold transition-all shadow-sm"
               >
-                <Play className="w-4 h-4 text-blue-500" />
-                Demo İzle
+                <Eye className="w-4 h-4 text-blue-500" />
+                Demo İncele
               </a>
             </div>
 
@@ -281,60 +282,64 @@ export function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Bottom Stats Bar */}
+        {/* Wizard Card - Bugün ne yapmak istiyorsunuz? */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
-          className="mt-20 pt-10 border-t border-slate-200/50 dark:border-slate-800"
+          className="mt-10"
         >
-          <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto text-center">
-            {stats.map((stat) => (
-              <div key={stat.label}>
-                <p className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center mb-5">
+              <p className="text-base font-semibold text-slate-800 dark:text-white">
+                Bugün ne yapmak istiyorsunuz?
+              </p>
+            </div>
 
-        {/* Question-based Onboarding */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="mt-16"
-        >
-          <div className="text-center mb-8">
-            <p className="text-base font-semibold text-slate-900 dark:text-white mb-1">
-              Bugün ne yapmak istiyorsunuz?
-            </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Hedefinize uygun ürünü keşfedin
-            </p>
-          </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {wizardOptions.map((option, index) => (
+                <motion.a
+                  key={option.title}
+                  href={option.href}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.6 + index * 0.05 }}
+                  className="group relative flex flex-col p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10 transition-all bg-white dark:bg-slate-800/80 overflow-hidden"
+                >
+                  {/* Highlight Badge */}
+                  {"highlight" in option && option.highlight && (
+                    <span className={`absolute top-2 right-2 px-2 py-0.5 text-[10px] font-semibold rounded-full ${
+                      option.highlight === "En Popüler"
+                        ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
+                        : "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400"
+                    }`}>
+                      {option.highlight}
+                    </span>
+                  )}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {onboardingOptions.map((option, index) => (
-              <motion.a
-                key={option.question}
-                href={option.href}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.7 + index * 0.05 }}
-                className="group flex flex-col items-center gap-3 p-5 bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-lg hover:shadow-blue-500/10 transition-all text-center"
-              >
-                <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">
-                  <option.icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <span className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-tight">
-                  {option.question}
-                </span>
-                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                  {option.product} →
-                </span>
-              </motion.a>
-            ))}
+                  {/* Icon */}
+                  <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-900/30 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 flex items-center justify-center transition-colors mb-3">
+                    <option.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="text-sm font-semibold text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
+                    {option.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                    {option.description}
+                  </p>
+
+                  {/* Stats & Arrow */}
+                  <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100 dark:border-slate-700/50">
+                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                      {option.stats}
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
+                  </div>
+                </motion.a>
+              ))}
+            </div>
           </div>
         </motion.div>
       </div>

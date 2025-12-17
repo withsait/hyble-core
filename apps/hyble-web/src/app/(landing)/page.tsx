@@ -3,20 +3,13 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { IntegrationLogos } from "@/components/landing/IntegrationLogos";
 import { FeatureBento } from "@/components/landing/FeatureBento";
 import { HowItWorks } from "@/components/landing/HowItWorks";
-import { StatsSection } from "@/components/landing/StatsSection";
+import { WhyHyble } from "@/components/landing/WhyHyble";
 import { PricingSection } from "@/components/landing/PricingSection";
-import { CTASection } from "@/components/landing/CTASection";
-import { TrustFloatingBar } from "@/components/landing/TrustFloatingBar";
 import { ScrollCTA } from "@/components/landing/ScrollCTA";
 
 export const metadata: Metadata = {
   title: "Hyble - All in One. All in Hyble.",
-  description: "Dijital işinizi tek platformdan yönetin. Kimlik doğrulama, ödeme altyapısı, lisanslama, hosting ve daha fazlası.",
-  openGraph: {
-    title: "Hyble - All in One. All in Hyble.",
-    description: "Dijital işinizi tek platformdan yönetin. Kimlik doğrulama, ödeme altyapısı, lisanslama ve hosting.",
-    images: ["/og-image.png"],
-  },
+  description: "Hızlı kurulum, kolay yönetim. Hosting, ödeme, kimlik doğrulama — hepsi tek platformda. 5 dakikada başlayın!",
 };
 
 export default function HomePage() {
@@ -26,10 +19,8 @@ export default function HomePage() {
       <IntegrationLogos />
       <FeatureBento />
       <HowItWorks />
-      <StatsSection />
+      <WhyHyble />
       <PricingSection />
-      <CTASection />
-      <TrustFloatingBar />
       <ScrollCTA />
     </>
   );

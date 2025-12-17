@@ -2,8 +2,7 @@
 
 import { motion } from "framer-motion";
 
-// Entegrasyon uyumluluk logoları - Seçenek B: "Entegrasyonlar" başlığı altında
-// Müşteri logosu yerine, Hyble'ın uyumlu olduğu platformlar
+// Entegrasyon uyumluluk logoları - Daha fazla entegrasyon eklendi
 const integrations = [
   { name: "Next.js", logo: "nextjs" },
   { name: "React", logo: "react" },
@@ -11,6 +10,8 @@ const integrations = [
   { name: "Stripe", logo: "stripe" },
   { name: "Discord", logo: "discord" },
   { name: "GitHub", logo: "github" },
+  { name: "WordPress", logo: "wordpress" },
+  { name: "Laravel", logo: "laravel" },
 ];
 
 // Simple SVG logos (monochrome)
@@ -52,15 +53,30 @@ const LogoSVG = ({ name }: { name: string }) => {
           <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
         </svg>
       );
+    case "wordpress":
+      return (
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M21.469 6.825c.84 1.537 1.318 3.3 1.318 5.175 0 3.979-2.156 7.456-5.363 9.325l3.295-9.527c.615-1.54.82-2.771.82-3.864 0-.405-.027-.78-.07-1.109m-7.981.105c.647-.034 1.23-.1 1.23-.1.579-.068.51-.922-.07-.89 0 0-1.742.137-2.866.137-1.055 0-2.83-.137-2.83-.137-.579-.033-.648.856-.068.89 0 0 .549.066 1.13.1l1.678 4.603-2.356 7.071-3.922-11.674c.647-.034 1.23-.1 1.23-.1.579-.068.51-.922-.07-.89 0 0-1.742.138-2.866.138-.201 0-.438-.005-.689-.015C5.494 2.655 8.594 0 12.312 0c2.761 0 5.28 1.058 7.17 2.79-.046-.003-.091-.009-.141-.009-1.055 0-1.803.917-1.803 1.904 0 .884.51 1.633 1.055 2.517.408.712.889 1.625.889 2.943 0 .915-.354 1.976-.82 3.455l-1.076 3.591-3.902-11.614.003-.002zm-3.177 1.395l4.148 12.371c.028.065.062.121.099.174-1.394.463-2.889.706-4.441.706-1.322 0-2.589-.191-3.788-.543l4.035-12.091-.053-.617zM1.93 12c0-2.44.907-4.675 2.413-6.375L8.5 18.621C4.626 16.916 1.93 13.17 1.93 12M12 24C5.37 24 0 18.627 0 12S5.37 0 12 0s12 5.373 12 12-5.37 12-12 12"/>
+        </svg>
+      );
+    case "laravel":
+      return (
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M23.642 5.43a.364.364 0 01.014.1v5.149c0 .135-.073.26-.189.326l-4.323 2.49v4.934a.378.378 0 01-.188.326L9.93 23.949a.316.316 0 01-.066.027c-.008.002-.016.008-.024.01a.348.348 0 01-.192 0c-.011-.002-.02-.008-.03-.012-.02-.008-.042-.014-.062-.025L.533 18.755a.376.376 0 01-.189-.326V2.974c0-.033.005-.066.014-.098.003-.012.01-.02.014-.032.006-.014.013-.028.021-.041.008-.016.018-.03.028-.044.008-.01.018-.017.027-.026.012-.012.022-.023.035-.033.01-.008.022-.014.032-.02.014-.009.025-.018.04-.025L4.9.027a.367.367 0 01.372 0L9.63 2.654c.014.007.027.016.04.025.011.006.022.012.032.021.013.01.024.021.035.032.01.01.02.017.027.027.011.013.021.028.028.044l.021.04c.004.013.011.022.014.033.009.032.014.065.014.098v9.652l3.76-2.164V5.527c0-.033.004-.066.013-.098.003-.01.01-.02.013-.032.007-.014.014-.028.022-.04.008-.017.018-.031.028-.045.008-.009.018-.017.027-.026.012-.012.023-.023.035-.033.01-.008.022-.014.032-.02.015-.009.026-.018.041-.025l4.356-2.51a.365.365 0 01.372 0l4.356 2.51c.015.007.027.016.041.025.01.006.021.012.032.02.012.01.023.021.034.033.01.009.02.017.028.026.01.014.02.028.028.045.007.012.014.026.021.04.004.012.011.022.014.032.009.033.013.066.013.099v10.3c0 .135-.073.26-.189.325l-9.027 5.195a.415.415 0 01-.06.027l-.027.01a.386.386 0 01-.192 0c-.01-.002-.018-.008-.028-.01-.02-.008-.043-.014-.063-.026l-4.357-2.508a.375.375 0 01-.189-.325v-4.935l-4.323 2.49a.375.375 0 01-.189-.326V5.433a.371.371 0 01.014-.1c.003-.012.01-.02.014-.032a.375.375 0 01.049-.085l.007-.007.002-.002c.01-.013.021-.027.033-.039.01-.01.02-.018.03-.027.01-.008.022-.014.032-.02.014-.009.026-.019.041-.026L4.9 2.657a.367.367 0 01.372 0l4.357 2.627c.014.007.027.017.04.026.011.006.022.012.032.02.011.009.021.018.031.027.012.012.023.026.033.039l.002.002.007.007a.375.375 0 01.049.085c.004.012.011.02.014.032"/>
+        </svg>
+      );
     default:
       return null;
   }
 };
 
 export function IntegrationLogos() {
+  // Slider için 3 kopya oluştur (sonsuz döngü efekti için)
+  const allIntegrations = [...integrations, ...integrations, ...integrations];
+
   return (
-    <section className="py-12 bg-white dark:bg-slate-900 border-y border-slate-100 dark:border-slate-800">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-12 bg-white dark:bg-slate-900 border-y border-slate-100 dark:border-slate-800 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -73,28 +89,40 @@ export function IntegrationLogos() {
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6"
-        >
-          {integrations.map((integration, index) => (
-            <motion.div
-              key={integration.name}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: 0.1 + index * 0.05 }}
-              className="flex items-center gap-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-            >
-              <LogoSVG name={integration.logo} />
-              <span className="text-sm font-medium">{integration.name}</span>
-            </motion.div>
-          ))}
-        </motion.div>
+        {/* Kayan Slider */}
+        <div className="relative">
+          {/* Gradient masks */}
+          <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white dark:from-slate-900 to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white dark:from-slate-900 to-transparent z-10 pointer-events-none" />
+
+          {/* Scrolling content */}
+          <div className="flex animate-scroll-integrations">
+            {allIntegrations.map((integration, index) => (
+              <div
+                key={`${integration.name}-${index}`}
+                className="flex-shrink-0 mx-6 flex items-center gap-2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+              >
+                <LogoSVG name={integration.logo} />
+                <span className="text-sm font-medium whitespace-nowrap">{integration.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
+
+      {/* CSS for slow scroll animation */}
+      <style jsx>{`
+        @keyframes scroll-integrations {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-33.333%); }
+        }
+        .animate-scroll-integrations {
+          animation: scroll-integrations 30s linear infinite;
+        }
+        .animate-scroll-integrations:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
     </section>
   );
 }
