@@ -95,15 +95,6 @@ export function InvoiceList() {
     : mockInvoices.filter(inv => inv.status === filter);
   const totalPages = 1;
 
-  if (error) {
-    return (
-      <Card className="p-6 border-destructive bg-destructive/10">
-        <p className="text-destructive text-sm">
-          Faturalar yüklenemedi: {error.message}
-        </p>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-4">
