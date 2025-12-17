@@ -29,7 +29,7 @@ export const statusRouter = createTRPCRouter({
         if (!acc[service.category]) {
           acc[service.category] = [];
         }
-        acc[service.category].push(service);
+        acc[service.category]!.push(service);
         return acc;
       },
       {} as Record<string, typeof services>
