@@ -19,6 +19,7 @@ import {
   ArrowRight,
   TrendingUp,
   Server,
+  Gamepad2,
 } from "lucide-react";
 
 // Live Preview Components
@@ -205,6 +206,41 @@ function ToolsPreview() {
   );
 }
 
+function GamingPreview() {
+  return (
+    <div className="mt-4 space-y-3">
+      {/* Game Server Status */}
+      <div className="p-4 bg-gradient-to-br from-emerald-600 to-green-700 rounded-xl">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm text-emerald-100">Minecraft Sunucusu</span>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-green-300 animate-pulse" />
+            <span className="text-xs text-emerald-200">Online</span>
+          </div>
+        </div>
+        <div className="flex items-baseline gap-2 mb-2">
+          <p className="text-2xl font-bold text-white">45</p>
+          <span className="text-sm text-emerald-200">/ 100 Oyuncu</span>
+        </div>
+        <div className="w-full bg-emerald-800/50 rounded-full h-1.5">
+          <div className="bg-emerald-300 h-1.5 rounded-full" style={{ width: "45%" }} />
+        </div>
+      </div>
+      {/* Quick Stats */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="p-2 bg-slate-800/50 rounded-lg text-center">
+          <p className="text-lg font-bold text-white">20ms</p>
+          <p className="text-xs text-slate-400">Ping</p>
+        </div>
+        <div className="p-2 bg-slate-800/50 rounded-lg text-center">
+          <p className="text-lg font-bold text-white">99.9%</p>
+          <p className="text-xs text-slate-400">Uptime</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const mainFeatures = [
   {
     icon: Shield,
@@ -261,6 +297,16 @@ const mainFeatures = [
     href: "/tools",
     preview: <ToolsPreview />,
   },
+  {
+    icon: Gamepad2,
+    title: "Hyble Gaming",
+    description: "Oyun sunucuları için özel çözümler. Minecraft, FiveM, Rust ve daha fazlası. Düşük ping, yüksek performans.",
+    color: "from-emerald-500 to-green-600",
+    size: "medium",
+    href: "/products/gaming",
+    badge: "Popüler",
+    preview: <GamingPreview />,
+  },
 ];
 
 const additionalFeatures = [
@@ -270,11 +316,13 @@ const additionalFeatures = [
   { icon: Globe, text: "Çoklu Dil" },
   { icon: Code2, text: "REST API" },
   { icon: Lock, text: "RBAC" },
+  { icon: Shield, text: "DDoS Koruması" },
+  { icon: Server, text: "Yedekleme" },
 ];
 
 export function FeatureBento() {
   return (
-    <section id="products" className="relative py-24 bg-white dark:bg-slate-900">
+    <section id="products" className="relative py-16 lg:py-24 bg-white dark:bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
@@ -365,7 +413,7 @@ export function FeatureBento() {
           ))}
         </div>
 
-        {/* Additional Features */}
+        {/* Additional Features - Scrolling Slider */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -374,25 +422,41 @@ export function FeatureBento() {
           className="mt-16"
         >
           <p className="text-center text-sm font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-8">
-            Ve Daha Fazlası
+            Tüm Özellikler
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {additionalFeatures.map((feature, index) => (
-              <motion.div
-                key={feature.text}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: 0.4 + index * 0.05 }}
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 cursor-default"
-              >
-                <feature.icon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-sm font-medium">{feature.text}</span>
-              </motion.div>
-            ))}
+          <div className="relative overflow-hidden">
+            {/* Gradient masks */}
+            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-white dark:from-slate-900 to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-white dark:from-slate-900 to-transparent z-10 pointer-events-none" />
+
+            {/* Scrolling content */}
+            <div className="flex animate-scroll-features">
+              {[...additionalFeatures, ...additionalFeatures, ...additionalFeatures].map((feature, index) => (
+                <div
+                  key={`${feature.text}-${index}`}
+                  className="flex-shrink-0 mx-2 flex items-center gap-2 px-4 py-2.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                >
+                  <feature.icon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm font-medium whitespace-nowrap">{feature.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </motion.div>
+
+        {/* CSS for scroll animation */}
+        <style jsx>{`
+          @keyframes scroll-features {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-33.333%); }
+          }
+          .animate-scroll-features {
+            animation: scroll-features 20s linear infinite;
+          }
+          .animate-scroll-features:hover {
+            animation-play-state: paused;
+          }
+        `}</style>
       </div>
     </section>
   );

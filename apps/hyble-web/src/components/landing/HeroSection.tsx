@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, Sparkles, CheckCircle2, Zap, Clock, Bot,
   Shield, Wallet, Cloud, Server, Gamepad2, Store,
-  ChevronRight
+  ChevronRight, Search
 } from "lucide-react";
 import { useState } from "react";
 
@@ -67,15 +67,15 @@ export function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center pt-20 pb-12 bg-slate-50 dark:bg-slate-900 overflow-hidden">
+    <section className="relative min-h-[85vh] lg:min-h-[90vh] flex items-center pt-20 lg:pt-24 pb-12 lg:pb-16 bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-900 overflow-hidden">
       {/* Grid Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-50/80 to-slate-50 dark:via-slate-900/80 dark:to-slate-900" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white dark:via-slate-900/80 dark:to-slate-900" />
 
         {/* Gradient orbs */}
-        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] rounded-full blur-3xl opacity-20 bg-blue-400 dark:bg-blue-600" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[350px] rounded-full blur-3xl opacity-15 bg-cyan-400 dark:bg-cyan-600" />
+        <div className="absolute top-20 left-1/4 w-[600px] h-[400px] rounded-full blur-3xl opacity-20 bg-blue-400 dark:bg-blue-600" />
+        <div className="absolute bottom-20 right-1/4 w-[500px] h-[350px] rounded-full blur-3xl opacity-15 bg-cyan-400 dark:bg-cyan-600" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
@@ -93,25 +93,30 @@ export function HeroSection() {
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 border border-blue-100 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-sm font-semibold mb-6"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Tek platform, sonsuz olasılık</span>
+              <span>Hepsi bir arada platform</span>
             </motion.div>
 
-            {/* Main Headline */}
+            {/* Main Headline with Gradient */}
             <motion.h1
               variants={fadeInUp}
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white mb-4 leading-tight"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight"
             >
-              All in One.{" "}
+              <span className="bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white bg-clip-text text-transparent">
+                Kur.
+              </span>{" "}
+              <span className="bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-500 bg-clip-text text-transparent">
+                Başlat.
+              </span>{" "}
               <span className="relative inline-block">
-                <span className="bg-gradient-to-r from-blue-600 via-cyan-500 to-blue-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
-                  All in Hyble.
+                <span className="bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 bg-clip-text text-transparent">
+                  Büyüt.
                 </span>
                 <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 200 8" fill="none">
                   <path d="M1 5.5Q50 1 100 5.5T199 5.5" stroke="url(#underline)" strokeWidth="3" strokeLinecap="round"/>
                   <defs>
                     <linearGradient id="underline" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#3B82F6"/>
-                      <stop offset="100%" stopColor="#06B6D4"/>
+                      <stop offset="0%" stopColor="#10B981"/>
+                      <stop offset="100%" stopColor="#22C55E"/>
                     </linearGradient>
                   </defs>
                 </svg>
@@ -123,8 +128,8 @@ export function HeroSection() {
               variants={fadeInUp}
               className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-xl mx-auto lg:mx-0 mb-8"
             >
-              Dijital işinizi başlatmak ve büyütmek için ihtiyacınız olan her şey.
-              Kimlik, ödeme, hosting ve araçlar — yapay zeka destekli tek platformda.
+              Web sitenizi, oyun sunucunuzu veya dijital projenizi dakikalar içinde kurun.
+              Kolay yönetim, hızlı kurulum ve profesyonel altyapı — hepsi tek platformda.
             </motion.p>
 
             {/* Feature pills */}
@@ -133,9 +138,9 @@ export function HeroSection() {
               className="flex flex-wrap justify-center lg:justify-start gap-3 mb-8"
             >
               {[
-                { icon: Bot, text: "AI Destekli", highlight: true },
-                { icon: Clock, text: "5dk Kurulum" },
-                { icon: Zap, text: "Anında Başlat" },
+                { icon: Zap, text: "Hızlı Kurulum", highlight: true },
+                { icon: Shield, text: "Güvenli Altyapı" },
+                { icon: Clock, text: "7/24 Destek" },
               ].map((item) => (
                 <div
                   key={item.text}
@@ -158,17 +163,17 @@ export function HeroSection() {
             >
               <a
                 href="https://id.hyble.co/register"
-                className="group flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:shadow-blue-500/25 w-full sm:w-auto justify-center"
+                className="group flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:shadow-blue-500/25 w-full sm:w-auto justify-center"
               >
                 7 Gün Ücretsiz Başla
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </a>
               <a
                 href="#products"
-                className="group flex items-center gap-2 px-6 py-4 text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 font-semibold transition-colors"
+                className="group flex items-center gap-2 px-6 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-300 dark:hover:border-blue-600 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl font-semibold transition-all"
               >
-                Ürünleri Keşfet
-                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <Search className="w-5 h-5" />
+                Demo İncele
               </a>
             </motion.div>
 
@@ -193,7 +198,7 @@ export function HeroSection() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="relative"
+            className="relative hidden lg:block"
           >
             {/* AI Setup Wizard */}
             <div className="relative">

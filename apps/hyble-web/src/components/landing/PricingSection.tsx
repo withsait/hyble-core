@@ -124,7 +124,7 @@ export function PricingSection() {
   };
 
   return (
-    <section id="pricing" className="relative py-24 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-900 overflow-hidden">
+    <section id="pricing" className="relative py-16 lg:py-24 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-900 overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full blur-3xl opacity-20 bg-gradient-to-r from-blue-400 to-cyan-400 dark:opacity-10" />
@@ -401,7 +401,7 @@ export function PricingSection() {
           )}
         </AnimatePresence>
 
-        {/* Enterprise CTA */}
+        {/* Custom Order CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -412,35 +412,72 @@ export function PricingSection() {
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900" />
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#fff1_1px,transparent_1px),linear-gradient(to_bottom,#fff1_1px,transparent_1px)] bg-[size:32px_32px] opacity-10" />
 
-          <div className="relative p-8 md:p-12 lg:p-16">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+          <div className="relative p-8 md:p-12">
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              {/* Left - Text Content */}
               <div className="text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/80 text-sm mb-4">
-                  <Users className="w-4 h-4" />
-                  <span>Enterprise Çözümler</span>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-300 text-sm font-medium mb-4">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Özel Sipariş</span>
                 </div>
                 <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
-                  Özel İhtiyaçlarınız mı Var?
+                  Size Özel Çözüm mü Gerekiyor?
                 </h3>
-                <p className="text-slate-300 max-w-xl">
-                  Büyük ölçekli projeleriniz için özelleştirilmiş altyapı, özel SLA ve
-                  dedicated destek ile işinizi bir sonraki seviyeye taşıyın.
+                <p className="text-slate-300 mb-6">
+                  Standart paketlerimiz ihtiyaçlarınızı karşılamıyorsa, size özel bir çözüm oluşturalım.
+                  Özel konfigürasyonlar, dedicated kaynaklar ve kurumsal SLA ile projenize uygun paket hazırlayalım.
                 </p>
+                <ul className="space-y-2 text-left">
+                  {[
+                    "Özel sunucu konfigürasyonları",
+                    "Dedicated kaynaklar ve izole ortam",
+                    "Kurumsal SLA ve öncelikli destek",
+                    "Özel entegrasyonlar ve API limitleri",
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-slate-300 text-sm">
+                      <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-slate-900 rounded-xl font-semibold hover:bg-slate-100 transition-colors"
-                >
-                  Satış ile Görüşün
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <Link
-                  href="/enterprise"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 text-white border border-white/20 rounded-xl font-semibold hover:bg-white/20 transition-colors"
-                >
-                  Daha Fazla Bilgi
-                </Link>
+
+              {/* Right - Quick Contact Form */}
+              <div className="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
+                <h4 className="text-lg font-semibold text-white mb-4">Bize Ulaşın</h4>
+                <form className="space-y-4">
+                  <div>
+                    <input
+                      type="text"
+                      placeholder="Adınız Soyadınız"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="email"
+                      placeholder="E-posta Adresiniz"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <textarea
+                      placeholder="İhtiyaçlarınızı kısaca açıklayın..."
+                      rows={3}
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                    />
+                  </div>
+                  <Link
+                    href="/contact"
+                    className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-cyan-600 transition-all"
+                  >
+                    Teklif Alın
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </form>
+                <p className="text-xs text-slate-400 text-center mt-4">
+                  24 saat içinde size geri dönüş yapacağız.
+                </p>
               </div>
             </div>
           </div>

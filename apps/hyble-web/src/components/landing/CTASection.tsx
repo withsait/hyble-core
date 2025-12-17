@@ -1,52 +1,9 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, Sparkles, CheckCircle2, Gift, Zap, Shield, Clock, Star, Rocket } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Sparkles, CheckCircle2, Gift, Zap, Shield, Clock, Star, Rocket, PartyPopper } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-
-// Scroll depth based CTA messages
-const ctaVariants = {
-  early: {
-    badge: "Hemen Keşfet",
-    title: "Dijital Geleceğinizi",
-    highlight: "Şekillendirin",
-    description: "Hyble ile projelerinizi hayata geçirin. Tüm araçlar tek platformda.",
-    cta: "Ürünleri Keşfet",
-    ctaLink: "#products",
-    stats: [
-      { value: "5dk", label: "Kurulum" },
-      { value: "99.9%", label: "Uptime" },
-      { value: "7/24", label: "Destek" },
-    ],
-  },
-  middle: {
-    badge: "Popüler Seçim",
-    title: "Pro Plan ile",
-    highlight: "Farkı Hissedin",
-    description: "100.000+ API çağrısı, sınırsız kullanıcı ve öncelikli destek ile işinizi büyütün.",
-    cta: "7 Gün Ücretsiz Dene",
-    ctaLink: "https://id.hyble.co/register?plan=pro",
-    stats: [
-      { value: "€49", label: "/ay" },
-      { value: "100K", label: "API/ay" },
-      { value: "4 saat", label: "Destek SLA" },
-    ],
-  },
-  late: {
-    badge: "Son Adım",
-    title: "Harekete Geçme",
-    highlight: "Zamanı",
-    description: "Şimdi başlayın, ilk 7 gün tamamen ücretsiz. Risk yok, bağlayıcılık yok.",
-    cta: "Ücretsiz Hesap Oluştur",
-    ctaLink: "https://id.hyble.co/register",
-    stats: [
-      { value: "7 gün", label: "Ücretsiz" },
-      { value: "0€", label: "Başlangıç" },
-      { value: "30 gün", label: "İade" },
-    ],
-  },
-};
 
 const benefits = [
   { icon: Gift, text: "7 gün ücretsiz deneme" },
@@ -77,26 +34,7 @@ const testimonials = [
 ];
 
 export function CTASection() {
-  const [scrollDepth, setScrollDepth] = useState<"early" | "middle" | "late">("early");
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-
-      if (scrollPercent < 40) {
-        setScrollDepth("early");
-      } else if (scrollPercent < 70) {
-        setScrollDepth("middle");
-      } else {
-        setScrollDepth("late");
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    handleScroll(); // Initial check
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -105,10 +43,8 @@ export function CTASection() {
     return () => clearInterval(timer);
   }, []);
 
-  const currentCTA = ctaVariants[scrollDepth];
-
   return (
-    <section className="relative py-24 bg-slate-900 overflow-hidden">
+    <section className="relative py-16 lg:py-24 bg-slate-900 overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0">
         {/* Gradient mesh */}
@@ -137,47 +73,83 @@ export function CTASection() {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* New Year Campaign Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="mb-12"
+        >
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-red-500/20 border border-amber-500/30 p-6 md:p-8">
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#fff0_0%,#fff1_50%,#fff0_100%)] animate-shimmer" />
+            <div className="relative flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/25">
+                  <PartyPopper className="w-7 h-7 text-white" />
+                </div>
+                <div className="text-center md:text-left">
+                  <p className="text-xl md:text-2xl font-bold text-white">2025 Yeni Yıl Kampanyası</p>
+                  <p className="text-amber-200/80">Yıllık planlarda <span className="font-bold text-amber-300">%30 indirim</span> - 31 Ocak'a kadar geçerli!</p>
+                </div>
+              </div>
+              <a
+                href="https://id.hyble.co/register?promo=newyear2025"
+                className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white rounded-xl font-semibold transition-all shadow-lg shadow-amber-500/25 whitespace-nowrap"
+              >
+                Kampanyayı Yakala
+                <ArrowRight className="w-5 h-5" />
+              </a>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Main CTA Content */}
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Left Column - Dynamic Content */}
+          {/* Left Column - Static Content */}
           <motion.div
-            key={scrollDepth}
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-sm font-semibold mb-6"
             >
               <Sparkles className="w-4 h-4" />
-              <span>{currentCTA.badge}</span>
+              <span>Hemen Başlayın</span>
             </motion.div>
 
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-              {currentCTA.title}{" "}
+              Projenizi{" "}
               <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                {currentCTA.highlight}
+                Bugün Başlatın
               </span>
             </h2>
 
             <p className="text-xl text-slate-300 mb-8 leading-relaxed">
-              {currentCTA.description}
+              7 gün ücretsiz deneyin, risk yok. Dakikalar içinde kurulum yapın ve hemen kullanmaya başlayın.
             </p>
 
             {/* Stats Row */}
-            <div className="flex gap-8 mb-10">
-              {currentCTA.stats.map((stat, index) => (
+            <div className="flex flex-wrap gap-6 lg:gap-8 mb-10">
+              {[
+                { value: "5dk", label: "Kurulum" },
+                { value: "99.9%", label: "Uptime" },
+                { value: "7/24", label: "Destek" },
+              ].map((stat, index) => (
                 <motion.div
                   key={stat.label}
                   initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                   className="text-center"
                 >
-                  <p className="text-3xl md:text-4xl font-bold text-white">{stat.value}</p>
-                  <p className="text-sm text-slate-400">{stat.label}</p>
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">{stat.value}</p>
+                  <p className="text-xs sm:text-sm text-slate-400">{stat.label}</p>
                 </motion.div>
               ))}
             </div>
@@ -185,19 +157,19 @@ export function CTASection() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <motion.a
-                href={currentCTA.ctaLink}
+                href="https://id.hyble.co/register"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold text-lg shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all"
               >
-                {currentCTA.cta}
+                Ücretsiz Hesap Oluştur
                 <ArrowRight className="w-5 h-5" />
               </motion.a>
               <Link
                 href="/contact"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 text-white border border-white/20 rounded-xl font-semibold hover:bg-white/20 transition-colors"
               >
-                Satış ile Görüşün
+                Sorularınız mı Var?
               </Link>
             </div>
 
@@ -328,36 +300,6 @@ export function CTASection() {
           </div>
         </motion.div>
 
-        {/* Urgency Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
-          className="mt-12"
-        >
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 border border-amber-500/30 p-6 md:p-8">
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#fff0_0%,#fff1_50%,#fff0_100%)] animate-shimmer" />
-            <div className="relative flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
-                  <Rocket className="w-6 h-6 text-amber-400" />
-                </div>
-                <div>
-                  <p className="font-semibold text-white">Yılsonu Kampanyası</p>
-                  <p className="text-sm text-amber-200/80">Yıllık planlarda ekstra %10 indirim - 31 Aralık'a kadar</p>
-                </div>
-              </div>
-              <a
-                href="https://id.hyble.co/register?promo=newyear"
-                className="flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl font-semibold transition-colors whitespace-nowrap"
-              >
-                Kampanyadan Yararlan
-                <ArrowRight className="w-4 h-4" />
-              </a>
-            </div>
-          </div>
-        </motion.div>
       </div>
 
       {/* CSS for shimmer animation */}

@@ -1,40 +1,7 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
-import { Server, Globe, Shield, Zap } from "lucide-react";
-
-// Animated counter hook
-function useCounter(end: number, duration: number = 2000, startOnView: boolean = true) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-
-  useEffect(() => {
-    if (!startOnView || !isInView) return;
-
-    let startTime: number;
-    let animationFrame: number;
-
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-
-      // Easing function for smooth animation
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      setCount(Math.floor(easeOutQuart * end));
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate);
-      }
-    };
-
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [end, duration, isInView, startOnView]);
-
-  return { count, ref };
-}
+import { motion } from "framer-motion";
+import { Shield } from "lucide-react";
 
 // Datacenter locations
 const datacenters = [
@@ -43,108 +10,10 @@ const datacenters = [
   { id: "hel", name: "Helsinki", country: "Finlandiya", lat: 60.17, lng: 24.94, primary: false },
 ];
 
-const stats = [
-  {
-    icon: Server,
-    value: 99.9,
-    suffix: "%",
-    label: "Uptime Garantisi",
-    description: "SLA ile desteklenen güvenilirlik",
-  },
-  {
-    icon: Zap,
-    value: 10,
-    suffix: "ms",
-    label: "Ortalama Yanıt",
-    description: "Avrupa'dan hızlı erişim",
-  },
-  {
-    icon: Globe,
-    value: 3,
-    suffix: "",
-    label: "Datacenter",
-    description: "Avrupa genelinde dağıtık",
-  },
-  {
-    icon: Shield,
-    value: 256,
-    suffix: "-bit",
-    label: "SSL Şifreleme",
-    description: "Endüstri standardı güvenlik",
-  },
-];
-
-function AnimatedStat({
-  icon: Icon,
-  value,
-  suffix,
-  label,
-  description,
-  index,
-}: {
-  icon: typeof Server;
-  value: number;
-  suffix: string;
-  label: string;
-  description: string;
-  index: number;
-}) {
-  const { count, ref } = useCounter(value, 2000);
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="text-center p-6"
-    >
-      <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-        <Icon className="w-7 h-7 text-blue-600 dark:text-blue-400" />
-      </div>
-      <div className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-2">
-        {count}
-        <span className="text-blue-600 dark:text-blue-400">{suffix}</span>
-      </div>
-      <div className="font-semibold text-slate-900 dark:text-white mb-1">{label}</div>
-      <div className="text-sm text-slate-500 dark:text-slate-400">{description}</div>
-    </motion.div>
-  );
-}
-
 export function StatsSection() {
   return (
-    <section className="relative py-24 bg-slate-50 dark:bg-slate-800/50 overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-50">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:40px_40px]" />
-      </div>
-
+    <section className="relative py-16 bg-white dark:bg-slate-900 overflow-hidden">
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">
-            Güçlü Altyapı, Güvenilir Performans
-          </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Hetzner'in güvenilir altyapısı üzerinde, Avrupa'nın önde gelen datacenter'larında çalışıyoruz.
-          </p>
-        </motion.div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-          {stats.map((stat, index) => (
-            <AnimatedStat key={stat.label} {...stat} index={index} />
-          ))}
-        </div>
-
         {/* Map Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
