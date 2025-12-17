@@ -1,6 +1,6 @@
 "use client";
 
-import { trpc } from "@/lib/trpc/client";
+import { useState } from "react";
 import { Card, Button } from "@hyble/ui";
 import {
   CreditCard,
@@ -45,39 +45,26 @@ const intervalLabels = {
 };
 
 export function SubscriptionCard({ subscription, onManage }: SubscriptionCardProps) {
-  const utils = trpc.useUtils();
-
-  const cancelSubscription = trpc.subscription.cancel.useMutation({
-    onSuccess: () => {
-      utils.subscription.list.invalidate();
-    },
-    onError: (error) => {
-      alert(`Hata: ${error.message}`);
-    },
-  });
-
-  const resumeSubscription = trpc.subscription.resume.useMutation({
-    onSuccess: () => {
-      utils.subscription.list.invalidate();
-    },
-    onError: (error) => {
-      alert(`Hata: ${error.message}`);
-    },
-  });
+  const [isPending, setIsPending] = useState(false);
 
   const config = statusConfig[subscription.status];
   const currencySymbol = subscription.currency === "EUR" ? "€" : subscription.currency === "USD" ? "$" : "₺";
   const isActive = subscription.status === "ACTIVE" || subscription.status === "TRIALING";
-  const isPending = cancelSubscription.isPending || resumeSubscription.isPending;
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (window.confirm("Bu aboneliği dönem sonunda iptal etmek istediğinize emin misiniz?")) {
-      cancelSubscription.mutate({ id: subscription.id });
+      setIsPending(true);
+      // TODO: Replace with tRPC mutation when subscription router is ready
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setIsPending(false);
     }
   };
 
-  const handleResume = () => {
-    resumeSubscription.mutate({ id: subscription.id });
+  const handleResume = async () => {
+    setIsPending(true);
+    // TODO: Replace with tRPC mutation when subscription router is ready
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setIsPending(false);
   };
 
   return (

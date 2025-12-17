@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { trpc } from "@/lib/trpc/client";
 import { Button, Input } from "@hyble/ui";
 import { Loader2, Save, ArrowLeft } from "lucide-react";
 import { VariantEditor } from "./VariantEditor";
@@ -36,33 +35,21 @@ interface ProductFormProps {
   productId?: string;
 }
 
+// Mock categories - will be replaced with tRPC when pim router is ready
+const mockCategories = [
+  { id: "1", nameTr: "Web Hosting" },
+  { id: "2", nameTr: "VPS Sunucular" },
+];
+
 export function ProductForm({ productId }: ProductFormProps) {
   const mode = productId ? "edit" : "create";
   const router = useRouter();
-  const utils = trpc.useUtils();
+  const [isPending, setIsPending] = useState(false);
 
-  const { data: product, isLoading: productLoading } = trpc.pim.getProductById.useQuery(
-    { id: productId! },
-    { enabled: mode === "edit" && !!productId }
-  );
-
-  const { data: categories } = trpc.pim.listCategories.useQuery();
-
-  const createProduct = trpc.pim.createProduct.useMutation({
-    onSuccess: (data) => {
-      utils.pim.listProducts.invalidate();
-      router.push(`/dashboard/pim/products/${data.id}`);
-    },
-    onError: (error) => alert(`Hata: ${error.message}`),
-  });
-
-  const updateProduct = trpc.pim.updateProduct.useMutation({
-    onSuccess: () => {
-      utils.pim.listProducts.invalidate();
-      utils.pim.getProductById.invalidate({ id: productId! });
-    },
-    onError: (error) => alert(`Hata: ${error.message}`),
-  });
+  // TODO: Replace with tRPC queries when pim router is ready
+  const product = null;
+  const productLoading = false;
+  const categories = mockCategories;
 
   const {
     register,
@@ -123,25 +110,16 @@ export function ProductForm({ productId }: ProductFormProps) {
     }
   }, [nameTr, mode, setValue]);
 
-  const onSubmit = (data: ProductFormData) => {
-    const payload = {
-      ...data,
-      basePrice: data.basePrice ? parseFloat(data.basePrice) : undefined,
-      taxRate: data.taxRate ? parseFloat(data.taxRate) : 20,
-      currency: data.currency || "EUR",
-      isFeatured: data.isFeatured ?? false,
-      tags: data.tags ? data.tags.split(",").map(t => t.trim()).filter(Boolean) : [],
-      categoryId: data.categoryId || undefined,
-    };
+  const onSubmit = async (data: ProductFormData) => {
+    setIsPending(true);
+    // TODO: Replace with tRPC mutations when pim router is ready
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     if (mode === "create") {
-      createProduct.mutate(payload);
-    } else {
-      updateProduct.mutate({ id: productId!, ...payload });
+      router.push(`/dashboard/pim/products/demo-id`);
     }
+    setIsPending(false);
   };
-
-  const isPending = createProduct.isPending || updateProduct.isPending;
 
   if (mode === "edit" && productLoading) {
     return (

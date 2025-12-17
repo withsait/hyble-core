@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { trpc } from "@/lib/trpc/client";
 import { Button, Input } from "@hyble/ui";
 import { X, Loader2 } from "lucide-react";
 
@@ -34,33 +33,18 @@ interface CategoryFormProps {
   onSuccess?: () => void;
 }
 
+// Mock categories - will be replaced with tRPC when pim router is ready
+const mockCategories = [
+  { id: "1", nameTr: "Web Hosting", nameEn: "Web Hosting", slug: "web-hosting" },
+  { id: "2", nameTr: "VPS Sunucular", nameEn: "VPS Servers", slug: "vps-servers" },
+];
+
 export function CategoryForm({ category, parentId, onClose, onSuccess }: CategoryFormProps) {
-  const utils = trpc.useUtils();
+  const [isPending, setIsPending] = useState(false);
   const isEditMode = !!category;
 
-  const { data: categories } = trpc.pim.listCategories.useQuery();
-
-  const createCategory = trpc.pim.createCategory.useMutation({
-    onSuccess: () => {
-      utils.pim.listCategories.invalidate();
-      onSuccess?.();
-      onClose();
-    },
-    onError: (error) => {
-      alert(`Hata: ${error.message}`);
-    },
-  });
-
-  const updateCategory = trpc.pim.updateCategory.useMutation({
-    onSuccess: () => {
-      utils.pim.listCategories.invalidate();
-      onSuccess?.();
-      onClose();
-    },
-    onError: (error) => {
-      alert(`Hata: ${error.message}`);
-    },
-  });
+  // TODO: Replace with tRPC query when pim router is ready
+  const categories = mockCategories;
 
   const {
     register,
@@ -98,22 +82,14 @@ export function CategoryForm({ category, parentId, onClose, onSuccess }: Categor
     }
   }, [nameTr, isEditMode, setValue]);
 
-  const onSubmit = (data: CategoryFormData) => {
-    if (isEditMode) {
-      updateCategory.mutate({
-        id: category.id,
-        ...data,
-        parentId: data.parentId || undefined,
-      });
-    } else {
-      createCategory.mutate({
-        ...data,
-        parentId: data.parentId || undefined,
-      });
-    }
+  const onSubmit = async (data: CategoryFormData) => {
+    setIsPending(true);
+    // TODO: Replace with tRPC mutation when pim router is ready
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setIsPending(false);
+    onSuccess?.();
+    onClose();
   };
-
-  const isPending = createCategory.isPending || updateCategory.isPending;
 
   // Filter out current category and its children for parent selection
   const availableParents = categories?.filter(c => {

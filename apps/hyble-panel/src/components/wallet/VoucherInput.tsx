@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { trpc } from "@/lib/trpc/client";
 import { Button, Input } from "@hyble/ui";
 import { Ticket, Loader2, Check, X, Gift } from "lucide-react";
 
@@ -14,53 +13,46 @@ export function VoucherInput({ onSuccess }: VoucherInputProps) {
   const [status, setStatus] = useState<"idle" | "validating" | "valid" | "invalid" | "redeemed">("idle");
   const [voucherInfo, setVoucherInfo] = useState<{ amount: number; type: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isValidating, setIsValidating] = useState(false);
+  const [isRedeeming, setIsRedeeming] = useState(false);
 
-  const utils = trpc.useUtils();
-
-  const validateVoucher = trpc.voucher.validate.useMutation({
-    onSuccess: (data) => {
-      if (data.valid) {
-        setStatus("valid");
-        setVoucherInfo({ amount: data.amount, type: data.type });
-        setErrorMessage("");
-      } else {
-        setStatus("invalid");
-        setErrorMessage(data.message || "Geçersiz kupon kodu");
-      }
-    },
-    onError: (error) => {
-      setStatus("invalid");
-      setErrorMessage(error.message);
-    },
-  });
-
-  const redeemVoucher = trpc.voucher.redeem.useMutation({
-    onSuccess: (data) => {
-      setStatus("redeemed");
-      utils.wallet.getBalance.invalidate();
-      onSuccess?.(data.amount);
-      // Reset after 3 seconds
-      setTimeout(() => {
-        setCode("");
-        setStatus("idle");
-        setVoucherInfo(null);
-      }, 3000);
-    },
-    onError: (error) => {
-      setStatus("invalid");
-      setErrorMessage(error.message);
-    },
-  });
-
-  const handleValidate = () => {
+  // TODO: Replace with tRPC mutations when voucher router is ready
+  const handleValidate = async () => {
     if (!code.trim()) return;
     setStatus("validating");
-    validateVoucher.mutate({ code: code.trim().toUpperCase() });
+    setIsValidating(true);
+
+    // Mock validation
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Demo: accept codes starting with "HYBLE"
+    if (code.toUpperCase().startsWith("HYBLE")) {
+      setStatus("valid");
+      setVoucherInfo({ amount: 10, type: "PROMO" });
+      setErrorMessage("");
+    } else {
+      setStatus("invalid");
+      setErrorMessage("Geçersiz kupon kodu");
+    }
+    setIsValidating(false);
   };
 
-  const handleRedeem = () => {
-    if (!code.trim()) return;
-    redeemVoucher.mutate({ code: code.trim().toUpperCase() });
+  const handleRedeem = async () => {
+    if (!code.trim() || !voucherInfo) return;
+    setIsRedeeming(true);
+
+    // Mock redeem
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setStatus("redeemed");
+    onSuccess?.(voucherInfo.amount);
+
+    // Reset after 3 seconds
+    setTimeout(() => {
+      setCode("");
+      setStatus("idle");
+      setVoucherInfo(null);
+    }, 3000);
+    setIsRedeeming(false);
   };
 
   const handleReset = () => {
@@ -70,7 +62,7 @@ export function VoucherInput({ onSuccess }: VoucherInputProps) {
     setErrorMessage("");
   };
 
-  const isLoading = validateVoucher.isPending || redeemVoucher.isPending;
+  const isLoading = isValidating || isRedeeming;
 
   return (
     <div className="space-y-3">

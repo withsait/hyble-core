@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button } from "@hyble/ui";
 import {
   FileText,
@@ -60,19 +59,41 @@ function InvoiceSkeleton() {
   );
 }
 
+// Mock invoices - will be replaced with tRPC when invoice router is ready
+const mockInvoices: Invoice[] = [
+  {
+    id: "1",
+    number: "INV-2024-001",
+    status: "PAID",
+    total: 25.00,
+    currency: "EUR",
+    dueDate: new Date("2024-12-30"),
+    createdAt: new Date("2024-12-15"),
+    items: [{ name: "Hyble Pro Hosting" }],
+  },
+  {
+    id: "2",
+    number: "INV-2024-002",
+    status: "PENDING",
+    total: 9.99,
+    currency: "EUR",
+    dueDate: new Date("2024-12-25"),
+    createdAt: new Date("2024-12-10"),
+    items: [{ name: "Domain .com" }],
+  },
+];
+
 export function InvoiceList() {
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<InvoiceStatus | "ALL">("ALL");
-  const limit = 10;
 
-  const { data, isLoading, error } = trpc.invoice.list.useQuery({
-    page,
-    limit,
-    status: filter === "ALL" ? undefined : filter,
-  });
-
-  const invoices = data?.invoices || [];
-  const totalPages = data?.totalPages || 1;
+  // TODO: Replace with tRPC query when invoice router is ready
+  const isLoading = false;
+  const error = null;
+  const invoices = filter === "ALL"
+    ? mockInvoices
+    : mockInvoices.filter(inv => inv.status === filter);
+  const totalPages = 1;
 
   if (error) {
     return (

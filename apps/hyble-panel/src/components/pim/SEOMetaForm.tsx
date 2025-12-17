@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { trpc } from "@/lib/trpc/client";
 import { Button, Input } from "@hyble/ui";
 import { Loader2, Search, Globe, AlertCircle, CheckCircle2 } from "lucide-react";
 
@@ -22,24 +21,25 @@ interface SEOMetaFormProps {
   productId: string;
 }
 
+// Mock product - will be replaced with tRPC when pim router is ready
+const mockProduct = {
+  nameTr: "Demo Ürün",
+  nameEn: "Demo Product",
+  slug: "demo-urun",
+  meta: {
+    metaTitleTr: "",
+    metaTitleEn: "",
+    metaDescTr: "",
+    metaDescEn: "",
+  },
+};
+
 export function SEOMetaForm({ productId }: SEOMetaFormProps) {
-  const utils = trpc.useUtils();
+  const [isPending, setIsPending] = useState(false);
 
-  const { data: product, isLoading } = trpc.pim.getProductById.useQuery({ id: productId });
-
-  const updateProduct = trpc.pim.updateProduct.useMutation({
-    onSuccess: () => {
-      utils.pim.getProductById.invalidate({ id: productId });
-    },
-    onError: (error) => alert(`Hata: ${error.message}`),
-  });
-
-  const updateMeta = trpc.pim.updateMeta.useMutation({
-    onSuccess: () => {
-      utils.pim.getProductById.invalidate({ id: productId });
-    },
-    onError: (error) => alert(`Hata: ${error.message}`),
-  });
+  // TODO: Replace with tRPC query when pim router is ready
+  const product = mockProduct;
+  const isLoading = false;
 
   const {
     register,
@@ -75,21 +75,11 @@ export function SEOMetaForm({ productId }: SEOMetaFormProps) {
   const metaDescriptionEn = watch("metaDescriptionEn") || "";
   const slug = watch("slug") || "";
 
-  const onSubmit = (data: SEOFormData) => {
-    // Update slug
-    updateProduct.mutate({
-      id: productId,
-      slug: data.slug,
-    });
-
-    // Update meta
-    updateMeta.mutate({
-      productId,
-      metaTitleTr: data.metaTitleTr || undefined,
-      metaTitleEn: data.metaTitleEn || undefined,
-      metaDescTr: data.metaDescriptionTr || undefined,
-      metaDescEn: data.metaDescriptionEn || undefined,
-    });
+  const onSubmit = async (data: SEOFormData) => {
+    setIsPending(true);
+    // TODO: Replace with tRPC mutations when pim router is ready
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setIsPending(false);
   };
 
   const getCharacterStatus = (current: number, max: number) => {
@@ -273,8 +263,8 @@ export function SEOMetaForm({ productId }: SEOMetaFormProps) {
 
       {/* Submit Button */}
       <div className="flex justify-end">
-        <Button type="submit" disabled={!isDirty || updateProduct.isPending}>
-          {updateProduct.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+        <Button type="submit" disabled={!isDirty || isPending}>
+          {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
           SEO Ayarlarını Kaydet
         </Button>
       </div>
