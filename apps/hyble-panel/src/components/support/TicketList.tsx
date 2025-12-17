@@ -108,15 +108,6 @@ export function TicketList() {
     ticket.referenceNo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (error) {
-    return (
-      <Card className="p-6 border-destructive bg-destructive/10">
-        <p className="text-destructive text-sm">
-          Destek talepleri yüklenemedi: {error.message}
-        </p>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-4">

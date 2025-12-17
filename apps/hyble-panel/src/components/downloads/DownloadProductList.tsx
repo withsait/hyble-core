@@ -97,15 +97,6 @@ export function DownloadProductList() {
     return matchesSearch && matchesLicense;
   });
 
-  if (error) {
-    return (
-      <Card className="p-6 border-destructive bg-destructive/10">
-        <p className="text-destructive text-sm">
-          Ürünler yüklenemedi: {error.message}
-        </p>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-6">
