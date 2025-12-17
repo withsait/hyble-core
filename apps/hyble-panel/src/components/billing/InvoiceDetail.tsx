@@ -50,7 +50,7 @@ function DetailSkeleton() {
 const mockInvoice = {
   id: "1",
   number: "INV-2024-001",
-  status: "PENDING" as const,
+  status: "PENDING" as InvoiceStatus,
   total: 25.00,
   subtotal: 25.00,
   taxAmount: 0,
