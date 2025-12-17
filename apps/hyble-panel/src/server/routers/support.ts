@@ -412,6 +412,47 @@ export const supportRouter = createTRPCRouter({
     }),
 
   /**
+   * Get ticket by reference number (Admin)
+   */
+  adminGetByRef: adminProcedure
+    .input(z.object({ referenceNo: z.string() }))
+    .query(async ({ input }) => {
+      const ticket = await prisma.ticket.findFirst({
+        where: { referenceNo: input.referenceNo },
+        include: {
+          messages: {
+            orderBy: { createdAt: "asc" },
+            include: {
+              attachments: true,
+            },
+          },
+          attachments: true,
+        },
+      });
+
+      if (!ticket) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Destek talebi bulunamadı",
+        });
+      }
+
+      // Get user info
+      const user = await prisma.user.findUnique({
+        where: { id: ticket.userId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          image: true,
+          createdAt: true,
+        },
+      });
+
+      return { ticket, user };
+    }),
+
+  /**
    * Get ticket by ID (Admin)
    */
   adminGetById: adminProcedure
