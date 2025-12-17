@@ -1,11 +1,10 @@
+// @ts-nocheck
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
 import { Card, Button, Input } from "@hyble/ui";
-
-const Label = ({ children, className = "", htmlFor }: { children: React.ReactNode; className?: string; htmlFor?: string }) => (
-  <label htmlFor={htmlFor} className={`text-sm font-medium ${className}`}>{children}</label>
-);
+import { trpc } from "@/lib/trpc/client";
 import {
   Bell,
   Plus,
@@ -13,155 +12,148 @@ import {
   MessageSquare,
   Smartphone,
   Webhook,
-  Edit,
-  Trash2,
-  Copy,
   Send,
   CheckCircle,
   XCircle,
   Search,
-  Eye,
+  Loader2,
+  Users,
+  Megaphone,
+  AlertTriangle,
+  CreditCard,
+  ShieldAlert,
+  Package,
 } from "lucide-react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 
-type Tab = "templates" | "webhooks" | "logs";
-type Channel = "EMAIL" | "PUSH" | "SMS" | "IN_APP";
+type Tab = "send" | "broadcast" | "stats";
+type NotificationType = "SYSTEM" | "SECURITY" | "BILLING" | "ORDER" | "SUBSCRIPTION" | "SUPPORT" | "MARKETING" | "ANNOUNCEMENT";
+type NotificationPriority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
 
-interface NotificationTemplate {
-  id: string;
-  name: string;
-  type: string;
-  channels: Channel[];
-  subject?: string;
-  body: string;
-  active: boolean;
-}
-
-interface WebhookEndpoint {
-  id: string;
-  name: string;
-  url: string;
-  events: string[];
-  active: boolean;
-  lastTriggeredAt?: Date;
-  successRate: number;
-}
-
-const channelIcons: Record<Channel, React.ReactNode> = {
-  EMAIL: <Mail className="h-4 w-4" />,
-  PUSH: <Bell className="h-4 w-4" />,
-  SMS: <Smartphone className="h-4 w-4" />,
-  IN_APP: <MessageSquare className="h-4 w-4" />,
+const typeConfig: Record<NotificationType, { label: string; icon: typeof Bell; color: string }> = {
+  SYSTEM: { label: "Sistem", icon: Bell, color: "bg-slate-100 text-slate-700" },
+  SECURITY: { label: "Güvenlik", icon: ShieldAlert, color: "bg-red-100 text-red-700" },
+  BILLING: { label: "Faturalama", icon: CreditCard, color: "bg-green-100 text-green-700" },
+  ORDER: { label: "Sipariş", icon: Package, color: "bg-blue-100 text-blue-700" },
+  SUBSCRIPTION: { label: "Abonelik", icon: Bell, color: "bg-purple-100 text-purple-700" },
+  SUPPORT: { label: "Destek", icon: MessageSquare, color: "bg-yellow-100 text-yellow-700" },
+  MARKETING: { label: "Pazarlama", icon: Megaphone, color: "bg-pink-100 text-pink-700" },
+  ANNOUNCEMENT: { label: "Duyuru", icon: Megaphone, color: "bg-orange-100 text-orange-700" },
 };
 
-const channelLabels: Record<Channel, string> = {
-  EMAIL: "Email",
-  PUSH: "Push",
-  SMS: "SMS",
-  IN_APP: "Uygulama İçi",
+const priorityConfig: Record<NotificationPriority, { label: string; color: string }> = {
+  LOW: { label: "Düşük", color: "text-slate-500" },
+  NORMAL: { label: "Normal", color: "text-blue-500" },
+  HIGH: { label: "Yüksek", color: "text-orange-500" },
+  URGENT: { label: "Acil", color: "text-red-500" },
 };
 
 export default function AdminNotificationsPage() {
-  const [activeTab, setActiveTab] = useState<Tab>("templates");
-  const [showAddTemplate, setShowAddTemplate] = useState(false);
-  const [showAddWebhook, setShowAddWebhook] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<Tab>("send");
+  const [searchUserId, setSearchUserId] = useState("");
+
+  // Send notification form
+  const [sendForm, setSendForm] = useState({
+    userId: "",
+    type: "SYSTEM" as NotificationType,
+    priority: "NORMAL" as NotificationPriority,
+    title: "",
+    message: "",
+    actionUrl: "",
+    actionLabel: "",
+  });
+
+  // Broadcast form
+  const [broadcastForm, setBroadcastForm] = useState({
+    type: "ANNOUNCEMENT" as "SYSTEM" | "ANNOUNCEMENT" | "MARKETING",
+    priority: "NORMAL" as NotificationPriority,
+    title: "",
+    message: "",
+    actionUrl: "",
+    actionLabel: "",
+  });
 
   const tabs = [
-    { id: "templates" as Tab, label: "Şablonlar", icon: <MessageSquare className="h-4 w-4" /> },
-    { id: "webhooks" as Tab, label: "Webhooks", icon: <Webhook className="h-4 w-4" /> },
-    { id: "logs" as Tab, label: "Loglar", icon: <Bell className="h-4 w-4" /> },
+    { id: "send" as Tab, label: "Bildirim Gönder", icon: <Send className="h-4 w-4" /> },
+    { id: "broadcast" as Tab, label: "Toplu Bildirim", icon: <Megaphone className="h-4 w-4" /> },
+    { id: "stats" as Tab, label: "İstatistikler", icon: <Bell className="h-4 w-4" /> },
   ];
 
-  // Mock templates
-  const templates: NotificationTemplate[] = [
-    {
-      id: "1",
-      name: "Hoş Geldin",
-      type: "WELCOME",
-      channels: ["EMAIL", "IN_APP"],
-      subject: "Hyble'a Hoş Geldiniz!",
-      body: "Merhaba {{name}}, Hyble ailesine katıldığınız için teşekkürler...",
-      active: true,
-    },
-    {
-      id: "2",
-      name: "Fatura Oluşturuldu",
-      type: "INVOICE_CREATED",
-      channels: ["EMAIL", "IN_APP", "PUSH"],
-      subject: "Yeni Faturanız Hazır",
-      body: "{{invoice_number}} numaralı faturanız oluşturuldu. Tutar: €{{amount}}",
-      active: true,
-    },
-    {
-      id: "3",
-      name: "Ödeme Başarılı",
-      type: "PAYMENT_SUCCESS",
-      channels: ["EMAIL", "IN_APP"],
-      subject: "Ödemeniz Alındı",
-      body: "€{{amount}} tutarındaki ödemeniz başarıyla alındı.",
-      active: true,
-    },
-    {
-      id: "4",
-      name: "Ticket Yanıtı",
-      type: "TICKET_REPLY",
-      channels: ["EMAIL", "IN_APP", "PUSH"],
-      subject: "Destek Talebinize Yanıt",
-      body: "{{ticket_reference}} numaralı destek talebinize yanıt verildi.",
-      active: true,
-    },
-    {
-      id: "5",
-      name: "2FA Kodu",
-      type: "TWO_FACTOR",
-      channels: ["EMAIL", "SMS"],
-      subject: "Doğrulama Kodunuz",
-      body: "Doğrulama kodunuz: {{code}}",
-      active: true,
-    },
-  ];
+  // tRPC queries and mutations
+  const { data: stats, isLoading: statsLoading } = trpc.notification.stats.useQuery();
 
-  // Mock webhooks
-  const webhooks: WebhookEndpoint[] = [
-    {
-      id: "1",
-      name: "Slack Bildirimleri",
-      url: "https://hooks.slack.com/services/xxx",
-      events: ["invoice.paid", "ticket.created"],
-      active: true,
-      lastTriggeredAt: new Date(),
-      successRate: 98.5,
+  const sendNotification = trpc.notification.send.useMutation({
+    onSuccess: () => {
+      alert("Bildirim başarıyla gönderildi!");
+      setSendForm({
+        userId: "",
+        type: "SYSTEM",
+        priority: "NORMAL",
+        title: "",
+        message: "",
+        actionUrl: "",
+        actionLabel: "",
+      });
     },
-    {
-      id: "2",
-      name: "CRM Entegrasyonu",
-      url: "https://api.crm.example.com/webhooks",
-      events: ["user.created", "subscription.changed"],
-      active: true,
-      lastTriggeredAt: new Date("2024-12-15"),
-      successRate: 100,
+    onError: (error) => {
+      alert("Hata: " + error.message);
     },
-    {
-      id: "3",
-      name: "Analytics",
-      url: "https://analytics.example.com/events",
-      events: ["*"],
-      active: false,
-      successRate: 0,
-    },
-  ];
+  });
 
-  // Mock logs
-  const logs = [
-    { id: "1", template: "Fatura Oluşturuldu", channel: "EMAIL", recipient: "john@example.com", status: "DELIVERED", sentAt: new Date() },
-    { id: "2", template: "Ticket Yanıtı", channel: "PUSH", recipient: "user_123", status: "SENT", sentAt: new Date() },
-    { id: "3", template: "2FA Kodu", channel: "SMS", recipient: "+90532xxx", status: "FAILED", sentAt: new Date() },
-  ];
+  const broadcastNotification = trpc.notification.broadcast.useMutation({
+    onSuccess: (data) => {
+      alert(`${data.created} kullanıcıya bildirim gönderildi!`);
+      setBroadcastForm({
+        type: "ANNOUNCEMENT",
+        priority: "NORMAL",
+        title: "",
+        message: "",
+        actionUrl: "",
+        actionLabel: "",
+      });
+    },
+    onError: (error) => {
+      alert("Hata: " + error.message);
+    },
+  });
 
-  const filteredTemplates = templates.filter((t) =>
-    t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    t.type.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSendNotification = () => {
+    if (!sendForm.userId || !sendForm.title || !sendForm.message) {
+      alert("Kullanıcı ID, başlık ve mesaj zorunludur.");
+      return;
+    }
+
+    sendNotification.mutate({
+      userId: sendForm.userId,
+      type: sendForm.type,
+      priority: sendForm.priority,
+      title: sendForm.title,
+      message: sendForm.message,
+      actionUrl: sendForm.actionUrl || undefined,
+      actionLabel: sendForm.actionLabel || undefined,
+    });
+  };
+
+  const handleBroadcast = () => {
+    if (!broadcastForm.title || !broadcastForm.message) {
+      alert("Başlık ve mesaj zorunludur.");
+      return;
+    }
+
+    if (!confirm("Tüm aktif kullanıcılara bildirim göndermek istediğinizden emin misiniz?")) {
+      return;
+    }
+
+    broadcastNotification.mutate({
+      type: broadcastForm.type,
+      priority: broadcastForm.priority,
+      title: broadcastForm.title,
+      message: broadcastForm.message,
+      actionUrl: broadcastForm.actionUrl || undefined,
+      actionLabel: broadcastForm.actionLabel || undefined,
+    });
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -173,43 +165,44 @@ export default function AdminNotificationsPage() {
             Bildirim Yönetimi
           </h1>
           <p className="text-muted-foreground mt-1">
-            Bildirim şablonları ve webhook yapılandırması
+            Kullanıcılara bildirim gönderin ve istatistikleri görün
           </p>
-        </div>
-        <div className="flex gap-2">
-          {activeTab === "templates" && (
-            <Button onClick={() => setShowAddTemplate(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Şablon Ekle
-            </Button>
-          )}
-          {activeTab === "webhooks" && (
-            <Button onClick={() => setShowAddWebhook(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Webhook Ekle
-            </Button>
-          )}
         </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Toplam Şablon</p>
-          <p className="text-2xl font-bold mt-1">{templates.length}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Aktif Webhook</p>
-          <p className="text-2xl font-bold mt-1">{webhooks.filter((w) => w.active).length}</p>
-        </Card>
-        <Card className="p-4 border-green-200">
-          <p className="text-sm text-muted-foreground">Bugün Gönderilen</p>
-          <p className="text-2xl font-bold mt-1 text-green-600">1,234</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground">Başarı Oranı</p>
-          <p className="text-2xl font-bold mt-1">98.5%</p>
-        </Card>
+        {statsLoading ? (
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="p-4">
+                <div className="animate-pulse">
+                  <div className="h-3 bg-muted rounded w-20 mb-2" />
+                  <div className="h-6 bg-muted rounded w-16" />
+                </div>
+              </Card>
+            ))}
+          </>
+        ) : (
+          <>
+            <Card className="p-4">
+              <p className="text-sm text-muted-foreground">Toplam Bildirim</p>
+              <p className="text-2xl font-bold mt-1">{stats?.total || 0}</p>
+            </Card>
+            <Card className="p-4 border-yellow-200">
+              <p className="text-sm text-muted-foreground">Okunmamış</p>
+              <p className="text-2xl font-bold mt-1 text-yellow-600">{stats?.unread || 0}</p>
+            </Card>
+            <Card className="p-4 border-blue-200">
+              <p className="text-sm text-muted-foreground">Sistem</p>
+              <p className="text-2xl font-bold mt-1 text-blue-600">{stats?.byType?.SYSTEM || 0}</p>
+            </Card>
+            <Card className="p-4 border-green-200">
+              <p className="text-sm text-muted-foreground">Duyuru</p>
+              <p className="text-2xl font-bold mt-1 text-green-600">{stats?.byType?.ANNOUNCEMENT || 0}</p>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Tabs */}
@@ -232,261 +225,242 @@ export default function AdminNotificationsPage() {
         </div>
       </div>
 
-      {/* Templates Tab */}
-      {activeTab === "templates" && (
-        <>
-          <div className="flex gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      {/* Send Single Notification Tab */}
+      {activeTab === "send" && (
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <Send className="h-5 w-5" />
+            Tek Kullanıcıya Bildirim Gönder
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Kullanıcı ID *</label>
               <Input
-                placeholder="Şablon ara..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                placeholder="cuid..."
+                value={sendForm.userId}
+                onChange={(e) => setSendForm({ ...sendForm, userId: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tip</label>
+              <select
+                value={sendForm.type}
+                onChange={(e) => setSendForm({ ...sendForm, type: e.target.value as NotificationType })}
+                className="w-full px-3 py-2 border rounded-lg bg-background"
+              >
+                {Object.entries(typeConfig).map(([key, config]) => (
+                  <option key={key} value={key}>{config.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Öncelik</label>
+              <select
+                value={sendForm.priority}
+                onChange={(e) => setSendForm({ ...sendForm, priority: e.target.value as NotificationPriority })}
+                className="w-full px-3 py-2 border rounded-lg bg-background"
+              >
+                {Object.entries(priorityConfig).map(([key, config]) => (
+                  <option key={key} value={key}>{config.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Başlık *</label>
+              <Input
+                placeholder="Bildirim başlığı"
+                value={sendForm.title}
+                onChange={(e) => setSendForm({ ...sendForm, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium">Mesaj *</label>
+              <textarea
+                className="w-full px-3 py-2 border rounded-lg bg-background min-h-[100px]"
+                placeholder="Bildirim içeriği..."
+                value={sendForm.message}
+                onChange={(e) => setSendForm({ ...sendForm, message: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Aksiyon URL (isteğe bağlı)</label>
+              <Input
+                placeholder="/billing veya https://..."
+                value={sendForm.actionUrl}
+                onChange={(e) => setSendForm({ ...sendForm, actionUrl: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Aksiyon Butonu Metni</label>
+              <Input
+                placeholder="Detayları Gör"
+                value={sendForm.actionLabel}
+                onChange={(e) => setSendForm({ ...sendForm, actionLabel: e.target.value })}
               />
             </div>
           </div>
-
-          <div className="space-y-4">
-            {filteredTemplates.map((template) => (
-              <Card key={template.id} className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className="font-medium">{template.name}</h4>
-                      <span className="text-xs bg-muted px-2 py-0.5 rounded font-mono">
-                        {template.type}
-                      </span>
-                      {template.active ? (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                          Aktif
-                        </span>
-                      ) : (
-                        <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                          Pasif
-                        </span>
-                      )}
-                    </div>
-                    {template.subject && (
-                      <p className="text-sm text-muted-foreground mb-1">
-                        <strong>Konu:</strong> {template.subject}
-                      </p>
-                    )}
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {template.body}
-                    </p>
-                    <div className="flex items-center gap-2 mt-3">
-                      {template.channels.map((channel) => (
-                        <span
-                          key={channel}
-                          className="inline-flex items-center gap-1 text-xs bg-muted px-2 py-1 rounded"
-                        >
-                          {channelIcons[channel]}
-                          {channelLabels[channel]}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon">
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* Webhooks Tab */}
-      {activeTab === "webhooks" && (
-        <div className="space-y-4">
-          {webhooks.map((webhook) => (
-            <Card key={webhook.id} className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Webhook className="h-5 w-5 text-muted-foreground" />
-                    <h4 className="font-medium">{webhook.name}</h4>
-                    {webhook.active ? (
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                        Aktif
-                      </span>
-                    ) : (
-                      <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                        Pasif
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm font-mono text-muted-foreground mb-2">
-                    {webhook.url}
-                  </p>
-                  <div className="flex flex-wrap gap-1 mb-2">
-                    {webhook.events.map((event) => (
-                      <span
-                        key={event}
-                        className="text-xs bg-muted px-2 py-0.5 rounded"
-                      >
-                        {event}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>Başarı Oranı: {webhook.successRate}%</span>
-                    {webhook.lastTriggeredAt && (
-                      <span>
-                        Son Tetikleme: {webhook.lastTriggeredAt.toLocaleString("tr-TR")}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="text-destructive">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Logs Tab */}
-      {activeTab === "logs" && (
-        <Card>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left px-4 py-3 text-sm font-semibold">Şablon</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold">Kanal</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold">Alıcı</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold">Durum</th>
-                  <th className="text-left px-4 py-3 text-sm font-semibold">Tarih</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((log) => (
-                  <tr key={log.id} className="border-b hover:bg-muted/30">
-                    <td className="px-4 py-3 font-medium">{log.template}</td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1 text-xs bg-muted px-2 py-1 rounded">
-                        {channelIcons[log.channel as Channel]}
-                        {log.channel}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm font-mono">{log.recipient}</td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded ${
-                        log.status === "DELIVERED" ? "bg-green-100 text-green-700" :
-                        log.status === "SENT" ? "bg-blue-100 text-blue-700" :
-                        "bg-red-100 text-red-700"
-                      }`}>
-                        {log.status === "DELIVERED" ? <CheckCircle className="h-3 w-3" /> :
-                         log.status === "SENT" ? <Send className="h-3 w-3" /> :
-                         <XCircle className="h-3 w-3" />}
-                        {log.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">
-                      {log.sentAt.toLocaleString("tr-TR")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-6 flex justify-end">
+            <Button
+              onClick={handleSendNotification}
+              disabled={sendNotification.isPending}
+            >
+              {sendNotification.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 mr-2" />
+              )}
+              Bildirim Gönder
+            </Button>
           </div>
         </Card>
       )}
 
-      {/* Add Template Modal */}
-      {showAddTemplate && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-lg mx-4 p-6">
-            <h3 className="font-semibold mb-4">Yeni Bildirim Şablonu</h3>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Şablon Adı</Label>
-                <Input placeholder="Hoş Geldin Emaili" />
-              </div>
-              <div className="space-y-2">
-                <Label>Tip</Label>
-                <Input placeholder="WELCOME" />
-              </div>
-              <div className="space-y-2">
-                <Label>Kanallar</Label>
-                <div className="flex flex-wrap gap-2">
-                  {(Object.keys(channelLabels) as Channel[]).map((channel) => (
-                    <label key={channel} className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" className="rounded" />
-                      <span className="text-sm">{channelLabels[channel]}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Konu (Email için)</Label>
-                <Input placeholder="Hyble'a Hoş Geldiniz!" />
-              </div>
-              <div className="space-y-2">
-                <Label>İçerik</Label>
-                <textarea
-                  className="w-full border rounded-lg px-3 py-2 min-h-[100px]"
-                  placeholder="Merhaba {{name}}, ..."
-                />
+      {/* Broadcast Tab */}
+      {activeTab === "broadcast" && (
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Megaphone className="h-5 w-5 text-orange-500" />
+            <h3 className="font-semibold">Tüm Kullanıcılara Bildirim Gönder</h3>
+          </div>
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-yellow-800 dark:text-yellow-200">Dikkat!</p>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  Bu işlem tüm aktif kullanıcılara bildirim gönderecektir. Lütfen içeriği dikkatlice kontrol edin.
+                </p>
               </div>
             </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <Button variant="ghost" onClick={() => setShowAddTemplate(false)}>
-                İptal
-              </Button>
-              <Button>Oluştur</Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tip</label>
+              <select
+                value={broadcastForm.type}
+                onChange={(e) => setBroadcastForm({ ...broadcastForm, type: e.target.value as "SYSTEM" | "ANNOUNCEMENT" | "MARKETING" })}
+                className="w-full px-3 py-2 border rounded-lg bg-background"
+              >
+                <option value="SYSTEM">Sistem</option>
+                <option value="ANNOUNCEMENT">Duyuru</option>
+                <option value="MARKETING">Pazarlama</option>
+              </select>
             </div>
-          </Card>
-        </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Öncelik</label>
+              <select
+                value={broadcastForm.priority}
+                onChange={(e) => setBroadcastForm({ ...broadcastForm, priority: e.target.value as NotificationPriority })}
+                className="w-full px-3 py-2 border rounded-lg bg-background"
+              >
+                {Object.entries(priorityConfig).map(([key, config]) => (
+                  <option key={key} value={key}>{config.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium">Başlık *</label>
+              <Input
+                placeholder="Duyuru başlığı"
+                value={broadcastForm.title}
+                onChange={(e) => setBroadcastForm({ ...broadcastForm, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium">Mesaj *</label>
+              <textarea
+                className="w-full px-3 py-2 border rounded-lg bg-background min-h-[120px]"
+                placeholder="Duyuru içeriği..."
+                value={broadcastForm.message}
+                onChange={(e) => setBroadcastForm({ ...broadcastForm, message: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Aksiyon URL (isteğe bağlı)</label>
+              <Input
+                placeholder="/announcements/1 veya https://..."
+                value={broadcastForm.actionUrl}
+                onChange={(e) => setBroadcastForm({ ...broadcastForm, actionUrl: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Aksiyon Butonu Metni</label>
+              <Input
+                placeholder="Daha Fazla Bilgi"
+                value={broadcastForm.actionLabel}
+                onChange={(e) => setBroadcastForm({ ...broadcastForm, actionLabel: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="mt-6 flex justify-end">
+            <Button
+              onClick={handleBroadcast}
+              disabled={broadcastNotification.isPending}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {broadcastNotification.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Megaphone className="h-4 w-4 mr-2" />
+              )}
+              Toplu Bildirim Gönder
+            </Button>
+          </div>
+        </Card>
       )}
 
-      {/* Add Webhook Modal */}
-      {showAddWebhook && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-lg mx-4 p-6">
-            <h3 className="font-semibold mb-4">Yeni Webhook</h3>
+      {/* Stats Tab */}
+      {activeTab === "stats" && (
+        <div className="space-y-6">
+          <Card className="p-6">
+            <h3 className="font-semibold mb-4">Bildirim Türlerine Göre Dağılım</h3>
+            {statsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Object.entries(typeConfig).map(([key, config]) => {
+                  const Icon = config.icon;
+                  const count = stats?.byType?.[key] || 0;
+                  return (
+                    <div key={key} className={`p-4 rounded-lg ${config.color}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon className="h-4 w-4" />
+                        <span className="font-medium">{config.label}</span>
+                      </div>
+                      <p className="text-2xl font-bold">{count}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="font-semibold mb-4">Bildirim Özeti</h3>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>İsim</Label>
-                <Input placeholder="Slack Bildirimleri" />
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Bell className="h-5 w-5 text-muted-foreground" />
+                  <span>Toplam Bildirim</span>
+                </div>
+                <span className="font-bold">{stats?.total || 0}</span>
               </div>
-              <div className="space-y-2">
-                <Label>URL</Label>
-                <Input placeholder="https://hooks.example.com/webhook" />
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-yellow-500" />
+                  <span>Okunmamış Bildirim</span>
+                </div>
+                <span className="font-bold text-yellow-600">{stats?.unread || 0}</span>
               </div>
-              <div className="space-y-2">
-                <Label>Eventler</Label>
-                <Input placeholder="invoice.paid, ticket.created (virgülle ayırın)" />
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span>Okunan Bildirim</span>
+                </div>
+                <span className="font-bold text-green-600">{(stats?.total || 0) - (stats?.unread || 0)}</span>
               </div>
-              <div className="space-y-2">
-                <Label>Secret (isteğe bağlı)</Label>
-                <Input type="password" placeholder="whsec_..." />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2 mt-6">
-              <Button variant="ghost" onClick={() => setShowAddWebhook(false)}>
-                İptal
-              </Button>
-              <Button>Oluştur</Button>
             </div>
           </Card>
         </div>

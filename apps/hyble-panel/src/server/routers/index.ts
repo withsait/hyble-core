@@ -15,6 +15,7 @@ import { subscriptionRouter } from "./subscription";
 import { notificationRouter } from "./notification";
 import { supportRouter } from "./support";
 import { statusRouter } from "./status";
+import { emailRouter } from "./email";
 
 /**
  * Main tRPC router for hyble-panel
@@ -37,6 +38,7 @@ export const appRouter = createTRPCRouter({
   notification: notificationRouter,
   support: supportRouter,
   status: statusRouter,
+  email: emailRouter,
 });
 
 // Export type for client usage
@@ -60,4 +62,5 @@ export {
   notificationRouter,
   supportRouter,
   statusRouter,
+  emailRouter,
 };

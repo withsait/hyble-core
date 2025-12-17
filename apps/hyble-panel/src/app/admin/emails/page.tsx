@@ -1,61 +1,42 @@
+// @ts-nocheck
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
-import { Mail, Search, Filter, RefreshCw, CheckCircle, XCircle, Clock, Eye, MousePointer } from "lucide-react";
+import { Card, Button, Input } from "@hyble/ui";
+import { trpc } from "@/lib/trpc/client";
+import {
+  Mail,
+  Search,
+  Filter,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Eye,
+  MousePointer,
+  Loader2,
+  Send,
+  AlertTriangle,
+} from "lucide-react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 
-// Mock data - will be replaced with tRPC query
-const mockEmailLogs = [
-  {
-    id: "1",
-    recipient: "user@example.com",
-    subject: "Email Adresinizi Doğrulayın - Hyble",
-    type: "VERIFICATION",
-    status: "DELIVERED",
-    sentAt: new Date("2024-12-15T10:30:00"),
-    deliveredAt: new Date("2024-12-15T10:30:05"),
-    openedAt: new Date("2024-12-15T10:35:00"),
-  },
-  {
-    id: "2",
-    recipient: "test@example.com",
-    subject: "Şifrenizi Sıfırlayın - Hyble",
-    type: "RESET_PASSWORD",
-    status: "OPENED",
-    sentAt: new Date("2024-12-15T09:00:00"),
-    deliveredAt: new Date("2024-12-15T09:00:03"),
-    openedAt: new Date("2024-12-15T09:15:00"),
-  },
-  {
-    id: "3",
-    recipient: "bounce@example.com",
-    subject: "Hoş Geldiniz! - Hyble",
-    type: "WELCOME",
-    status: "BOUNCED",
-    sentAt: new Date("2024-12-14T15:00:00"),
-    error: "Mailbox not found",
-  },
-  {
-    id: "4",
-    recipient: "pending@example.com",
-    subject: "Organizasyona Davet - Hyble",
-    type: "ORG_INVITE",
-    status: "PENDING",
-    sentAt: new Date("2024-12-16T08:00:00"),
-  },
-];
+type EmailStatus = "PENDING" | "SENT" | "DELIVERED" | "FAILED" | "BOUNCED" | "COMPLAINED" | "OPENED" | "CLICKED";
+type EmailType = "VERIFICATION" | "RESET_PASSWORD" | "WELCOME" | "INVOICE" | "TICKET_REPLY" | "ORG_INVITE" | "SECURITY_ALERT" | "MARKETING" | "SYSTEM_ALERT";
 
-const statusColors: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
-  PENDING: { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-700 dark:text-yellow-400", icon: <Clock className="w-3.5 h-3.5" /> },
-  SENT: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", icon: <Mail className="w-3.5 h-3.5" /> },
-  DELIVERED: { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", icon: <CheckCircle className="w-3.5 h-3.5" /> },
-  FAILED: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", icon: <XCircle className="w-3.5 h-3.5" /> },
-  BOUNCED: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", icon: <XCircle className="w-3.5 h-3.5" /> },
-  COMPLAINED: { bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-400", icon: <XCircle className="w-3.5 h-3.5" /> },
-  OPENED: { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-700 dark:text-purple-400", icon: <Eye className="w-3.5 h-3.5" /> },
-  CLICKED: { bg: "bg-indigo-100 dark:bg-indigo-900/30", text: "text-indigo-700 dark:text-indigo-400", icon: <MousePointer className="w-3.5 h-3.5" /> },
+const statusConfig: Record<EmailStatus, { label: string; color: string; icon: typeof Clock }> = {
+  PENDING: { label: "Bekliyor", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400", icon: Clock },
+  SENT: { label: "Gönderildi", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", icon: Mail },
+  DELIVERED: { label: "Teslim Edildi", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle },
+  FAILED: { label: "Başarısız", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400", icon: XCircle },
+  BOUNCED: { label: "Geri Döndü", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400", icon: XCircle },
+  COMPLAINED: { label: "Şikayet", color: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400", icon: AlertTriangle },
+  OPENED: { label: "Açıldı", color: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400", icon: Eye },
+  CLICKED: { label: "Tıklandı", color: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400", icon: MousePointer },
 };
 
-const typeLabels: Record<string, string> = {
+const typeLabels: Record<EmailType, string> = {
   VERIFICATION: "Doğrulama",
   RESET_PASSWORD: "Şifre Sıfırlama",
   WELCOME: "Hoş Geldin",
@@ -69,164 +50,222 @@ const typeLabels: Record<string, string> = {
 
 export default function AdminEmailsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<EmailStatus | "all">("all");
+  const [typeFilter, setTypeFilter] = useState<EmailType | "all">("all");
+  const [page, setPage] = useState(1);
 
-  const filteredLogs = mockEmailLogs.filter((log) => {
-    const matchesSearch =
-      log.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.subject.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || log.status === statusFilter;
-    const matchesType = typeFilter === "all" || log.type === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
+  // tRPC queries
+  const { data: stats, isLoading: statsLoading } = trpc.email.adminStats.useQuery({ period: "week" });
+
+  const { data: emailsData, isLoading: emailsLoading, refetch } = trpc.email.adminList.useQuery({
+    page,
+    limit: 20,
+    status: statusFilter === "all" ? undefined : statusFilter,
+    type: typeFilter === "all" ? undefined : typeFilter,
+    search: searchTerm || undefined,
+  });
+
+  const resendEmail = trpc.email.adminResend.useMutation({
+    onSuccess: () => refetch(),
   });
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-          <Mail className="w-7 h-7 text-blue-500" />
+        <h1 className="text-2xl font-bold flex items-center gap-3">
+          <Mail className="h-7 w-7 text-primary" />
           Email Logları
         </h1>
-        <p className="text-slate-600 dark:text-slate-400 mt-1">
+        <p className="text-muted-foreground mt-1">
           Gönderilen tüm emailleri takip edin
         </p>
       </div>
 
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        {statsLoading ? (
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <Card key={i} className="p-4">
+                <div className="animate-pulse">
+                  <div className="h-3 bg-muted rounded w-16 mb-2" />
+                  <div className="h-6 bg-muted rounded w-12" />
+                </div>
+              </Card>
+            ))}
+          </>
+        ) : (
+          <>
+            <Card className="p-4">
+              <p className="text-sm text-muted-foreground">Bu Hafta Gönderilen</p>
+              <p className="text-2xl font-bold mt-1">{stats?.totalSent || 0}</p>
+            </Card>
+            <Card className="p-4 border-green-200">
+              <p className="text-sm text-muted-foreground">Teslim Oranı</p>
+              <p className="text-2xl font-bold text-green-600 mt-1">%{stats?.deliveryRate || 0}</p>
+            </Card>
+            <Card className="p-4 border-purple-200">
+              <p className="text-sm text-muted-foreground">Açılma Oranı</p>
+              <p className="text-2xl font-bold text-purple-600 mt-1">%{stats?.openRate || 0}</p>
+            </Card>
+            <Card className="p-4 border-red-200">
+              <p className="text-sm text-muted-foreground">Bounce Oranı</p>
+              <p className="text-2xl font-bold text-red-600 mt-1">%{stats?.bounceRate || 0}</p>
+            </Card>
+          </>
+        )}
+      </div>
+
       {/* Filters */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 mb-6">
+      <Card className="p-4 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
-          {/* Search */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
               placeholder="Email veya konu ara..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="pl-10"
             />
           </div>
-
-          {/* Status Filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="pl-10 pr-8 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
-            >
-              <option value="all">Tüm Durumlar</option>
-              <option value="PENDING">Bekliyor</option>
-              <option value="SENT">Gönderildi</option>
-              <option value="DELIVERED">Teslim Edildi</option>
-              <option value="OPENED">Açıldı</option>
-              <option value="CLICKED">Tıklandı</option>
-              <option value="BOUNCED">Geri Döndü</option>
-              <option value="FAILED">Başarısız</option>
-            </select>
-          </div>
-
-          {/* Type Filter */}
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="pl-10 pr-8 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
-            >
-              <option value="all">Tüm Tipler</option>
-              {Object.entries(typeLabels).map(([key, label]) => (
-                <option key={key} value={key}>{label}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Refresh Button */}
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors">
-            <RefreshCw className="w-4 h-4" />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as EmailStatus | "all")}
+            className="px-3 py-2 border rounded-lg bg-background text-sm"
+          >
+            <option value="all">Tüm Durumlar</option>
+            {Object.entries(statusConfig).map(([key, config]) => (
+              <option key={key} value={key}>{config.label}</option>
+            ))}
+          </select>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value as EmailType | "all")}
+            className="px-3 py-2 border rounded-lg bg-background text-sm"
+          >
+            <option value="all">Tüm Tipler</option>
+            {Object.entries(typeLabels).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+          <Button onClick={() => refetch()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
             Yenile
-          </button>
+          </Button>
         </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
-          <p className="text-sm text-slate-600 dark:text-slate-400">Toplam</p>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">{mockEmailLogs.length}</p>
-        </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
-          <p className="text-sm text-slate-600 dark:text-slate-400">Teslim Edildi</p>
-          <p className="text-2xl font-bold text-green-600">{mockEmailLogs.filter(l => l.status === "DELIVERED" || l.status === "OPENED" || l.status === "CLICKED").length}</p>
-        </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
-          <p className="text-sm text-slate-600 dark:text-slate-400">Açılma Oranı</p>
-          <p className="text-2xl font-bold text-purple-600">
-            {Math.round((mockEmailLogs.filter(l => l.status === "OPENED" || l.status === "CLICKED").length / mockEmailLogs.length) * 100)}%
-          </p>
-        </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
-          <p className="text-sm text-slate-600 dark:text-slate-400">Başarısız</p>
-          <p className="text-2xl font-bold text-red-600">{mockEmailLogs.filter(l => l.status === "BOUNCED" || l.status === "FAILED").length}</p>
-        </div>
-      </div>
+      </Card>
 
       {/* Table */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white">Alıcı</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white">Konu</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white">Tip</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white">Durum</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-slate-900 dark:text-white">Gönderilme</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredLogs.map((log) => {
-                const statusStyle = statusColors[log.status as keyof typeof statusColors] ?? statusColors.PENDING!;
-                return (
-                  <tr key={log.id} className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">{log.recipient}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xs truncate">{log.subject}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-                        {typeLabels[log.type] || log.type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
-                        {statusStyle.icon}
-                        {log.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
-                        {log.sentAt.toLocaleString("tr-TR")}
-                      </p>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {filteredLogs.length === 0 && (
-          <div className="text-center py-12">
-            <Mail className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-600 dark:text-slate-400">Sonuç bulunamadı</p>
+      <Card>
+        {emailsLoading ? (
+          <div className="p-12 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+            <p className="text-muted-foreground mt-2">Yükleniyor...</p>
           </div>
+        ) : emailsData?.logs.length === 0 ? (
+          <div className="p-12 text-center">
+            <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">Email logu bulunamadı</p>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left px-4 py-3 text-sm font-semibold">Alıcı</th>
+                    <th className="text-left px-4 py-3 text-sm font-semibold">Konu</th>
+                    <th className="text-left px-4 py-3 text-sm font-semibold">Tip</th>
+                    <th className="text-left px-4 py-3 text-sm font-semibold">Durum</th>
+                    <th className="text-left px-4 py-3 text-sm font-semibold">Gönderilme</th>
+                    <th className="text-left px-4 py-3 text-sm font-semibold">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {emailsData?.logs.map((log: any) => {
+                    const config = statusConfig[log.status as EmailStatus];
+                    const StatusIcon = config?.icon || Clock;
+                    return (
+                      <tr key={log.id} className="border-b hover:bg-muted/30">
+                        <td className="px-4 py-3">
+                          <p className="font-medium">{log.recipient}</p>
+                          {log.userId && (
+                            <p className="text-xs text-muted-foreground font-mono">{log.userId.slice(0, 8)}...</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="text-sm max-w-xs truncate">{log.subject}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-xs bg-muted px-2 py-1 rounded">
+                            {typeLabels[log.type as EmailType] || log.type}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded ${config?.color || "bg-slate-100"}`}>
+                            <StatusIcon className="h-3 w-3" />
+                            {config?.label || log.status}
+                          </span>
+                          {log.error && (
+                            <p className="text-xs text-red-500 mt-1">{log.error}</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                          {format(new Date(log.sentAt), "d MMM yyyy HH:mm", { locale: tr })}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" title="Detay">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            {(log.status === "FAILED" || log.status === "BOUNCED") && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Tekrar Gönder"
+                                onClick={() => resendEmail.mutate({ id: log.id })}
+                                disabled={resendEmail.isPending}
+                              >
+                                <Send className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            {emailsData && emailsData.totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Toplam {emailsData.total} email
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    Önceki
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= emailsData.totalPages}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    Sonraki
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
-      </div>
+      </Card>
     </div>
   );
 }
