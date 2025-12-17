@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { TRPCProvider } from "@/lib/trpc/provider";
 import {
   LayoutDashboard,
   Users,
@@ -14,6 +18,7 @@ import {
   Settings,
   LogOut,
   Shield,
+  ChevronRight,
 } from "lucide-react";
 
 const navItems = [
@@ -31,11 +36,9 @@ const navItems = [
   { href: "/admin/settings", label: "Ayarlar", icon: Settings },
 ];
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function AdminLayoutContent({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Top Bar */}
@@ -65,16 +68,24 @@ export default function AdminLayout({
         {/* Sidebar */}
         <aside className="sticky top-[57px] h-[calc(100vh-57px)] w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 overflow-y-auto">
           <nav className="p-4 space-y-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
-              >
-                <item.icon className="h-5 w-5" />
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || (item.href !== "/admin" && pathname?.startsWith(item.href));
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  <item.icon className={`h-5 w-5 ${isActive ? "text-amber-500" : ""}`} />
+                  {item.label}
+                  {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
+                </Link>
+              );
+            })}
           </nav>
         </aside>
 
@@ -84,5 +95,17 @@ export default function AdminLayout({
         </main>
       </div>
     </div>
+  );
+}
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <TRPCProvider>
+      <AdminLayoutContent>{children}</AdminLayoutContent>
+    </TRPCProvider>
   );
 }

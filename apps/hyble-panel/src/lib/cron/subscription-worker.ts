@@ -8,7 +8,7 @@
  * 3. Süresi geçen abonelikleri askıya alır
  */
 
-import { prisma } from "@hyble/db";
+import { prisma, PaymentMethod } from "@hyble/db";
 import { createBillingNotification, createNotification } from "../../server/routers/notification";
 
 // Constants
@@ -176,7 +176,7 @@ async function renewSubscription(
         currency: wallet.currency,
         description: `${subscription.productName} abonelik yenileme`,
         reference: `SUB-${subscriptionId}`,
-        paymentMethod: "WALLET",
+        paymentMethod: PaymentMethod.WALLET,
       },
     }),
     // Update subscription

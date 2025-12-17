@@ -18,7 +18,7 @@ const navigation = [
   { name: "Organizasyonlar", href: "/organizations", icon: Building2 },
   { name: "Projeler", href: "/projects", icon: FolderKanban },
   { name: "Cüzdan", href: "/wallet", icon: Wallet },
-  { name: "Faturalar", href: "/invoices", icon: Receipt },
+  { name: "Faturalama", href: "/billing", icon: Receipt },
   { name: "Destek", href: "/support", icon: HeadphonesIcon },
   { name: "Ayarlar", href: "/settings", icon: Settings },
 ];
