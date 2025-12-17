@@ -5,10 +5,10 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, publicProcedure, adminProcedure } from "../trpc/trpc";
+import { createTRPCRouter, publicProcedure, adminProcedure } from "../trpc/trpc";
 import { prisma } from "@hyble/db";
 
-export const statusRouter = router({
+export const statusRouter = createTRPCRouter({
   // ==================== PUBLIC PROCEDURES ====================
 
   /**

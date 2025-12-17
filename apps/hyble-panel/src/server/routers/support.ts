@@ -5,7 +5,7 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { router, protectedProcedure, adminProcedure } from "../trpc/trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "../trpc/trpc";
 import { prisma } from "@hyble/db";
 import { createSupportNotification } from "./notification";
 
@@ -17,7 +17,7 @@ function generateTicketRef(): string {
   return `TKT-${dateStr}-${random}`;
 }
 
-export const supportRouter = router({
+export const supportRouter = createTRPCRouter({
   // ==================== USER PROCEDURES ====================
 
   /**
