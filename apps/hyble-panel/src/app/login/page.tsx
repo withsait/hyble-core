@@ -45,11 +45,8 @@ function ThemeToggle() {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Default redirect to panel.hyble.co after login
-  const defaultCallback = process.env.NODE_ENV === "production"
-    ? "https://panel.hyble.co/dashboard"
-    : "http://localhost:3001/dashboard";
-  const callbackUrl = searchParams.get("callbackUrl") || searchParams.get("redirect") || defaultCallback;
+  // Default redirect to dashboard on id.hyble.co after login
+  const callbackUrl = searchParams.get("callbackUrl") || searchParams.get("redirect") || "/dashboard";
   const errorParam = searchParams.get("error");
 
   const [email, setEmail] = useState("");

@@ -42,19 +42,10 @@ function ThemeToggle() {
   );
 }
 
-// Default redirect URL after registration
-const getDefaultRedirect = () => {
-  if (typeof window !== "undefined") {
-    return process.env.NODE_ENV === "production"
-      ? "https://panel.hyble.co/dashboard"
-      : "http://localhost:3001/dashboard";
-  }
-  return "/dashboard";
-};
-
 export default function RegisterPage() {
   const router = useRouter();
-  const defaultCallback = getDefaultRedirect();
+  // Default redirect to dashboard on id.hyble.co after registration
+  const defaultCallback = "/dashboard";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

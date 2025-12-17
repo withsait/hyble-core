@@ -32,38 +32,16 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Host-based routing for id.hyble.co (Auth Hub)
+  // Host-based routing for id.hyble.co (Auth Hub + Identity Management)
   if (host.includes("id.hyble.co") || host.includes("localhost:3000")) {
-    // id.hyble.co only allows auth pages and profile
-    const allowedPaths = [
-      "/login",
-      "/register",
-      "/forgot-password",
-      "/reset-password",
-      "/verify-2fa",
-      "/verify-email",
-      "/profile",
-      "/api",
-    ];
-
-    const isAllowedPath = allowedPaths.some(p => pathname.startsWith(p)) || pathname === "/";
-
-    // Redirect /dashboard to panel.hyble.co
-    if (pathname.startsWith("/dashboard") || pathname.startsWith("/settings") || pathname.startsWith("/organizations")) {
-      const panelUrl = process.env.NODE_ENV === "production"
-        ? "https://panel.hyble.co"
-        : "http://localhost:3001";
-      return NextResponse.redirect(new URL(pathname, panelUrl));
-    }
-
-    // Root path for logged-in users goes to profile, for guests to login
+    // Root path for logged-in users goes to dashboard, for guests to login
     if (pathname === "/") {
       const sessionToken =
         request.cookies.get("__Secure-authjs.session-token")?.value ||
         request.cookies.get("authjs.session-token")?.value;
 
       if (sessionToken) {
-        return NextResponse.redirect(new URL("/profile", request.url));
+        return NextResponse.redirect(new URL("/dashboard", request.url));
       } else {
         return NextResponse.redirect(new URL("/login", request.url));
       }
@@ -179,9 +157,7 @@ export function middleware(request: NextRequest) {
 
   // Redirect logged-in users away from auth pages (except verify-2fa)
   if (isAuthPage && isLoggedIn && !pathname.startsWith("/verify-2fa")) {
-    // Redirect to profile for id.hyble.co, dashboard for others
-    const redirectPath = host.includes("id.hyble.co") ? "/profile" : "/dashboard";
-    const response = NextResponse.redirect(new URL(redirectPath, request.url));
+    const response = NextResponse.redirect(new URL("/dashboard", request.url));
     return createSecureResponse(response);
   }
 

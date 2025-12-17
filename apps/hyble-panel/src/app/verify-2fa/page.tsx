@@ -9,11 +9,8 @@ import { Shield, Loader2, Key, ArrowLeft } from "lucide-react";
 function Verify2FAContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // Default redirect to panel.hyble.co after 2FA verification
-  const defaultCallback = typeof window !== "undefined" && process.env.NODE_ENV === "production"
-    ? "https://panel.hyble.co/dashboard"
-    : "http://localhost:3001/dashboard";
-  const callbackUrl = searchParams.get("callbackUrl") || searchParams.get("redirect") || defaultCallback;
+  // Default redirect to dashboard on id.hyble.co after 2FA verification
+  const callbackUrl = searchParams.get("callbackUrl") || searchParams.get("redirect") || "/dashboard";
 
   const [email, setEmail] = useState<string | null>(null);
   const [password, setPassword] = useState<string | null>(null);
