@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button, Input } from "@hyble/ui";
 
 const Label = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
@@ -41,12 +40,14 @@ export function CreateTicketWizard() {
   const [message, setMessage] = useState("");
   const [priority, setPriority] = useState<Priority>("NORMAL");
   const [files, setFiles] = useState<File[]>([]);
+  const [isCreating, setIsCreating] = useState(false);
 
-  const createTicket = trpc.support.tickets.create.useMutation({
-    onSuccess: (data) => {
-      router.push(`/dashboard/support/${data.referenceNo}`);
-    },
-  });
+  // TODO: Replace with tRPC mutation when support router is ready
+  // const createTicket = trpc.support.tickets.create.useMutation({
+  //   onSuccess: (data) => {
+  //     router.push(`/dashboard/support/${data.referenceNo}`);
+  //   },
+  // });
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newFiles = Array.from(e.target.files || []);
@@ -81,14 +82,14 @@ export function CreateTicketWizard() {
     else if (step === "review") setStep("details");
   };
 
-  const handleSubmit = () => {
-    createTicket.mutate({
-      categorySlug: selectedCategory,
-      subject,
-      message,
-      priority,
-      // Files would need separate upload handling
-    });
+  const handleSubmit = async () => {
+    // TODO: Replace with tRPC mutation when support router is ready
+    setIsCreating(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Generate mock reference number
+    const refNo = `TKT-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, "0")}`;
+    router.push(`/dashboard/support/${refNo}`);
   };
 
   const selectedCategoryData = categories.find((c) => c.id === selectedCategory);
@@ -351,9 +352,9 @@ export function CreateTicketWizard() {
           {step === "review" ? (
             <Button
               onClick={handleSubmit}
-              disabled={createTicket.isPending}
+              disabled={isCreating}
             >
-              {createTicket.isPending ? (
+              {isCreating ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <Check className="h-4 w-4 mr-2" />

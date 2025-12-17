@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button, Input } from "@hyble/ui";
 
 const Label = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
@@ -13,7 +12,6 @@ import {
   Trash2,
   Eye,
   EyeOff,
-  Save,
   Loader2,
   AlertTriangle,
 } from "lucide-react";
@@ -25,37 +23,25 @@ interface EnvVarEditorProps {
 interface EnvVar {
   id: string;
   key: string;
-  value: string; // Will show as ***** until revealed
-  isRevealed?: boolean;
+  value: string;
 }
+
+// Mock data - will be replaced with tRPC query when cloud router is implemented
+const mockEnvVars: EnvVar[] = [
+  { id: "1", key: "NODE_ENV", value: "production" },
+  { id: "2", key: "DATABASE_URL", value: "postgres://..." },
+  { id: "3", key: "API_KEY", value: "sk-1234567890abcdef" },
+];
 
 export function EnvVarEditor({ siteSlug }: EnvVarEditorProps) {
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
+  const [envVars, setEnvVars] = useState<EnvVar[]>(mockEnvVars);
+  const [isAdding, setIsAdding] = useState(false);
 
-  const { data, isLoading, refetch } = trpc.cloud.envVars.list.useQuery({ siteSlug });
-  const envVars = data?.envVars || [];
-
-  const addEnvVar = trpc.cloud.envVars.add.useMutation({
-    onSuccess: () => {
-      setNewKey("");
-      setNewValue("");
-      refetch();
-    },
-  });
-
-  const updateEnvVar = trpc.cloud.envVars.update.useMutation({
-    onSuccess: () => {
-      refetch();
-    },
-  });
-
-  const deleteEnvVar = trpc.cloud.envVars.delete.useMutation({
-    onSuccess: () => {
-      refetch();
-    },
-  });
+  // TODO: Replace with tRPC query when cloud router is ready
+  // const { data, isLoading, refetch } = trpc.cloud.envVars.list.useQuery({ siteSlug });
 
   const toggleReveal = (id: string) => {
     const newSet = new Set(revealedIds);
@@ -67,10 +53,20 @@ export function EnvVarEditor({ siteSlug }: EnvVarEditorProps) {
     setRevealedIds(newSet);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (newKey && newValue) {
-      addEnvVar.mutate({ siteSlug, key: newKey, value: newValue });
+      setIsAdding(true);
+      // Mock add - will be replaced with tRPC mutation
+      await new Promise(resolve => setTimeout(resolve, 300));
+      setEnvVars([...envVars, { id: String(envVars.length + 1), key: newKey, value: newValue }]);
+      setNewKey("");
+      setNewValue("");
+      setIsAdding(false);
     }
+  };
+
+  const handleDelete = (id: string) => {
+    setEnvVars(envVars.filter(e => e.id !== id));
   };
 
   return (
@@ -121,10 +117,10 @@ export function EnvVarEditor({ siteSlug }: EnvVarEditorProps) {
         <div className="flex items-end">
           <Button
             onClick={handleAdd}
-            disabled={!newKey || !newValue || addEnvVar.isPending}
+            disabled={!newKey || !newValue || isAdding}
             className="w-full"
           >
-            {addEnvVar.isPending ? (
+            {isAdding ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <Plus className="h-4 w-4 mr-2" />
@@ -135,20 +131,14 @@ export function EnvVarEditor({ siteSlug }: EnvVarEditorProps) {
       </div>
 
       {/* Existing Variables */}
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-12 bg-muted rounded animate-pulse" />
-          ))}
-        </div>
-      ) : envVars.length === 0 ? (
+      {envVars.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <Key className="h-12 w-12 mx-auto mb-3 opacity-30" />
           <p>Henüz değişken eklenmemiş</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {envVars.map((envVar: EnvVar) => {
+          {envVars.map((envVar) => {
             const isRevealed = revealedIds.has(envVar.id);
 
             return (
@@ -181,8 +171,7 @@ export function EnvVarEditor({ siteSlug }: EnvVarEditorProps) {
                     variant="ghost"
                     size="icon"
                     className="text-destructive hover:text-destructive"
-                    onClick={() => deleteEnvVar.mutate({ siteSlug, envVarId: envVar.id })}
-                    disabled={deleteEnvVar.isPending}
+                    onClick={() => handleDelete(envVar.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

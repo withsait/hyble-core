@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button } from "@hyble/ui";
 import {
   Ticket,
@@ -33,6 +32,32 @@ interface TicketItem {
   updatedAt: Date;
   _count?: { messages: number };
 }
+
+// Mock data - will be replaced with tRPC query when support router is implemented
+const mockTickets: TicketItem[] = [
+  {
+    id: "1",
+    referenceNo: "TKT-2024-001",
+    subject: "Sunucu erişim sorunu",
+    status: "OPEN",
+    priority: "HIGH",
+    category: { nameTr: "Teknik Destek" },
+    createdAt: new Date("2024-12-15"),
+    updatedAt: new Date("2024-12-16"),
+    _count: { messages: 3 },
+  },
+  {
+    id: "2",
+    referenceNo: "TKT-2024-002",
+    subject: "Fatura sorgulama",
+    status: "RESOLVED",
+    priority: "NORMAL",
+    category: { nameTr: "Fatura & Ödeme" },
+    createdAt: new Date("2024-12-10"),
+    updatedAt: new Date("2024-12-14"),
+    _count: { messages: 5 },
+  },
+];
 
 const statusConfig: Record<TicketStatus, { icon: React.ReactNode; label: string; color: string }> = {
   NEW: { icon: <AlertCircle className="h-4 w-4" />, label: "Yeni", color: "bg-yellow-100 text-yellow-700" },
@@ -67,11 +92,16 @@ export function TicketList() {
   const [statusFilter, setStatusFilter] = useState<TicketStatus | "ALL">("ALL");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data, isLoading, error } = trpc.support.tickets.list.useQuery({
-    status: statusFilter === "ALL" ? undefined : statusFilter,
-  });
+  // TODO: Replace with tRPC query when support router is ready
+  // const { data, isLoading, error } = trpc.support.tickets.list.useQuery({
+  //   status: statusFilter === "ALL" ? undefined : statusFilter,
+  // });
+  const isLoading = false;
+  const error = null;
 
-  const tickets = data?.tickets || [];
+  const tickets = statusFilter === "ALL"
+    ? mockTickets
+    : mockTickets.filter(t => t.status === statusFilter);
 
   const filteredTickets = tickets.filter((ticket: TicketItem) =>
     ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||

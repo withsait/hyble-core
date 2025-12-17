@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button } from "@hyble/ui";
 import {
   Globe,
@@ -63,19 +61,35 @@ function SiteSkeleton() {
   );
 }
 
-export function SiteList() {
-  const { data, isLoading, error } = trpc.cloud.sites.list.useQuery();
-  const sites = data?.sites || [];
+// Mock data - will be replaced with tRPC query when cloud router is implemented
+const mockSites: Site[] = [
+  {
+    id: "1",
+    name: "My Portfolio",
+    slug: "my-portfolio",
+    framework: "nextjs",
+    status: "ACTIVE",
+    domains: [{ domain: "my-portfolio.hyble.net", isPrimary: true }],
+    lastDeployment: { status: "SUCCESS", deployedAt: new Date() },
+    createdAt: new Date("2024-10-01"),
+  },
+  {
+    id: "2",
+    name: "Blog App",
+    slug: "blog-app",
+    framework: "react",
+    status: "ACTIVE",
+    domains: [{ domain: "blog-app.hyble.net", isPrimary: true }],
+    lastDeployment: { status: "SUCCESS", deployedAt: new Date("2024-12-10") },
+    createdAt: new Date("2024-11-15"),
+  },
+];
 
-  if (error) {
-    return (
-      <Card className="p-6 border-destructive bg-destructive/10">
-        <p className="text-destructive text-sm">
-          Siteler yüklenemedi: {error.message}
-        </p>
-      </Card>
-    );
-  }
+export function SiteList() {
+  // TODO: Replace with tRPC query when cloud router is ready
+  // const { data, isLoading, error } = trpc.cloud.sites.list.useQuery();
+  const sites = mockSites;
+  const isLoading = false;
 
   return (
     <div className="space-y-4">

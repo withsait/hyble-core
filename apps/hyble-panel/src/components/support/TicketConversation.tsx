@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button, Input } from "@hyble/ui";
 import {
   Send,
@@ -28,6 +27,33 @@ interface Message {
   attachments?: { id: string; fileName: string; fileUrl: string; mimeType: string }[];
   createdAt: Date;
 }
+
+// Mock data - will be replaced with tRPC query when support router is implemented
+const mockMessages: Message[] = [
+  {
+    id: "1",
+    senderId: "user-1",
+    senderType: "customer",
+    message: "Sunucuya SSH ile bağlanamıyorum. Yardımcı olabilir misiniz?",
+    createdAt: new Date("2024-12-15T10:30:00"),
+  },
+  {
+    id: "2",
+    senderId: "agent-1",
+    senderType: "agent",
+    message: "Merhaba, talebinizi aldık. SSH erişim sorununuzu inceliyoruz. Lütfen hangi IP adresinden bağlanmaya çalıştığınızı paylaşır mısınız?",
+    createdAt: new Date("2024-12-15T11:00:00"),
+  },
+  {
+    id: "3",
+    senderId: "user-1",
+    senderType: "customer",
+    message: "IP adresim 85.123.45.67. Port 22 üzerinden bağlanmaya çalışıyorum.",
+    createdAt: new Date("2024-12-15T11:30:00"),
+  },
+];
+
+const mockCurrentUserId = "user-1";
 
 function MessageBubble({ message, isOwn }: { message: Message; isOwn: boolean }) {
   const isImage = (mimeType: string) => mimeType.startsWith("image/");
@@ -103,34 +129,41 @@ function MessageBubble({ message, isOwn }: { message: Message; isOwn: boolean })
 export function TicketConversation({ ticketId }: TicketConversationProps) {
   const [newMessage, setNewMessage] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [localMessages, setLocalMessages] = useState<Message[]>(mockMessages);
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data, isLoading, refetch } = trpc.support.tickets.getMessages.useQuery({ ticketId });
-  const messages = data?.messages || [];
-  const currentUserId = data?.currentUserId;
-
-  const sendMessage = trpc.support.tickets.sendMessage.useMutation({
-    onSuccess: () => {
-      setNewMessage("");
-      setSelectedFiles([]);
-      refetch();
-    },
-  });
+  // TODO: Replace with tRPC query when support router is ready
+  // const { data, isLoading, refetch } = trpc.support.tickets.getMessages.useQuery({ ticketId });
+  const isLoading = false;
+  const messages = localMessages;
+  const currentUserId = mockCurrentUserId;
 
   // Auto scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!newMessage.trim() && selectedFiles.length === 0) return;
 
-    sendMessage.mutate({
-      ticketId,
+    // TODO: Replace with tRPC mutation when support router is ready
+    setIsSending(true);
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    const newMsg: Message = {
+      id: String(messages.length + 1),
+      senderId: currentUserId,
+      senderType: "customer",
       message: newMessage,
-      // Note: File upload would need separate handling
-    });
+      createdAt: new Date(),
+    };
+
+    setLocalMessages(prev => [...prev, newMsg]);
+    setNewMessage("");
+    setSelectedFiles([]);
+    setIsSending(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -238,9 +271,9 @@ export function TicketConversation({ ticketId }: TicketConversationProps) {
           </div>
           <Button
             onClick={handleSend}
-            disabled={(!newMessage.trim() && selectedFiles.length === 0) || sendMessage.isPending}
+            disabled={(!newMessage.trim() && selectedFiles.length === 0) || isSending}
           >
-            {sendMessage.isPending ? (
+            {isSending ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
               <Send className="h-5 w-5" />

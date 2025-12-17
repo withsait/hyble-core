@@ -1,6 +1,5 @@
 "use client";
 
-import { trpc } from "@/lib/trpc/client";
 import { Card } from "@hyble/ui";
 import {
   CheckCircle,
@@ -30,6 +29,39 @@ interface ServiceGroup {
   name: string;
   services: Service[];
 }
+
+// Mock data - will be replaced with tRPC query when status router is implemented
+const mockGroups: ServiceGroup[] = [
+  {
+    id: "1",
+    name: "Web Servisleri",
+    services: [
+      { id: "s1", name: "Ana Website", currentStatus: "OPERATIONAL" },
+      { id: "s2", name: "Kontrol Paneli", currentStatus: "OPERATIONAL" },
+      { id: "s3", name: "API Gateway", currentStatus: "OPERATIONAL" },
+    ],
+  },
+  {
+    id: "2",
+    name: "Altyapı",
+    services: [
+      { id: "s4", name: "Veritabanı Sunucuları", currentStatus: "OPERATIONAL" },
+      { id: "s5", name: "CDN", currentStatus: "OPERATIONAL" },
+      { id: "s6", name: "DNS", currentStatus: "OPERATIONAL" },
+    ],
+  },
+  {
+    id: "3",
+    name: "Ödeme Sistemleri",
+    services: [
+      { id: "s7", name: "Kredi Kartı İşlemleri", currentStatus: "OPERATIONAL" },
+      { id: "s8", name: "Bakiye Sistemi", currentStatus: "OPERATIONAL" },
+    ],
+  },
+];
+
+const mockActiveIncidents: any[] = [];
+const mockScheduledMaintenances: any[] = [];
 
 const statusConfig: Record<ServiceStatus, { icon: React.ReactNode; label: string; color: string; bgColor: string }> = {
   OPERATIONAL: { icon: <CheckCircle className="h-4 w-4" />, label: "Çalışıyor", color: "text-green-600", bgColor: "bg-green-500" },
@@ -70,11 +102,14 @@ function UptimeBar({ dailyUptimes }: { dailyUptimes: Service["dailyUptimes"] }) 
 }
 
 export function StatusPage() {
-  const { data, isLoading, error } = trpc.status.getAll.useQuery();
+  // TODO: Replace with tRPC query when status router is ready
+  // const { data, isLoading, error } = trpc.status.getAll.useQuery();
+  const isLoading = false;
+  const error = null;
 
-  const groups = data?.groups || [];
-  const activeIncidents = data?.activeIncidents || [];
-  const scheduledMaintenances = data?.scheduledMaintenances || [];
+  const groups = mockGroups;
+  const activeIncidents = mockActiveIncidents;
+  const scheduledMaintenances = mockScheduledMaintenances;
 
   // Calculate overall status
   const getOverallStatus = (): ServiceStatus => {

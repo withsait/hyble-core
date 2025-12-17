@@ -1,6 +1,5 @@
 "use client";
 
-import { trpc } from "@/lib/trpc/client";
 import { Card } from "@hyble/ui";
 import {
   Activity,
@@ -50,33 +49,21 @@ function ProgressBar({ value, max, color }: { value: number; max: number; color:
   );
 }
 
+// Mock data - will be replaced with tRPC query when cloud router is implemented
+const mockUsage: UsageData = {
+  bandwidth: { used: 2147483648, limit: 10737418240, unit: "bytes" }, // 2GB / 10GB
+  storage: { used: 536870912, limit: 1073741824, unit: "bytes" }, // 512MB / 1GB
+  buildMinutes: { used: 45, limit: 100 },
+  deployments: { count: 23, limit: 50 },
+};
+
+const mockPlan = { name: "Free", slug: "free" };
+
 export function UsageMeter({ siteSlug }: UsageMeterProps) {
-  const { data, isLoading } = trpc.cloud.usage.get.useQuery({ siteSlug });
-
-  const usage: UsageData = data?.usage || {
-    bandwidth: { used: 0, limit: 10737418240, unit: "bytes" }, // 10GB
-    storage: { used: 0, limit: 1073741824, unit: "bytes" }, // 1GB
-    buildMinutes: { used: 0, limit: 100 },
-    deployments: { count: 0, limit: 50 },
-  };
-
-  const plan = data?.plan || { name: "Free", slug: "free" };
-
-  if (isLoading) {
-    return (
-      <Card className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-6 w-32 bg-muted rounded" />
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="space-y-2">
-              <div className="h-4 w-24 bg-muted rounded" />
-              <div className="h-2 w-full bg-muted rounded" />
-            </div>
-          ))}
-        </div>
-      </Card>
-    );
-  }
+  // TODO: Replace with tRPC query when cloud router is ready
+  // const { data, isLoading } = trpc.cloud.usage.get.useQuery({ siteSlug });
+  const usage = mockUsage;
+  const plan = mockPlan;
 
   const metrics = [
     {
