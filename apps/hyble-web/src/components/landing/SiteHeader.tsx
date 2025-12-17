@@ -94,18 +94,18 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-slate-900 dark:bg-white flex items-center justify-center">
-              <span className="text-white dark:text-slate-900 font-bold text-sm">H</span>
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+              <span className="text-white font-bold text-lg">H</span>
             </div>
-            <span className="text-slate-900 dark:text-white font-semibold text-lg">Hyble</span>
+            <span className="text-slate-900 dark:text-white font-semibold text-xl">Hyble</span>
           </Link>
 
-          {/* Desktop Navigation - Vercel Style */}
+          {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center">
             {/* Ürünler Dropdown */}
             <div
@@ -114,12 +114,12 @@ export function SiteHeader() {
               onMouseLeave={handleMouseLeave}
             >
               <button
-                className={`flex items-center gap-1 px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors ${
-                  activeDropdown === "products" ? "text-slate-900 dark:text-white" : ""
+                className={`flex items-center gap-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
+                  activeDropdown === "products" ? "text-blue-600 dark:text-blue-400" : ""
                 }`}
               >
                 Ürünler
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${activeDropdown === "products" ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-4 h-4 transition-transform duration-150 ${activeDropdown === "products" ? "rotate-180" : ""}`} />
               </button>
 
               {/* Products Dropdown */}
@@ -128,30 +128,30 @@ export function SiteHeader() {
                   activeDropdown === "products" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"
                 }`}
               >
-                <div className="w-[320px] bg-white dark:bg-slate-900 rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden p-2">
+                <div className="w-[320px] bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden p-2">
                   {mainProducts.map((product) => (
                     <Link
                       key={product.name}
                       href={product.href}
                       target={product.external ? "_blank" : undefined}
                       onClick={() => setActiveDropdown(null)}
-                      className="flex items-center gap-3 p-2.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
                     >
-                      <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors">
-                        <product.icon className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                      <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-blue-100 dark:group-hover:bg-slate-700 transition-colors">
+                        <product.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-slate-900 dark:text-white">
+                          <span className="text-sm font-medium text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                             {product.name}
                           </span>
                           {"badge" in product && product.badge && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded">
+                            <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded font-medium">
                               {product.badge}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-500">
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
                           {product.description}
                         </p>
                       </div>
@@ -168,12 +168,12 @@ export function SiteHeader() {
               onMouseLeave={handleMouseLeave}
             >
               <button
-                className={`flex items-center gap-1 px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors ${
-                  activeDropdown === "resources" ? "text-slate-900 dark:text-white" : ""
+                className={`flex items-center gap-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
+                  activeDropdown === "resources" ? "text-blue-600 dark:text-blue-400" : ""
                 }`}
               >
                 Kaynaklar
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-150 ${activeDropdown === "resources" ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-4 h-4 transition-transform duration-150 ${activeDropdown === "resources" ? "rotate-180" : ""}`} />
               </button>
 
               {/* Resources Dropdown */}
@@ -182,20 +182,20 @@ export function SiteHeader() {
                   activeDropdown === "resources" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"
                 }`}
               >
-                <div className="w-[280px] bg-white dark:bg-slate-900 rounded-lg shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden p-2">
+                <div className="w-[280px] bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 overflow-hidden p-2">
                   {resources.map((item) => (
                     <Link
                       key={item.name}
                       href={item.href}
                       onClick={() => setActiveDropdown(null)}
-                      className="flex items-center gap-3 p-2.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
                     >
-                      <item.icon className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors" />
+                      <item.icon className="w-5 h-5 text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors" />
                       <div>
                         <span className="text-sm font-medium text-slate-900 dark:text-white block">
                           {item.name}
                         </span>
-                        <span className="text-xs text-slate-500">{item.description}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">{item.description}</span>
                       </div>
                     </Link>
                   ))}
@@ -205,14 +205,14 @@ export function SiteHeader() {
                         key={tool.name}
                         href={tool.href}
                         onClick={() => setActiveDropdown(null)}
-                        className="flex items-center gap-3 p-2.5 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
                       >
-                        <tool.icon className="w-4 h-4 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors" />
+                        <tool.icon className="w-5 h-5 text-blue-500 dark:text-blue-400 group-hover:text-blue-600 dark:group-hover:text-blue-300 transition-colors" />
                         <div>
                           <span className="text-sm font-medium text-slate-900 dark:text-white block">
                             {tool.name}
                           </span>
-                          <span className="text-xs text-slate-500">{tool.description}</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400">{tool.description}</span>
                         </div>
                       </Link>
                     ))}
@@ -226,7 +226,7 @@ export function SiteHeader() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 {link.label}
               </Link>
@@ -239,28 +239,28 @@ export function SiteHeader() {
             {mounted && (
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 aria-label="Temayı Değiştir"
               >
                 {theme === "dark" ? (
-                  <Moon className="w-4 h-4 text-slate-400" />
+                  <Moon className="w-5 h-5 text-slate-400" />
                 ) : (
-                  <Sun className="w-4 h-4 text-slate-600" />
+                  <Sun className="w-5 h-5 text-slate-600" />
                 )}
               </button>
             )}
 
             {/* Auth Buttons - Desktop */}
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-3">
               <a
                 href="https://id.hyble.co/auth/login"
-                className="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
-                Giriş
+                Giriş Yap
               </a>
               <a
                 href="https://id.hyble.co/auth/register"
-                className="px-4 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium rounded-md hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
+                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-md shadow-blue-600/20"
               >
                 Başla
               </a>
@@ -269,7 +269,7 @@ export function SiteHeader() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               {mobileMenuOpen ? (
                 <X className="w-5 h-5 text-slate-600 dark:text-slate-300" />
@@ -293,12 +293,12 @@ export function SiteHeader() {
                     href={product.href}
                     target={product.external ? "_blank" : undefined}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
                   >
-                    <product.icon className="w-4 h-4 text-slate-500" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">{product.name}</span>
+                    <product.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{product.name}</span>
                     {"badge" in product && product.badge && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded">
+                      <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded">
                         {product.badge}
                       </span>
                     )}
@@ -314,10 +314,10 @@ export function SiteHeader() {
                     key={item.name}
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
                   >
-                    <item.icon className="w-4 h-4 text-slate-500" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">{item.name}</span>
+                    <item.icon className="w-5 h-5 text-blue-500 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{item.name}</span>
                   </Link>
                 ))}
               </div>
@@ -329,7 +329,7 @@ export function SiteHeader() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                    className="block px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
                   >
                     {link.label}
                   </Link>
@@ -340,13 +340,13 @@ export function SiteHeader() {
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 px-3">
                 <a
                   href="https://id.hyble.co/auth/login"
-                  className="py-2 text-sm text-center text-slate-600 dark:text-slate-300"
+                  className="py-2.5 text-sm text-center text-slate-600 dark:text-slate-300 hover:text-blue-600 transition-colors"
                 >
                   Giriş Yap
                 </a>
                 <a
                   href="https://id.hyble.co/auth/register"
-                  className="py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-md text-sm font-medium text-center"
+                  className="py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold text-center transition-colors"
                 >
                   Ücretsiz Başla
                 </a>
