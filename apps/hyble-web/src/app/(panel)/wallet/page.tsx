@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { trpc } from "@/lib/trpc";
 import {
@@ -30,7 +30,7 @@ const txTypeConfig: Record<TransactionType, { label: string; icon: typeof ArrowD
   BONUS: { label: "Bonus", icon: Gift, color: "text-amber-600 bg-amber-100 dark:bg-amber-900/30" },
 };
 
-export default function WalletPage() {
+function WalletContent() {
   const searchParams = useSearchParams();
   const success = searchParams.get("success");
   const sessionId = searchParams.get("session_id");
@@ -325,5 +325,17 @@ export default function WalletPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function WalletPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+      </div>
+    }>
+      <WalletContent />
+    </Suspense>
   );
 }
