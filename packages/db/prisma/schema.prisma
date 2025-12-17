@@ -368,7 +368,10 @@ enum TransactionStatus {
 
 enum PaymentMethod {
   STRIPE           // Stripe ödeme
+  PAYTR            // PayTR ödeme
+  PAPARA           // Papara ödeme
   BANK_TRANSFER    // Banka havalesi
+  WALLET           // Cüzdan ödemesi
   MANUAL           // Manuel (admin)
   SYSTEM           // Sistem otomatik
 }
@@ -1480,4 +1483,510 @@ model VoucherRedemption {
 
   @@index([voucherId])
   @@index([userId])
+}
+
+// ==================== FAZ3: IN-APP NOTIFICATIONS ====================
+
+enum NotificationType {
+  SYSTEM          // Sistem bildirimi
+  SECURITY        // Güvenlik uyarısı
+  BILLING         // Fatura/Ödeme
+  ORDER           // Sipariş durumu
+  SUBSCRIPTION    // Abonelik bildirimi
+  SUPPORT         // Destek talebi
+  MARKETING       // Pazarlama
+  ANNOUNCEMENT    // Duyuru
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+model Notification {
+  id            String               @id @default(cuid())
+  userId        String
+
+  type          NotificationType
+  priority      NotificationPriority @default(NORMAL)
+
+  title         String
+  message       String               @db.Text
+
+  // Link/Action
+  actionUrl     String?
+  actionLabel   String?
+
+  // Meta
+  icon          String?              // Lucide icon name
+  metadata      Json?
+
+  // Status
+  isRead        Boolean              @default(false)
+  readAt        DateTime?
+  isDismissed   Boolean              @default(false)
+  dismissedAt   DateTime?
+
+  // Expiry
+  expiresAt     DateTime?
+
+  createdAt     DateTime             @default(now())
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+  @@index([createdAt])
+  @@index([userId, isRead])
+}
+
+// ==================== FAZ3: SUPPORT TICKET SYSTEM ====================
+
+enum TicketStatus {
+  OPEN            // Açık
+  AWAITING_REPLY  // Yanıt bekleniyor (müşteri)
+  IN_PROGRESS     // İşleniyor
+  ON_HOLD         // Beklemede
+  RESOLVED        // Çözüldü
+  CLOSED          // Kapatıldı
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum TicketCategory {
+  BILLING         // Fatura/Ödeme
+  TECHNICAL       // Teknik destek
+  ACCOUNT         // Hesap sorunları
+  SALES           // Satış öncesi
+  FEEDBACK        // Geri bildirim
+  BUG_REPORT      // Hata raporu
+  FEATURE_REQUEST // Özellik talebi
+  OTHER           // Diğer
+}
+
+model Ticket {
+  id              String          @id @default(cuid())
+  referenceNo     String          @unique // TKT-20250101-XXXX
+
+  userId          String
+  organizationId  String?
+
+  subject         String
+  category        TicketCategory
+  status          TicketStatus    @default(OPEN)
+  priority        TicketPriority  @default(NORMAL)
+
+  // Assignment
+  assignedTo      String?         // Admin user ID
+  assignedAt      DateTime?
+
+  // Related resources
+  relatedOrderId  String?
+  relatedProductId String?
+  relatedSubscriptionId String?
+
+  // Tags/Labels
+  tags            String[]
+
+  // Meta
+  metadata        Json?
+  ipAddress       String?
+  userAgent       String?
+
+  // SLA
+  firstResponseAt DateTime?
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+
+  // Rating (after resolution)
+  rating          Int?            // 1-5
+  ratingComment   String?
+  ratedAt         DateTime?
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  messages        TicketMessage[]
+  attachments     TicketAttachment[]
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([assignedTo])
+  @@index([referenceNo])
+  @@index([category])
+  @@index([createdAt])
+}
+
+model TicketMessage {
+  id            String    @id @default(cuid())
+  ticketId      String
+  ticket        Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  authorId      String    // User or Admin ID
+  authorType    String    // user, admin, system
+  authorName    String?   // Snapshot
+
+  content       String    @db.Text
+
+  // Internal note (only visible to admins)
+  isInternal    Boolean   @default(false)
+
+  // Auto-reply indicator
+  isAutoReply   Boolean   @default(false)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  attachments   TicketAttachment[]
+
+  @@index([ticketId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model TicketAttachment {
+  id            String    @id @default(cuid())
+  ticketId      String
+  ticket        Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  messageId     String?
+  message       TicketMessage? @relation(fields: [messageId], references: [id], onDelete: SetNull)
+
+  fileName      String
+  fileSize      Int
+  fileType      String
+  fileUrl       String
+
+  uploadedBy    String
+  uploadedAt    DateTime  @default(now())
+
+  @@index([ticketId])
+  @@index([messageId])
+}
+
+// ==================== FAZ3: STATUS PAGE ====================
+
+enum ServiceCategory {
+  CORE            // Core services
+  CLOUD           // Cloud hosting
+  GAMING          // Game servers
+  API             // API services
+  BILLING         // Payment/Billing
+  AUTH            // Authentication
+}
+
+enum ServiceHealthStatus {
+  OPERATIONAL     // Çalışıyor
+  DEGRADED        // Performans düşük
+  PARTIAL_OUTAGE  // Kısmi kesinti
+  MAJOR_OUTAGE    // Büyük kesinti
+  MAINTENANCE     // Bakım
+}
+
+model ServiceStatus {
+  id              String              @id @default(cuid())
+
+  name            String              // "API Gateway", "Database", etc.
+  slug            String              @unique
+  description     String?
+  category        ServiceCategory
+
+  status          ServiceHealthStatus @default(OPERATIONAL)
+  statusMessage   String?
+
+  // Uptime tracking
+  uptimePercent   Decimal             @default(100) @db.Decimal(5, 2)
+  lastCheckedAt   DateTime            @default(now())
+  lastIncidentAt  DateTime?
+
+  // Display
+  isPublic        Boolean             @default(true)
+  sortOrder       Int                 @default(0)
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  incidents       Incident[]
+
+  @@index([status])
+  @@index([category])
+  @@index([isPublic])
+}
+
+enum IncidentStatus {
+  INVESTIGATING   // Araştırılıyor
+  IDENTIFIED      // Tespit edildi
+  MONITORING      // İzleniyor
+  RESOLVED        // Çözüldü
+}
+
+enum IncidentImpact {
+  NONE            // Etki yok
+  MINOR           // Küçük etki
+  MAJOR           // Büyük etki
+  CRITICAL        // Kritik
+}
+
+model Incident {
+  id              String          @id @default(cuid())
+
+  title           String
+  status          IncidentStatus  @default(INVESTIGATING)
+  impact          IncidentImpact  @default(MINOR)
+
+  // Affected services
+  serviceIds      String[]
+  services        ServiceStatus[] @relation
+
+  // Timeline
+  startedAt       DateTime        @default(now())
+  resolvedAt      DateTime?
+
+  // Investigation
+  rootCause       String?         @db.Text
+  resolution      String?         @db.Text
+
+  // Postmortem
+  postmortemUrl   String?
+
+  // Visibility
+  isPublic        Boolean         @default(true)
+
+  createdBy       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  updates         IncidentUpdate[]
+
+  @@index([status])
+  @@index([startedAt])
+  @@index([isPublic])
+}
+
+model IncidentUpdate {
+  id            String    @id @default(cuid())
+  incidentId    String
+  incident      Incident  @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  status        IncidentStatus
+  message       String    @db.Text
+
+  createdBy     String?
+  createdAt     DateTime  @default(now())
+
+  @@index([incidentId])
+  @@index([createdAt])
+}
+
+// ==================== FAZ3: SCHEDULED MAINTENANCE ====================
+
+model ScheduledMaintenance {
+  id              String          @id @default(cuid())
+
+  title           String
+  description     String          @db.Text
+
+  // Affected services
+  serviceIds      String[]
+
+  // Schedule
+  scheduledStart  DateTime
+  scheduledEnd    DateTime
+
+  // Actual times
+  actualStart     DateTime?
+  actualEnd       DateTime?
+
+  // Status
+  isCancelled     Boolean         @default(false)
+  cancelReason    String?
+
+  // Notifications sent
+  notificationSentAt DateTime?
+  reminderSentAt    DateTime?
+
+  createdBy       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([scheduledStart])
+  @@index([isCancelled])
+}
+
+// ==================== FAZ2: DELIVERY SYSTEM ====================
+
+enum DeliveryStatus {
+  PENDING         // Teslimat bekleniyor
+  PROCESSING      // İşleniyor
+  DELIVERED       // Teslim edildi
+  FAILED          // Başarısız
+  REFUNDED        // İade edildi
+}
+
+enum DeliveryType {
+  INSTANT         // Anında teslimat (dijital)
+  SCHEDULED       // Zamanlanmış teslimat
+  MANUAL          // Manuel teslimat
+}
+
+model Delivery {
+  id              String          @id @default(cuid())
+
+  orderId         String
+  orderItemId     String
+  userId          String
+
+  type            DeliveryType    @default(INSTANT)
+  status          DeliveryStatus  @default(PENDING)
+
+  // Product info snapshot
+  productId       String
+  productName     String
+  variantId       String?
+  variantName     String?
+
+  // Delivery content (encrypted if sensitive)
+  deliveryData    Json?           // { licenseKey, downloadUrl, accessCredentials, etc. }
+
+  // Access tracking
+  accessCount     Int             @default(0)
+  maxAccessCount  Int?            // null = unlimited
+  accessExpiresAt DateTime?
+
+  // Timestamps
+  deliveredAt     DateTime?
+  firstAccessedAt DateTime?
+  lastAccessedAt  DateTime?
+
+  // Error handling
+  failureReason   String?
+  retryCount      Int             @default(0)
+  maxRetries      Int             @default(3)
+  nextRetryAt     DateTime?
+
+  // Meta
+  metadata        Json?
+  ipAddress       String?
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  accessLogs      DeliveryAccessLog[]
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@index([productId])
+}
+
+model DeliveryAccessLog {
+  id            String    @id @default(cuid())
+  deliveryId    String
+  delivery      Delivery  @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+
+  userId        String
+  ipAddress     String?
+  userAgent     String?
+
+  action        String    // view, download, activate
+
+  createdAt     DateTime  @default(now())
+
+  @@index([deliveryId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ==================== FAZ2: PAYMENT GATEWAY RECORDS ====================
+
+enum PaymentGateway {
+  STRIPE
+  PAYTR
+  PAPARA
+}
+
+enum PaymentGatewayStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+model PaymentRecord {
+  id                String               @id @default(cuid())
+
+  userId            String
+  orderId           String?
+  walletId          String?
+
+  gateway           PaymentGateway
+  status            PaymentGatewayStatus @default(PENDING)
+
+  // Amounts
+  amount            Decimal              @db.Decimal(10, 2)
+  currency          String               @default("TRY")
+  fee               Decimal              @default(0) @db.Decimal(10, 2)
+  netAmount         Decimal              @db.Decimal(10, 2)
+
+  // Gateway references
+  externalId        String?              // Gateway transaction ID
+  externalStatus    String?              // Gateway status
+
+  // PayTR specific
+  paytrMerchantOid  String?
+  paytrToken        String?
+
+  // Papara specific
+  paparaPaymentId   String?
+  paparaAccountNumber String?
+
+  // Stripe specific
+  stripePaymentIntentId String?
+  stripeChargeId        String?
+
+  // Card info (masked)
+  cardBrand         String?              // visa, mastercard
+  cardLast4         String?
+  cardHolderName    String?
+
+  // Error handling
+  errorCode         String?
+  errorMessage      String?
+
+  // Webhook data
+  webhookReceivedAt DateTime?
+  webhookData       Json?
+
+  // Refund info
+  refundedAmount    Decimal              @default(0) @db.Decimal(10, 2)
+  refundedAt        DateTime?
+  refundReason      String?
+
+  // Meta
+  ipAddress         String?
+  userAgent         String?
+  metadata          Json?
+
+  completedAt       DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([walletId])
+  @@index([gateway])
+  @@index([status])
+  @@index([externalId])
+  @@index([paytrMerchantOid])
+  @@index([paparaPaymentId])
+  @@index([stripePaymentIntentId])
 }

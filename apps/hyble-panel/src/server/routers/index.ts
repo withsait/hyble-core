@@ -12,6 +12,9 @@ import { invoiceRouter } from "./invoice";
 import { cartRouter } from "./cart";
 import { voucherRouter } from "./voucher";
 import { subscriptionRouter } from "./subscription";
+import { notificationRouter } from "./notification";
+import { supportRouter } from "./support";
+import { statusRouter } from "./status";
 
 /**
  * Main tRPC router for hyble-panel
@@ -31,6 +34,9 @@ export const appRouter = createTRPCRouter({
   cart: cartRouter,
   voucher: voucherRouter,
   subscription: subscriptionRouter,
+  notification: notificationRouter,
+  support: supportRouter,
+  status: statusRouter,
 });
 
 // Export type for client usage
@@ -51,4 +57,7 @@ export {
   cartRouter,
   voucherRouter,
   subscriptionRouter,
+  notificationRouter,
+  supportRouter,
+  statusRouter,
 };
