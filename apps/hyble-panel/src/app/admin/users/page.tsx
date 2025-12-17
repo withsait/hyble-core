@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Card, Button, Input } from "@hyble/ui";
 import { trpc } from "@/lib/trpc/client";
@@ -68,7 +68,7 @@ interface UserItem {
   };
 }
 
-export default function AdminUsersPage() {
+function AdminUsersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -358,5 +358,17 @@ export default function AdminUsersPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+export default function AdminUsersPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <AdminUsersContent />
+    </Suspense>
   );
 }
