@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button } from "@hyble/ui";
 import {
   Download,
@@ -50,6 +49,22 @@ const licenseStatusConfig: Record<LicenseStatus, { label: string; color: string 
   SUSPENDED: { label: "Askıya Alındı", color: "bg-slate-100 text-slate-600" },
 };
 
+// Mock data - will be replaced with tRPC query when downloads router is implemented
+const mockProducts: DownloadProduct[] = [
+  {
+    id: "1",
+    name: "Hyble Starter Theme",
+    slug: "hyble-starter-theme",
+    description: "Modern ve responsive bir başlangıç teması",
+    license: {
+      type: "LIFETIME",
+      status: "ACTIVE",
+    },
+    latestVersion: { version: "1.2.0", releasedAt: new Date() },
+    downloadCount: 45,
+  },
+];
+
 function ProductSkeleton() {
   return (
     <Card className="p-4 animate-pulse">
@@ -69,9 +84,12 @@ export function DownloadProductList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [licenseFilter, setLicenseFilter] = useState<LicenseStatus | "ALL">("ALL");
 
-  const { data, isLoading, error } = trpc.downloads.listProducts.useQuery();
+  // TODO: Replace with tRPC query when downloads router is ready
+  // const { data, isLoading, error } = trpc.downloads.listProducts.useQuery();
+  const isLoading = false;
+  const error = null;
 
-  const products = data?.products || [];
+  const products = mockProducts;
 
   const filteredProducts = products.filter((product: DownloadProduct) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());

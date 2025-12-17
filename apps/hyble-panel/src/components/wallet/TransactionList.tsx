@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button } from "@hyble/ui";
 import {
   ArrowUpRight,
@@ -25,6 +24,28 @@ const typeConfig: Record<TransactionType, { icon: React.ReactNode; label: string
   BONUS: { icon: <Gift className="h-4 w-4" />, label: "Bonus", color: "text-emerald-600" },
 };
 
+// Mock data - will be replaced with tRPC query when wallet router is implemented
+const mockTransactions = [
+  {
+    id: "1",
+    type: "DEPOSIT",
+    amount: "50.00",
+    currency: "EUR",
+    description: "Bakiye yüklemesi",
+    status: "COMPLETED",
+    createdAt: new Date("2024-12-15"),
+  },
+  {
+    id: "2",
+    type: "CHARGE",
+    amount: "25.00",
+    currency: "EUR",
+    description: "Hosting ödemesi",
+    status: "COMPLETED",
+    createdAt: new Date("2024-12-14"),
+  },
+];
+
 
 function TransactionSkeleton() {
   return (
@@ -43,14 +64,15 @@ function TransactionSkeleton() {
 
 export function TransactionList() {
   const [filter, setFilter] = useState<TransactionType | "ALL">("ALL");
-  const limit = 20;
 
-  const { data, isLoading, error } = trpc.wallet.getTransactions.useQuery({
-    limit,
-    type: filter === "ALL" ? undefined : filter,
-  });
+  // TODO: Replace with tRPC query when wallet router is ready
+  // const { data, isLoading, error } = trpc.wallet.getTransactions.useQuery({ limit: 20 });
+  const isLoading = false;
+  const error = null;
 
-  const transactions = data?.transactions || [];
+  const transactions = filter === "ALL"
+    ? mockTransactions
+    : mockTransactions.filter(t => t.type === filter);
 
   if (error) {
     return (
