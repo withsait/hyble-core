@@ -9,7 +9,6 @@
  */
 
 import { prisma } from "@hyble/db";
-import { Decimal } from "@prisma/client/runtime/library";
 import { createBillingNotification, createNotification } from "../../server/routers/notification";
 
 // Constants
