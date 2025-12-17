@@ -48,7 +48,6 @@ export function ProductForm({ productId }: ProductFormProps) {
 
   // TODO: Replace with tRPC queries when pim router is ready
   // const { data: product, isLoading: productLoading } = trpc.pim.products.getById.useQuery(productId);
-  const product: ProductFormData | null = null;
   const productLoading = false;
   const categories = mockCategories;
 
@@ -57,7 +56,6 @@ export function ProductForm({ productId }: ProductFormProps) {
     handleSubmit,
     setValue,
     watch,
-    reset,
     formState: { errors, isDirty },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -70,28 +68,12 @@ export function ProductForm({ productId }: ProductFormProps) {
     },
   });
 
-  // Load product data for edit mode
-  useEffect(() => {
-    if (product) {
-      reset({
-        nameTr: product.nameTr,
-        nameEn: product.nameEn,
-        slug: product.slug,
-        type: product.type,
-        status: product.status,
-        categoryId: product.categoryId,
-        descriptionTr: product.descriptionTr || "",
-        descriptionEn: product.descriptionEn || "",
-        shortDescTr: product.shortDescTr || "",
-        shortDescEn: product.shortDescEn || "",
-        basePrice: product.basePrice?.toString() || "",
-        currency: product.currency,
-        taxRate: product.taxRate?.toString() || "20",
-        tags: product.tags || "",
-        isFeatured: product.isFeatured,
-      });
-    }
-  }, [product, reset]);
+  // TODO: Load product data for edit mode when tRPC router is ready
+  // useEffect(() => {
+  //   if (product) {
+  //     reset({ ...product });
+  //   }
+  // }, [product, reset]);
 
   // Auto-generate slug from Turkish name
   const nameTr = watch("nameTr");
