@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Button, Input, Label } from "@hyble/ui";
+import { Card, Button, Input } from "@hyble/ui";
+
+const Label = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <label className={`text-sm font-medium ${className}`}>{children}</label>
+);
 import {
   Bot,
   Plus,

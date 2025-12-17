@@ -33,7 +33,8 @@
       "Bash(find:*)",
       "Bash(sshpass -p '8WheEUDukgJ2Pr' ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"ls -la /home/hyble/apps/\")",
       "Bash(ssh-keygen:*)",
-      "Bash(npx prisma generate:*)"
+      "Bash(npx prisma generate:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
     "ask": []
