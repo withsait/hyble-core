@@ -1,18 +1,35 @@
 "use client";
 
-import { trpc } from "@/lib/trpc/client";
 import { Card } from "@hyble/ui";
 import { Loader2, Package, Tag, Percent, CreditCard } from "lucide-react";
+
+// Mock data - will be replaced with tRPC when cart/wallet routers are ready
+const mockCart = {
+  items: [],
+  subtotal: 0,
+  discount: 0,
+  tax: 0,
+  taxRate: 20,
+  total: 0,
+  currency: "EUR",
+  coupon: null,
+};
+
+const mockWallet = {
+  mainBalance: 125.50,
+  bonusBalance: 15.00,
+  promoBalance: 5.00,
+};
 
 interface OrderSummaryProps {
   showWalletBalance?: boolean;
 }
 
 export function OrderSummary({ showWalletBalance = true }: OrderSummaryProps) {
-  const { data: cart, isLoading: cartLoading } = trpc.cart.get.useQuery();
-  const { data: wallet, isLoading: walletLoading } = trpc.wallet.getBalance.useQuery(undefined, {
-    enabled: showWalletBalance,
-  });
+  // TODO: Replace with tRPC queries when cart/wallet routers are ready
+  const cart = mockCart;
+  const wallet = mockWallet;
+  const cartLoading = false;
 
   if (cartLoading) {
     return (
@@ -78,7 +95,7 @@ export function OrderSummary({ showWalletBalance = true }: OrderSummaryProps) {
               İndirim
               {cart.coupon && (
                 <span className="text-xs bg-green-100 dark:bg-green-900 px-1.5 py-0.5 rounded">
-                  {cart.coupon.code}
+                  {cart.coupon}
                 </span>
               )}
             </span>
