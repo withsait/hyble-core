@@ -481,7 +481,7 @@ export async function accessDelivery(
 
   return {
     success: true,
-    content: delivery.deliveryData as DeliveryContent,
+    content: delivery.deliveryData as unknown as DeliveryContent,
   };
 }
 
