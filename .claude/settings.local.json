@@ -40,7 +40,8 @@
       "Bash(powershell -Command \"& { cd 'C:\\Users\\ahmet\\Documents\\.claude-worktrees\\hyble-core\\angry-curie\\apps\\hyble-web'; npm run build }\":*)",
       "Bash(git checkout:*)",
       "Bash(git pull:*)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

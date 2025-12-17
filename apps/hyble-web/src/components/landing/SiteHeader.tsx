@@ -6,9 +6,9 @@ import {
   Sun, Moon, Menu, X, ChevronDown,
   Shield, Wallet, Cloud, Key, Activity, Wrench,
   BookOpen, Headphones, FileText, Users,
-  Globe
+  Globe, Gamepad2
 } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 // Ürünler mega menü içeriği
 const products = {
@@ -34,6 +34,14 @@ const products = {
       href: "/products/cloud",
       badge: "Yakında",
       color: "from-purple-500 to-pink-500",
+    },
+    {
+      icon: Gamepad2,
+      name: "HybleGaming",
+      description: "Minecraft & Game Server Hosting",
+      href: "https://game.hyble.co",
+      color: "from-emerald-500 to-green-600",
+      external: true,
     },
   ],
   tools: [
@@ -95,24 +103,21 @@ export function SiteHeader() {
   const [langOpen, setLangOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState(languages[0]);
 
-  const productsRef = useRef<HTMLDivElement>(null);
-  const langRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => setMounted(true), []);
 
-  // Dışarı tıklandığında menüleri kapat
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (productsRef.current && !productsRef.current.contains(event.target as Node)) {
-        setProductsOpen(false);
-      }
-      if (langRef.current && !langRef.current.contains(event.target as Node)) {
-        setLangOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  // Hover timeout için
+  let hoverTimeout: NodeJS.Timeout | null = null;
+
+  const handleMouseEnterProducts = () => {
+    if (hoverTimeout) clearTimeout(hoverTimeout);
+    setProductsOpen(true);
+  };
+
+  const handleMouseLeaveProducts = () => {
+    hoverTimeout = setTimeout(() => {
+      setProductsOpen(false);
+    }, 150);
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
@@ -128,25 +133,32 @@ export function SiteHeader() {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-1">
-            {/* Ürünler Dropdown */}
-            <div ref={productsRef} className="relative">
+            {/* Ürünler Dropdown - Hover ile açılır (Vercel tarzı) */}
+            <div
+              className="relative"
+              onMouseEnter={handleMouseEnterProducts}
+              onMouseLeave={handleMouseLeaveProducts}
+            >
               <button
-                onClick={() => setProductsOpen(!productsOpen)}
                 className={`flex items-center gap-1 px-4 py-2 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-all font-medium ${
                   productsOpen ? "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white" : ""
                 }`}
               >
                 Ürünler
-                <ChevronDown className={`w-4 h-4 transition-transform ${productsOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${productsOpen ? "rotate-180" : ""}`} />
               </button>
 
-              {/* Mega Menu */}
-              {productsOpen && (
-                <div className="absolute top-full left-0 mt-2 w-[720px] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+              {/* Mega Menu - Vercel tarzı */}
+              <div
+                className={`absolute top-full left-1/2 -translate-x-1/2 pt-2 transition-all duration-200 ${
+                  productsOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"
+                }`}
+              >
+                <div className="w-[800px] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
                   <div className="grid grid-cols-3 divide-x divide-slate-100 dark:divide-slate-800">
                     {/* Ana Ürünler */}
-                    <div className="p-4">
-                      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-2">
+                    <div className="p-5">
+                      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-2">
                         Ana Ürünler
                       </h3>
                       <div className="space-y-1">
@@ -154,24 +166,25 @@ export function SiteHeader() {
                           <Link
                             key={product.name}
                             href={product.href}
+                            target={product.external ? "_blank" : undefined}
                             onClick={() => setProductsOpen(false)}
-                            className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                            className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
                           >
-                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${product.color} flex items-center justify-center flex-shrink-0`}>
+                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${product.color} flex items-center justify-center flex-shrink-0 shadow-sm`}>
                               <product.icon className="w-5 h-5 text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="font-medium text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                <span className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                   {product.name}
                                 </span>
-                                {product.badge && (
-                                  <span className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded">
+                                {"badge" in product && product.badge && (
+                                  <span className="text-[10px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded font-medium">
                                     {product.badge}
                                   </span>
                                 )}
                               </div>
-                              <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
+                              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                                 {product.description}
                               </p>
                             </div>
@@ -180,9 +193,9 @@ export function SiteHeader() {
                       </div>
                     </div>
 
-                    {/* Araçlar */}
-                    <div className="p-4">
-                      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-2">
+                    {/* Araçlar & Servisler */}
+                    <div className="p-5">
+                      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-2">
                         Araçlar & Servisler
                       </h3>
                       <div className="space-y-1">
@@ -191,16 +204,16 @@ export function SiteHeader() {
                             key={product.name}
                             href={product.href}
                             onClick={() => setProductsOpen(false)}
-                            className="flex items-start gap-3 p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                            className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
                           >
-                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${product.color} flex items-center justify-center flex-shrink-0`}>
+                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${product.color} flex items-center justify-center flex-shrink-0 shadow-sm`}>
                               <product.icon className="w-5 h-5 text-white" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <span className="font-medium text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                              <span className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                 {product.name}
                               </span>
-                              <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
+                              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                                 {product.description}
                               </p>
                             </div>
@@ -210,8 +223,8 @@ export function SiteHeader() {
                     </div>
 
                     {/* Kaynaklar */}
-                    <div className="p-4 bg-slate-50 dark:bg-slate-800/50">
-                      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-2">
+                    <div className="p-5 bg-slate-50/50 dark:bg-slate-800/30">
+                      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-2">
                         Kaynaklar
                       </h3>
                       <div className="space-y-1">
@@ -220,7 +233,7 @@ export function SiteHeader() {
                             key={item.name}
                             href={item.href}
                             onClick={() => setProductsOpen(false)}
-                            className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors group"
+                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-white dark:hover:bg-slate-700 transition-colors group"
                           >
                             <item.icon className="w-5 h-5 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
                             <span className="font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
@@ -236,20 +249,20 @@ export function SiteHeader() {
                   <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-t border-slate-100 dark:border-slate-800">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-slate-900 dark:text-white">Tüm ürünleri keşfet</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">Tüm ürünleri keşfet</p>
                         <p className="text-sm text-slate-600 dark:text-slate-400">7 gün ücretsiz deneme ile başla</p>
                       </div>
                       <Link
-                        href="/products"
+                        href="https://id.hyble.co/register"
                         onClick={() => setProductsOpen(false)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                        className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors shadow-sm"
                       >
                         Başla
                       </Link>
                     </div>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Diğer linkler */}
@@ -267,9 +280,10 @@ export function SiteHeader() {
           {/* Right Section */}
           <div className="flex items-center gap-2">
             {/* Dil Seçici */}
-            <div ref={langRef} className="relative hidden md:block">
+            <div className="relative hidden md:block">
               <button
                 onClick={() => setLangOpen(!langOpen)}
+                onBlur={() => setTimeout(() => setLangOpen(false), 150)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 title="Dil Seçin"
               >
@@ -285,7 +299,6 @@ export function SiteHeader() {
                       onClick={() => {
                         setCurrentLang(lang);
                         setLangOpen(false);
-                        // TODO: i18n entegrasyonu
                       }}
                       className={`w-full flex items-center gap-3 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${
                         currentLang?.code === lang.code ? "bg-blue-50 dark:bg-blue-900/30" : ""
@@ -358,6 +371,7 @@ export function SiteHeader() {
                   <Link
                     key={product.name}
                     href={product.href}
+                    target={("external" in product && product.external) ? "_blank" : undefined}
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   >
