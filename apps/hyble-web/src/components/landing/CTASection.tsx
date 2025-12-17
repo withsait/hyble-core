@@ -1,244 +1,375 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ArrowRight, Mail, Sparkles, CheckCircle2, Play, Rocket } from "lucide-react";
-import { useState } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { ArrowRight, Sparkles, CheckCircle2, Gift, Zap, Shield, Clock, Star, Rocket } from "lucide-react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+
+// Scroll depth based CTA messages
+const ctaVariants = {
+  early: {
+    badge: "Hemen Keşfet",
+    title: "Dijital Geleceğinizi",
+    highlight: "Şekillendirin",
+    description: "Hyble ile projelerinizi hayata geçirin. Tüm araçlar tek platformda.",
+    cta: "Ürünleri Keşfet",
+    ctaLink: "#products",
+    stats: [
+      { value: "5dk", label: "Kurulum" },
+      { value: "99.9%", label: "Uptime" },
+      { value: "7/24", label: "Destek" },
+    ],
+  },
+  middle: {
+    badge: "Popüler Seçim",
+    title: "Pro Plan ile",
+    highlight: "Farkı Hissedin",
+    description: "100.000+ API çağrısı, sınırsız kullanıcı ve öncelikli destek ile işinizi büyütün.",
+    cta: "7 Gün Ücretsiz Dene",
+    ctaLink: "https://id.hyble.co/register?plan=pro",
+    stats: [
+      { value: "€49", label: "/ay" },
+      { value: "100K", label: "API/ay" },
+      { value: "4 saat", label: "Destek SLA" },
+    ],
+  },
+  late: {
+    badge: "Son Adım",
+    title: "Harekete Geçme",
+    highlight: "Zamanı",
+    description: "Şimdi başlayın, ilk 7 gün tamamen ücretsiz. Risk yok, bağlayıcılık yok.",
+    cta: "Ücretsiz Hesap Oluştur",
+    ctaLink: "https://id.hyble.co/register",
+    stats: [
+      { value: "7 gün", label: "Ücretsiz" },
+      { value: "0€", label: "Başlangıç" },
+      { value: "30 gün", label: "İade" },
+    ],
+  },
+};
 
 const benefits = [
-  "14 gün ücretsiz deneme",
-  "Kredi kartı gerekmez",
-  "Anında kurulum",
-  "İstediğiniz zaman iptal",
+  { icon: Gift, text: "7 gün ücretsiz deneme" },
+  { icon: Shield, text: "30 gün para iade garantisi" },
+  { icon: Clock, text: "5 dakikada kurulum" },
+  { icon: Zap, text: "Anında aktivasyon" },
+];
+
+const testimonials = [
+  {
+    quote: "Hyble ile projemizi 2 hafta erken teslim ettik. Harika bir deneyim!",
+    author: "Mehmet K.",
+    role: "CTO, TechStartup",
+    avatar: "M",
+  },
+  {
+    quote: "API entegrasyonu inanılmaz kolay. Dokümantasyon çok detaylı.",
+    author: "Ayşe Y.",
+    role: "Senior Developer",
+    avatar: "A",
+  },
+  {
+    quote: "Müşteri desteği gerçekten 7/24. Gece 3'te bile cevap aldım.",
+    author: "Can B.",
+    role: "Founder, GameStudio",
+    avatar: "C",
+  },
 ];
 
 export function CTASection() {
-  const [email, setEmail] = useState("");
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isVideoOpen, setIsVideoOpen] = useState(false);
+  const [scrollDepth, setScrollDepth] = useState<"early" | "middle" | "late">("early");
+  const [currentTestimonial, setCurrentTestimonial] = useState(0);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      // Redirect to register with email pre-filled
-      window.location.href = `https://id.hyble.co/register?email=${encodeURIComponent(email)}`;
-    }
-  };
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+
+      if (scrollPercent < 40) {
+        setScrollDepth("early");
+      } else if (scrollPercent < 70) {
+        setScrollDepth("middle");
+      } else {
+        setScrollDepth("late");
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Initial check
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentCTA = ctaVariants[scrollDepth];
 
   return (
-    <section className="relative py-24 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:40px_40px]" />
+    <section className="relative py-24 bg-slate-900 overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0">
+        {/* Gradient mesh */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/50 via-slate-900 to-purple-900/50" />
 
-        {/* Gradient orbs */}
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full blur-3xl opacity-20 bg-blue-400 dark:bg-blue-600" />
-        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full blur-3xl opacity-15 bg-cyan-400 dark:bg-cyan-600" />
+        {/* Animated gradient orbs */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full blur-3xl bg-blue-500/30"
+        />
+        <motion.div
+          animate={{
+            scale: [1.2, 1, 1.2],
+            opacity: [0.2, 0.4, 0.2],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full blur-3xl bg-purple-500/30"
+        />
+
+        {/* Grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#fff1_1px,transparent_1px),linear-gradient(to_bottom,#fff1_1px,transparent_1px)] bg-[size:40px_40px] opacity-5" />
       </div>
 
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Main CTA Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="relative"
-        >
-          {/* Glow effect */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-3xl blur-xl opacity-20" />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Main CTA Content */}
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Left Column - Dynamic Content */}
+          <motion.div
+            key={scrollDepth}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/20 border border-blue-500/30 text-blue-300 text-sm font-semibold mb-6"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>{currentCTA.badge}</span>
+            </motion.div>
 
-          <div className="relative bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 p-8 md:p-12 shadow-xl">
-            <div className="grid md:grid-cols-2 gap-10 items-center">
-              {/* Left Column - Content */}
-              <div>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+              {currentCTA.title}{" "}
+              <span className="bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                {currentCTA.highlight}
+              </span>
+            </h2>
+
+            <p className="text-xl text-slate-300 mb-8 leading-relaxed">
+              {currentCTA.description}
+            </p>
+
+            {/* Stats Row */}
+            <div className="flex gap-8 mb-10">
+              {currentCTA.stats.map((stat, index) => (
                 <motion.div
+                  key={stat.label}
                   initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.1 }}
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium mb-6"
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="text-center"
                 >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Ücretsiz başlayın</span>
+                  <p className="text-3xl md:text-4xl font-bold text-white">{stat.value}</p>
+                  <p className="text-sm text-slate-400">{stat.label}</p>
                 </motion.div>
+              ))}
+            </div>
 
-                <motion.h2
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.2 }}
-                  className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4"
-                >
-                  Yazılım işinizi{" "}
-                  <span className="bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
-                    bugün başlatın
-                  </span>
-                </motion.h2>
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <motion.a
+                href={currentCTA.ctaLink}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold text-lg shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30 transition-all"
+              >
+                {currentCTA.cta}
+                <ArrowRight className="w-5 h-5" />
+              </motion.a>
+              <Link
+                href="/contact"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 text-white border border-white/20 rounded-xl font-semibold hover:bg-white/20 transition-colors"
+              >
+                Satış ile Görüşün
+              </Link>
+            </div>
 
-                <motion.p
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3 }}
-                  className="text-lg text-slate-600 dark:text-slate-400 mb-6"
-                >
-                  Binlerce geliştirici Hyble ile projelerini hayata geçiriyor.
-                  Siz de aramıza katılın.
-                </motion.p>
+            {/* Benefits */}
+            <div className="grid grid-cols-2 gap-4 mt-10">
+              {benefits.map((benefit) => (
+                <div key={benefit.text} className="flex items-center gap-2 text-sm text-slate-300">
+                  <benefit.icon className="w-4 h-4 text-green-400 flex-shrink-0" />
+                  <span>{benefit.text}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
 
-                {/* Benefits list */}
-                <motion.ul
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.4 }}
-                  className="grid grid-cols-2 gap-3 mb-6"
-                >
-                  {benefits.map((benefit) => (
-                    <li key={benefit} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                      <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-                      <span>{benefit}</span>
-                    </li>
-                  ))}
-                </motion.ul>
-
-                {/* Demo video button */}
-                <motion.button
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.5 }}
-                  onClick={() => setIsVideoOpen(true)}
-                  className="group flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-500 transition-colors">
-                    <Play className="w-4 h-4 ml-0.5" />
-                  </div>
-                  <span>2 dakikalık demo izle</span>
-                </motion.button>
+          {/* Right Column - Testimonial Card */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="relative"
+          >
+            {/* Main Card */}
+            <div className="relative bg-white/5 backdrop-blur-sm rounded-3xl border border-white/10 p-8 md:p-10">
+              {/* Stars */}
+              <div className="flex gap-1 mb-6">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-amber-400 text-amber-400" />
+                ))}
               </div>
 
-              {/* Right Column - Form */}
+              {/* Testimonial */}
               <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
-                className="relative"
+                key={currentTestimonial}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
               >
-                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-6 md:p-8 border border-slate-100 dark:border-slate-700">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                      <Rocket className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 dark:text-white">Hızlı Başlangıç</h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">30 saniyede hesap oluşturun</p>
-                    </div>
+                <p className="text-xl md:text-2xl text-white font-medium mb-8 leading-relaxed">
+                  &quot;{testimonials[currentTestimonial]?.quote}&quot;
+                </p>
+
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-lg">
+                    {testimonials[currentTestimonial]?.avatar}
                   </div>
-
-                  {!isSubmitted ? (
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="E-posta adresiniz"
-                          required
-                          className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        />
-                      </div>
-
-                      <button
-                        type="submit"
-                        className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:shadow-blue-500/25 group"
-                      >
-                        Ücretsiz Başla
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                      </button>
-
-                      <p className="text-xs text-center text-slate-500 dark:text-slate-400">
-                        Kaydolarak{" "}
-                        <a href="/legal/terms" className="text-blue-600 dark:text-blue-400 hover:underline">
-                          Kullanım Şartları
-                        </a>
-                        'nı kabul etmiş olursunuz.
-                      </p>
-                    </form>
-                  ) : (
-                    <div className="text-center py-6">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                        <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
-                      </div>
-                      <h4 className="font-semibold text-slate-900 dark:text-white mb-2">Yönlendiriliyorsunuz!</h4>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">
-                        Hesap oluşturma sayfasına yönlendirileceksiniz...
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Floating badge */}
-                <div className="absolute -bottom-4 -right-4 bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 px-4 py-2 rounded-full text-sm font-medium shadow-lg">
-                  🎉 500+ aktif kullanıcı
+                  <div>
+                    <p className="font-semibold text-white">{testimonials[currentTestimonial]?.author}</p>
+                    <p className="text-sm text-slate-400">{testimonials[currentTestimonial]?.role}</p>
+                  </div>
                 </div>
               </motion.div>
-            </div>
-          </div>
-        </motion.div>
 
-        {/* Bottom trust indicators */}
+              {/* Testimonial dots */}
+              <div className="flex gap-2 mt-8">
+                {testimonials.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentTestimonial(index)}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      index === currentTestimonial
+                        ? "bg-blue-400 w-6"
+                        : "bg-white/30 hover:bg-white/50"
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Floating badge */}
+              <motion.div
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-4 -right-4 bg-gradient-to-r from-green-400 to-emerald-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg"
+              >
+                <CheckCircle2 className="w-4 h-4 inline mr-1.5" />
+                Doğrulanmış Müşteri
+              </motion.div>
+            </div>
+
+            {/* Decorative elements */}
+            <div className="absolute -z-10 -bottom-8 -left-8 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl" />
+            <div className="absolute -z-10 -top-8 -right-8 w-32 h-32 bg-purple-500/20 rounded-full blur-3xl" />
+          </motion.div>
+        </div>
+
+        {/* Bottom Section - Trust & Partners */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.6 }}
-          className="mt-12 text-center"
+          transition={{ delay: 0.4 }}
+          className="mt-20 pt-12 border-t border-white/10"
         >
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-            Güvenilir altyapı ile destekleniyor
-          </p>
-          <div className="flex items-center justify-center gap-8 opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
-            {["Stripe", "Hetzner", "Cloudflare", "Vercel"].map((partner) => (
-              <span key={partner} className="text-slate-400 dark:text-slate-500 font-semibold">
-                {partner}
-              </span>
-            ))}
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            {/* User count */}
+            <div className="flex items-center gap-4">
+              <div className="flex -space-x-3">
+                {["A", "B", "C", "D", "E"].map((letter, i) => (
+                  <div
+                    key={letter}
+                    className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 border-2 border-slate-900 flex items-center justify-center text-white text-sm font-medium"
+                    style={{ zIndex: 5 - i }}
+                  >
+                    {letter}
+                  </div>
+                ))}
+              </div>
+              <div>
+                <p className="text-white font-semibold">500+ Aktif Kullanıcı</p>
+                <p className="text-sm text-slate-400">Son 30 günde katılan</p>
+              </div>
+            </div>
+
+            {/* Partners */}
+            <div className="flex items-center gap-8">
+              <span className="text-sm text-slate-500 uppercase tracking-wider">Güvenilir Altyapı</span>
+              <div className="flex items-center gap-6">
+                {["Stripe", "Hetzner", "Cloudflare"].map((partner) => (
+                  <span
+                    key={partner}
+                    className="text-slate-500 font-semibold hover:text-slate-300 transition-colors cursor-default"
+                  >
+                    {partner}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Urgency Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.5 }}
+          className="mt-12"
+        >
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 border border-amber-500/30 p-6 md:p-8">
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#fff0_0%,#fff1_50%,#fff0_100%)] animate-shimmer" />
+            <div className="relative flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <Rocket className="w-6 h-6 text-amber-400" />
+                </div>
+                <div>
+                  <p className="font-semibold text-white">Yılsonu Kampanyası</p>
+                  <p className="text-sm text-amber-200/80">Yıllık planlarda ekstra %10 indirim - 31 Aralık'a kadar</p>
+                </div>
+              </div>
+              <a
+                href="https://id.hyble.co/register?promo=newyear"
+                className="flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-xl font-semibold transition-colors whitespace-nowrap"
+              >
+                Kampanyadan Yararlan
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
           </div>
         </motion.div>
       </div>
 
-      {/* Video Modal */}
-      {isVideoOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setIsVideoOpen(false)}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl p-8 max-w-2xl w-full text-center"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="aspect-video bg-slate-100 dark:bg-slate-800 rounded-xl mb-6 flex items-center justify-center">
-              <div className="text-center">
-                <Play className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-                <p className="text-slate-500 dark:text-slate-400">Demo videosu yakında eklenecek</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsVideoOpen(false)}
-              className="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-            >
-              Kapat
-            </button>
-          </motion.div>
-        </div>
-      )}
+      {/* CSS for shimmer animation */}
+      <style jsx>{`
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+        .animate-shimmer {
+          animation: shimmer 3s infinite;
+        }
+      `}</style>
     </section>
   );
 }

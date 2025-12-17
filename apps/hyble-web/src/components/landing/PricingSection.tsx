@@ -1,94 +1,136 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Check, X, Sparkles, ArrowRight, Zap } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Check,
+  Sparkles,
+  ArrowRight,
+  Zap,
+  Shield,
+  Clock,
+  CreditCard,
+  Gift,
+  Star,
+  ChevronDown,
+  Users,
+  Building2,
+  Rocket,
+} from "lucide-react";
 import Link from "next/link";
 
 const plans = [
   {
+    id: "starter",
     name: "Starter",
-    description: "Bireysel geliştiriciler ve küçük projeler için ideal başlangıç.",
+    icon: Rocket,
+    description: "Bireysel geliştiriciler ve küçük projeler için ideal başlangıç noktası.",
     price: "0",
-    period: "sonsuza kadar",
+    period: "sonsuza kadar ücretsiz",
     highlight: false,
     badge: null,
+    color: "from-slate-500 to-slate-600",
     features: [
-      { text: "1.000 API çağrısı/ay", included: true },
-      { text: "100 kullanıcı", included: true },
-      { text: "Temel analitik", included: true },
-      { text: "Email desteği", included: true },
-      { text: "SSL sertifikası", included: true },
-      { text: "Özel domain", included: false },
-      { text: "Öncelikli destek", included: false },
-      { text: "SLA garantisi", included: false },
+      "1.000 API çağrısı/ay",
+      "100 kullanıcı limiti",
+      "Temel analitik dashboard",
+      "Email desteği (48 saat)",
+      "SSL sertifikası dahil",
+      "Topluluk forum erişimi",
     ],
     cta: "Ücretsiz Başla",
-    ctaVariant: "outline",
+    ctaLink: "https://id.hyble.co/register",
   },
   {
+    id: "pro",
     name: "Pro",
-    description: "Büyüyen işletmeler ve profesyonel ekipler için güçlü özellikler.",
+    icon: Star,
+    description: "Büyüyen işletmeler için güçlü özellikler ve öncelikli destek.",
     price: "49",
+    originalPrice: "79",
     period: "/ay",
     highlight: true,
     badge: "En Popüler",
+    color: "from-blue-500 to-cyan-500",
     features: [
-      { text: "100.000 API çağrısı/ay", included: true },
-      { text: "Sınırsız kullanıcı", included: true },
-      { text: "Gelişmiş analitik", included: true },
-      { text: "Öncelikli email desteği", included: true },
-      { text: "SSL sertifikası", included: true },
-      { text: "Özel domain", included: true },
-      { text: "Webhook entegrasyonları", included: true },
-      { text: "99.9% SLA garantisi", included: true },
+      "100.000 API çağrısı/ay",
+      "Sınırsız kullanıcı",
+      "Gelişmiş analitik & raporlar",
+      "Öncelikli destek (4 saat)",
+      "Özel domain bağlama",
+      "Webhook entegrasyonları",
+      "API rate limit artışı",
+      "99.9% SLA garantisi",
     ],
-    cta: "Pro'ya Geç",
-    ctaVariant: "primary",
+    cta: "7 Gün Ücretsiz Dene",
+    ctaLink: "https://id.hyble.co/register?plan=pro",
+    savings: "Yıllık ödemede €240 tasarruf",
   },
   {
+    id: "business",
     name: "Business",
-    description: "Kurumsal gereksinimler için özelleştirilmiş çözümler ve destek.",
+    icon: Building2,
+    description: "Kurumsal gereksinimler için özelleştirilmiş çözümler.",
     price: "199",
     period: "/ay",
     highlight: false,
     badge: "Kurumsal",
+    color: "from-purple-500 to-pink-500",
     features: [
-      { text: "Sınırsız API çağrısı", included: true },
-      { text: "Sınırsız kullanıcı", included: true },
-      { text: "Özel analitik dashboard", included: true },
-      { text: "7/24 telefon desteği", included: true },
-      { text: "Wildcard SSL", included: true },
-      { text: "Çoklu özel domain", included: true },
-      { text: "Özel entegrasyonlar", included: true },
-      { text: "99.99% SLA garantisi", included: true },
+      "Sınırsız API çağrısı",
+      "Sınırsız kullanıcı & takım",
+      "Özel analitik dashboard",
+      "7/24 telefon desteği",
+      "Wildcard SSL sertifikası",
+      "Çoklu domain desteği",
+      "Özel entegrasyonlar",
+      "99.99% SLA garantisi",
+      "Dedicated account manager",
     ],
-    cta: "İletişime Geç",
-    ctaVariant: "outline",
+    cta: "Demo Talep Et",
+    ctaLink: "/contact",
   },
 ];
 
-const faqs = [
-  {
-    q: "Planımı istediğim zaman değiştirebilir miyim?",
-    a: "Evet, dilediğiniz zaman plan yükseltme veya düşürme yapabilirsiniz. Değişiklikler anında uygulanır.",
-  },
-  {
-    q: "Ücretsiz deneme süresi var mı?",
-    a: "Pro ve Business planları için 14 gün ücretsiz deneme sunuyoruz. Kredi kartı gerekmez.",
-  },
-  {
-    q: "Fatura kesiliyor mu?",
-    a: "Evet, tüm ödemeleriniz için yasal fatura düzenliyoruz. İngiltere merkezli şirketimiz üzerinden.",
-  },
+const guarantees = [
+  { icon: Clock, text: "7 Gün Ücretsiz Deneme" },
+  { icon: CreditCard, text: "Kredi Kartı Gerekmez" },
+  { icon: Shield, text: "Para İade Garantisi" },
+  { icon: Gift, text: "İlk Ay %50 İndirim" },
+];
+
+const comparisonFeatures = [
+  { name: "API Çağrısı", starter: "1K/ay", pro: "100K/ay", business: "Sınırsız" },
+  { name: "Kullanıcı Limiti", starter: "100", pro: "Sınırsız", business: "Sınırsız" },
+  { name: "Özel Domain", starter: false, pro: true, business: true },
+  { name: "Webhook Desteği", starter: false, pro: true, business: true },
+  { name: "SLA Garantisi", starter: false, pro: "99.9%", business: "99.99%" },
+  { name: "Öncelikli Destek", starter: false, pro: true, business: true },
+  { name: "Özel Entegrasyon", starter: false, pro: false, business: true },
+  { name: "Account Manager", starter: false, pro: false, business: true },
 ];
 
 export function PricingSection() {
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
+  const [showComparison, setShowComparison] = useState(false);
+
+  const getPrice = (basePrice: string) => {
+    if (basePrice === "0") return "0";
+    const price = parseInt(basePrice);
+    if (billingPeriod === "yearly") {
+      return Math.round(price * 0.8).toString(); // 20% discount for yearly
+    }
+    return basePrice;
+  };
+
   return (
-    <section id="pricing" className="relative py-24 bg-white dark:bg-slate-900 overflow-hidden">
+    <section id="pricing" className="relative py-24 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-900 overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-0 w-[500px] h-[500px] rounded-full blur-3xl opacity-10 bg-blue-400 dark:bg-blue-600" />
-        <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] rounded-full blur-3xl opacity-10 bg-purple-400 dark:bg-purple-600" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full blur-3xl opacity-20 bg-gradient-to-r from-blue-400 to-cyan-400 dark:opacity-10" />
+        <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] rounded-full blur-3xl opacity-20 bg-gradient-to-r from-purple-400 to-pink-400 dark:opacity-10" />
+        {/* Grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:24px_24px] opacity-[0.015] dark:opacity-[0.02]" />
       </div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -98,197 +140,313 @@ export function PricingSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-sm font-semibold mb-6">
-            <Zap className="w-4 h-4" />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30 border border-blue-100 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-sm font-semibold mb-6"
+          >
+            <Sparkles className="w-4 h-4" />
             <span>Şeffaf Fiyatlandırma</span>
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">
-            İhtiyacınıza Uygun Plan Seçin
+          </motion.div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white mb-4">
+            İşinizi Büyütecek Plan Seçin
           </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8">
             Gizli maliyet yok. İstediğiniz zaman iptal edin.
-            Tüm planlar temel özellikleri içerir.
+            <span className="text-blue-600 dark:text-blue-400 font-medium"> 7 gün ücretsiz deneyin.</span>
           </p>
+
+          {/* Billing Toggle */}
+          <div className="inline-flex items-center gap-3 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-full">
+            <button
+              onClick={() => setBillingPeriod("monthly")}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
+                billingPeriod === "monthly"
+                  ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              Aylık
+            </button>
+            <button
+              onClick={() => setBillingPeriod("yearly")}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                billingPeriod === "yearly"
+                  ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              Yıllık
+              <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/50 text-green-600 dark:text-green-400 text-xs rounded-full font-semibold">
+                %20 İndirim
+              </span>
+            </button>
+          </div>
+        </motion.div>
+
+        {/* Trust Guarantees */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="flex flex-wrap justify-center gap-4 md:gap-8 mb-12"
+        >
+          {guarantees.map((item) => (
+            <div key={item.text} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <item.icon className="w-4 h-4 text-green-500" />
+              <span>{item.text}</span>
+            </div>
+          ))}
         </motion.div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
+        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 mb-16">
           {plans.map((plan, index) => (
             <motion.div
-              key={plan.name}
+              key={plan.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className={`relative rounded-2xl p-8 ${
+              className={`relative rounded-3xl p-1 ${
                 plan.highlight
-                  ? "bg-gradient-to-b from-blue-600 to-blue-700 text-white shadow-2xl shadow-blue-500/25 scale-105 z-10"
-                  : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                  ? "bg-gradient-to-b from-blue-500 via-cyan-500 to-blue-600"
+                  : "bg-transparent"
               }`}
             >
-              {/* Badge */}
-              {plan.badge && (
-                <div
-                  className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-sm font-semibold ${
-                    plan.highlight
-                      ? "bg-amber-400 text-amber-900"
-                      : "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-                  }`}
-                >
-                  {plan.badge === "En Popüler" && <Sparkles className="w-3 h-3 inline mr-1" />}
-                  {plan.badge}
-                </div>
-              )}
-
-              {/* Plan Header */}
-              <div className="mb-6">
-                <h3
-                  className={`text-xl font-bold mb-2 ${
-                    plan.highlight ? "text-white" : "text-slate-900 dark:text-white"
-                  }`}
-                >
-                  {plan.name}
-                </h3>
-                <p
-                  className={`text-sm ${
-                    plan.highlight ? "text-blue-100" : "text-slate-500 dark:text-slate-400"
-                  }`}
-                >
-                  {plan.description}
-                </p>
-              </div>
-
-              {/* Price */}
-              <div className="mb-6">
-                <div className="flex items-baseline gap-1">
-                  <span
-                    className={`text-sm ${
-                      plan.highlight ? "text-blue-200" : "text-slate-500 dark:text-slate-400"
-                    }`}
-                  >
-                    €
-                  </span>
-                  <span
-                    className={`text-5xl font-bold tracking-tight ${
-                      plan.highlight ? "text-white" : "text-slate-900 dark:text-white"
-                    }`}
-                  >
-                    {plan.price}
-                  </span>
-                  <span
-                    className={`text-sm ${
-                      plan.highlight ? "text-blue-200" : "text-slate-500 dark:text-slate-400"
-                    }`}
-                  >
-                    {plan.period}
-                  </span>
-                </div>
-              </div>
-
-              {/* CTA Button */}
-              <a
-                href="https://id.hyble.co/register"
-                className={`block w-full py-3 px-4 rounded-xl font-semibold text-center transition-all mb-8 ${
+              <div
+                className={`relative h-full rounded-[22px] p-6 lg:p-8 ${
                   plan.highlight
-                    ? "bg-white text-blue-600 hover:bg-blue-50 shadow-lg"
-                    : plan.ctaVariant === "primary"
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600"
+                    ? "bg-white dark:bg-slate-900"
+                    : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
                 }`}
               >
-                {plan.cta}
-              </a>
+                {/* Badge */}
+                {plan.badge && (
+                  <div
+                    className={`absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg ${
+                      plan.highlight
+                        ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white"
+                        : "bg-slate-900 dark:bg-white text-white dark:text-slate-900"
+                    }`}
+                  >
+                    {plan.badge === "En Popüler" && <Sparkles className="w-3.5 h-3.5 inline mr-1.5" />}
+                    {plan.badge}
+                  </div>
+                )}
 
-              {/* Features List */}
-              <ul className="space-y-3">
-                {plan.features.map((feature) => (
-                  <li key={feature.text} className="flex items-start gap-3">
-                    {feature.included ? (
-                      <Check
-                        className={`w-5 h-5 flex-shrink-0 ${
-                          plan.highlight ? "text-blue-200" : "text-green-500"
-                        }`}
-                      />
-                    ) : (
-                      <X
-                        className={`w-5 h-5 flex-shrink-0 ${
-                          plan.highlight ? "text-blue-300/50" : "text-slate-300 dark:text-slate-600"
-                        }`}
-                      />
+                {/* Plan Header */}
+                <div className="mb-6">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${plan.color} flex items-center justify-center mb-4`}>
+                    <plan.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                    {plan.name}
+                  </h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+                    {plan.description}
+                  </p>
+                </div>
+
+                {/* Price */}
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-2">
+                    {plan.originalPrice && billingPeriod === "monthly" && (
+                      <span className="text-lg text-slate-400 line-through">€{plan.originalPrice}</span>
                     )}
-                    <span
-                      className={`text-sm ${
-                        feature.included
-                          ? plan.highlight
-                            ? "text-white"
-                            : "text-slate-700 dark:text-slate-300"
-                          : plan.highlight
-                            ? "text-blue-300/50"
-                            : "text-slate-400 dark:text-slate-500"
-                      }`}
-                    >
-                      {feature.text}
+                    <span className="text-sm text-slate-500 dark:text-slate-400">€</span>
+                    <span className="text-5xl font-bold text-slate-900 dark:text-white tracking-tight">
+                      {getPrice(plan.price)}
                     </span>
-                  </li>
-                ))}
-              </ul>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                      {plan.period}
+                    </span>
+                  </div>
+                  {plan.savings && billingPeriod === "yearly" && (
+                    <p className="mt-2 text-sm text-green-600 dark:text-green-400 font-medium">
+                      {plan.savings}
+                    </p>
+                  )}
+                </div>
+
+                {/* CTA Button */}
+                <motion.a
+                  href={plan.ctaLink}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`block w-full py-3.5 px-4 rounded-xl font-semibold text-center transition-all mb-8 ${
+                    plan.highlight
+                      ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/30"
+                      : "bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100"
+                  }`}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    {plan.cta}
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
+                </motion.a>
+
+                {/* Features List */}
+                <ul className="space-y-3">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <div className="w-5 h-5 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check className="w-3 h-3 text-green-600 dark:text-green-400" />
+                      </div>
+                      <span className="text-sm text-slate-600 dark:text-slate-300">
+                        {feature}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </motion.div>
           ))}
         </div>
+
+        {/* Feature Comparison Toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="text-center mb-8"
+        >
+          <button
+            onClick={() => setShowComparison(!showComparison)}
+            className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
+          >
+            <span>Tüm Özellikleri Karşılaştır</span>
+            <motion.div
+              animate={{ rotate: showComparison ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className="w-5 h-5" />
+            </motion.div>
+          </button>
+        </motion.div>
+
+        {/* Feature Comparison Table */}
+        <AnimatePresence>
+          {showComparison && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden mb-16"
+            >
+              <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-slate-200 dark:border-slate-700">
+                        <th className="text-left p-4 font-semibold text-slate-900 dark:text-white">Özellik</th>
+                        <th className="text-center p-4 font-semibold text-slate-900 dark:text-white">Starter</th>
+                        <th className="text-center p-4 font-semibold text-slate-900 dark:text-white bg-blue-50 dark:bg-blue-900/20">Pro</th>
+                        <th className="text-center p-4 font-semibold text-slate-900 dark:text-white">Business</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {comparisonFeatures.map((feature, index) => (
+                        <tr
+                          key={feature.name}
+                          className={index !== comparisonFeatures.length - 1 ? "border-b border-slate-100 dark:border-slate-700/50" : ""}
+                        >
+                          <td className="p-4 text-slate-600 dark:text-slate-300">{feature.name}</td>
+                          <td className="p-4 text-center">
+                            {typeof feature.starter === "boolean" ? (
+                              feature.starter ? (
+                                <Check className="w-5 h-5 text-green-500 mx-auto" />
+                              ) : (
+                                <span className="text-slate-300 dark:text-slate-600">—</span>
+                              )
+                            ) : (
+                              <span className="text-slate-600 dark:text-slate-300">{feature.starter}</span>
+                            )}
+                          </td>
+                          <td className="p-4 text-center bg-blue-50/50 dark:bg-blue-900/10">
+                            {typeof feature.pro === "boolean" ? (
+                              feature.pro ? (
+                                <Check className="w-5 h-5 text-green-500 mx-auto" />
+                              ) : (
+                                <span className="text-slate-300 dark:text-slate-600">—</span>
+                              )
+                            ) : (
+                              <span className="text-slate-600 dark:text-slate-300 font-medium">{feature.pro}</span>
+                            )}
+                          </td>
+                          <td className="p-4 text-center">
+                            {typeof feature.business === "boolean" ? (
+                              feature.business ? (
+                                <Check className="w-5 h-5 text-green-500 mx-auto" />
+                              ) : (
+                                <span className="text-slate-300 dark:text-slate-600">—</span>
+                              )
+                            ) : (
+                              <span className="text-slate-600 dark:text-slate-300">{feature.business}</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Enterprise CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-800/50 rounded-2xl p-8 md:p-12 mb-16"
-        >
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                Daha Büyük İhtiyaçlar İçin
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Özel gereksinimleriniz mi var? Enterprise planımız ile size özel çözümler sunalım.
-              </p>
-            </div>
-            <Link
-              href="/contact"
-              className="flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-semibold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors whitespace-nowrap"
-            >
-              Satış ile Görüşün
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </motion.div>
-
-        {/* FAQs */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.4 }}
+          className="relative rounded-3xl overflow-hidden"
         >
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white text-center mb-8">
-            Sıkça Sorulan Sorular
-          </h3>
-          <div className="grid md:grid-cols-3 gap-6">
-            {faqs.map((faq) => (
-              <div
-                key={faq.q}
-                className="p-6 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700"
-              >
-                <h4 className="font-semibold text-slate-900 dark:text-white mb-2">{faq.q}</h4>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{faq.a}</p>
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900" />
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#fff1_1px,transparent_1px),linear-gradient(to_bottom,#fff1_1px,transparent_1px)] bg-[size:32px_32px] opacity-10" />
+
+          <div className="relative p-8 md:p-12 lg:p-16">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+              <div className="text-center lg:text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/80 text-sm mb-4">
+                  <Users className="w-4 h-4" />
+                  <span>Enterprise Çözümler</span>
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
+                  Özel İhtiyaçlarınız mı Var?
+                </h3>
+                <p className="text-slate-300 max-w-xl">
+                  Büyük ölçekli projeleriniz için özelleştirilmiş altyapı, özel SLA ve
+                  dedicated destek ile işinizi bir sonraki seviyeye taşıyın.
+                </p>
               </div>
-            ))}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-slate-900 rounded-xl font-semibold hover:bg-slate-100 transition-colors"
+                >
+                  Satış ile Görüşün
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  href="/enterprise"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 text-white border border-white/20 rounded-xl font-semibold hover:bg-white/20 transition-colors"
+                >
+                  Daha Fazla Bilgi
+                </Link>
+              </div>
+            </div>
           </div>
         </motion.div>
 
-        {/* Full pricing page link */}
+        {/* Money Back Guarantee */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -296,13 +454,12 @@ export function PricingSection() {
           transition={{ duration: 0.5, delay: 0.5 }}
           className="text-center mt-12"
         >
-          <Link
-            href="/pricing"
-            className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium transition-colors"
-          >
-            Tüm özellikleri karşılaştır
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="inline-flex items-center gap-3 px-6 py-3 bg-green-50 dark:bg-green-900/20 rounded-full border border-green-100 dark:border-green-800">
+            <Shield className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <span className="text-sm text-green-700 dark:text-green-300 font-medium">
+              30 gün içinde memnun kalmazsanız, paranızı iade ediyoruz. Soru sormadan.
+            </span>
+          </div>
         </motion.div>
       </div>
     </section>
