@@ -97,9 +97,9 @@ export function WalletCard() {
   }
 
 
-  const mainBalance = typeof wallet?.mainBalance === 'number' ? wallet.mainBalance : parseFloat(String(wallet?.balance || 0));
-  const bonusBalance = typeof wallet?.bonusBalance === 'number' ? wallet.bonusBalance : 0;
-  const promoBalance = typeof wallet?.promoBalance === 'number' ? wallet.promoBalance : 0;
+  const mainBalance = wallet?.mainBalance ?? 0;
+  const bonusBalance = wallet?.bonusBalance ?? 0;
+  const promoBalance = wallet?.promoBalance ?? 0;
   const totalBalance = mainBalance + bonusBalance + promoBalance;
 
   return (
