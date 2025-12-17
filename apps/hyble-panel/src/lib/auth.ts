@@ -10,11 +10,45 @@ import { authenticator } from "otplib";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 
+// Determine cookie domain for cross-subdomain auth
+const isProduction = process.env.NODE_ENV === "production";
+const cookieDomain = isProduction ? ".hyble.co" : undefined;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  cookies: {
+    sessionToken: {
+      name: isProduction ? "__Secure-authjs.session-token" : "authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: isProduction,
+        domain: cookieDomain,
+      },
+    },
+    callbackUrl: {
+      name: isProduction ? "__Secure-authjs.callback-url" : "authjs.callback-url",
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: isProduction,
+        domain: cookieDomain,
+      },
+    },
+    csrfToken: {
+      name: isProduction ? "__Host-authjs.csrf-token" : "authjs.csrf-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: isProduction,
+      },
+    },
   },
   pages: {
     signIn: "/login",

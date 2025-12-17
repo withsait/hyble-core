@@ -27,13 +27,15 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/invoices") ||
     pathname.startsWith("/support")
   ) {
-    // Check for session cookie
-    const session = request.cookies.get("hyble_session");
+    // Check for NextAuth session cookie (shared across .hyble.co subdomains)
+    const sessionToken =
+      request.cookies.get("__Secure-authjs.session-token")?.value ||
+      request.cookies.get("authjs.session-token")?.value;
 
-    if (!session) {
-      // Redirect to auth hub
+    if (!sessionToken) {
+      // Redirect to auth hub with callback URL
       const redirectUrl = new URL("https://id.hyble.co/login");
-      redirectUrl.searchParams.set("redirect", request.url);
+      redirectUrl.searchParams.set("callbackUrl", request.url);
       return NextResponse.redirect(redirectUrl);
     }
   }
