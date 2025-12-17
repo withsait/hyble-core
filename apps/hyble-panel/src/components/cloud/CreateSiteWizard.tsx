@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, Button, Input } from "@hyble/ui";
 
-const Label = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <label className={`text-sm font-medium ${className}`}>{children}</label>
+const Label = ({ children, className = "", htmlFor }: { children: React.ReactNode; className?: string; htmlFor?: string }) => (
+  <label htmlFor={htmlFor} className={`text-sm font-medium ${className}`}>{children}</label>
 );
 import {
   ArrowLeft,
