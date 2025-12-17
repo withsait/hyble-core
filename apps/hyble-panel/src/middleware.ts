@@ -108,6 +108,8 @@ export function middleware(request: NextRequest) {
   const isAuthPage =
     pathname === "/login" ||
     pathname === "/register" ||
+    pathname === "/auth/login" ||
+    pathname === "/auth/register" ||
     pathname.startsWith("/forgot-password") ||
     pathname.startsWith("/reset-password") ||
     pathname.startsWith("/verify-2fa") ||
