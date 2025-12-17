@@ -74,15 +74,6 @@ export function TransactionList() {
     ? mockTransactions
     : mockTransactions.filter(t => t.type === filter);
 
-  if (error) {
-    return (
-      <Card className="p-6 border-destructive bg-destructive/10">
-        <p className="text-destructive text-sm">
-          İşlem geçmişi yüklenemedi: {error.message}
-        </p>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-4">

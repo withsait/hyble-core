@@ -96,15 +96,6 @@ export function WalletCard() {
     );
   }
 
-  if (error) {
-    return (
-      <Card className="p-6 border-destructive bg-destructive/10">
-        <p className="text-destructive text-sm">
-          Cüzdan bilgileri yüklenemedi: {error.message}
-        </p>
-      </Card>
-    );
-  }
 
   const mainBalance = typeof wallet?.mainBalance === 'number' ? wallet.mainBalance : parseFloat(String(wallet?.balance || 0));
   const bonusBalance = typeof wallet?.bonusBalance === 'number' ? wallet.bonusBalance : 0;
