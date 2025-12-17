@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { trpc } from "@/lib/trpc/client";
 import { Card } from "@hyble/ui";
-import { Terminal, CheckCircle, XCircle, Loader2, Clock } from "lucide-react";
+import { Terminal, CheckCircle, Loader2 } from "lucide-react";
 
 interface DeploymentLogsProps {
   deploymentId: string;
@@ -27,18 +26,31 @@ const levelStyles: Record<LogLevel, string> = {
   success: "text-green-400",
 };
 
+// Mock data - will be replaced with tRPC query when cloud router is implemented
+const mockLogs: LogEntry[] = [
+  { id: "1", step: "clone", message: "Cloning repository...", level: "info", timestamp: new Date() },
+  { id: "2", step: "clone", message: "Repository cloned successfully", level: "success", timestamp: new Date() },
+  { id: "3", step: "install", message: "Installing dependencies...", level: "info", timestamp: new Date() },
+  { id: "4", step: "install", message: "Dependencies installed (42 packages)", level: "success", timestamp: new Date() },
+  { id: "5", step: "build", message: "Running build command: pnpm build", level: "info", timestamp: new Date() },
+  { id: "6", step: "build", message: "Build completed successfully", level: "success", timestamp: new Date() },
+  { id: "7", step: "deploy", message: "Deploying to edge network...", level: "info", timestamp: new Date() },
+  { id: "8", step: "deploy", message: "Deployment complete!", level: "success", timestamp: new Date() },
+];
+
+const mockDeployment = {
+  status: "SUCCESS",
+  buildDuration: 45,
+};
+
 export function DeploymentLogs({ deploymentId, siteSlug }: DeploymentLogsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading } = trpc.cloud.deployments.getLogs.useQuery(
-    { deploymentId, siteSlug },
-    {
-      refetchInterval: 3000, // Poll every 3 seconds
-    }
-  );
-
-  const logs = data?.logs || [];
-  const deployment = data?.deployment;
+  // TODO: Replace with tRPC query when cloud router is ready
+  // const { data, isLoading } = trpc.cloud.deployments.getLogs.useQuery(...);
+  const logs = mockLogs;
+  const deployment = mockDeployment;
+  const isLoading = false;
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -63,31 +75,10 @@ export function DeploymentLogs({ deploymentId, siteSlug }: DeploymentLogsProps) 
           <Terminal className="h-4 w-4 text-green-400" />
           <span className="text-sm font-medium text-white">Build Logları</span>
         </div>
-        {deployment && (
-          <div className="flex items-center gap-2 text-xs">
-            {deployment.status === "BUILDING" ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 text-blue-400 animate-spin" />
-                <span className="text-blue-400">Derleniyor...</span>
-              </>
-            ) : deployment.status === "SUCCESS" ? (
-              <>
-                <CheckCircle className="h-3.5 w-3.5 text-green-400" />
-                <span className="text-green-400">Başarılı</span>
-              </>
-            ) : deployment.status === "FAILED" ? (
-              <>
-                <XCircle className="h-3.5 w-3.5 text-red-400" />
-                <span className="text-red-400">Başarısız</span>
-              </>
-            ) : (
-              <>
-                <Clock className="h-3.5 w-3.5 text-yellow-400" />
-                <span className="text-yellow-400">Kuyrukta</span>
-              </>
-            )}
-          </div>
-        )}
+        <div className="flex items-center gap-2 text-xs">
+          <CheckCircle className="h-3.5 w-3.5 text-green-400" />
+          <span className="text-green-400">Başarılı</span>
+        </div>
       </div>
 
       {/* Log Content */}
@@ -105,22 +96,17 @@ export function DeploymentLogs({ deploymentId, siteSlug }: DeploymentLogsProps) 
           </div>
         ) : (
           <div className="space-y-1">
-            {logs.map((log: LogEntry, index: number) => (
+            {logs.map((log, index) => (
               <div key={log.id || index} className="flex">
                 <span className="text-slate-600 w-20 flex-shrink-0">
                   {formatTime(log.timestamp)}
                 </span>
-                <span className={`${levelStyles[log.level as LogLevel] || levelStyles.info} mr-2`}>
+                <span className={`${levelStyles[log.level] || levelStyles.info} mr-2`}>
                   [{log.step}]
                 </span>
                 <span className="text-slate-300">{log.message}</span>
               </div>
             ))}
-            {deployment?.status === "BUILDING" && (
-              <div className="flex items-center text-slate-500 mt-2">
-                <span className="animate-pulse">▌</span>
-              </div>
-            )}
           </div>
         )}
       </div>

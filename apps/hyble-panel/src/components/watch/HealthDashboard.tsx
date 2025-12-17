@@ -1,6 +1,5 @@
 "use client";
 
-import { trpc } from "@/lib/trpc/client";
 import { Card } from "@hyble/ui";
 import {
   Activity,
@@ -40,6 +39,65 @@ interface ServerMetric {
   diskUsage: number;
   diskTotal: number;
 }
+
+// Mock data - will be replaced with tRPC query when watch router is implemented
+const mockMonitors: Monitor[] = [
+  {
+    id: "1",
+    name: "Ana Website",
+    type: "HTTP",
+    target: "https://hyble.co",
+    currentStatus: "UP",
+    lastCheckedAt: new Date(),
+    latestCheck: { latency: 45, statusCode: 200 },
+  },
+  {
+    id: "2",
+    name: "API Gateway",
+    type: "HTTP",
+    target: "https://api.hyble.co",
+    currentStatus: "UP",
+    lastCheckedAt: new Date(),
+    latestCheck: { latency: 32, statusCode: 200 },
+  },
+  {
+    id: "3",
+    name: "PostgreSQL",
+    type: "POSTGRES",
+    target: "localhost:5432",
+    currentStatus: "UP",
+    lastCheckedAt: new Date(),
+    latestCheck: { latency: 5 },
+  },
+  {
+    id: "4",
+    name: "Redis",
+    type: "TCP",
+    target: "localhost:6379",
+    currentStatus: "UP",
+    lastCheckedAt: new Date(),
+    latestCheck: { latency: 2 },
+  },
+  {
+    id: "5",
+    name: "Hyble Panel",
+    type: "DOCKER",
+    target: "hyble-panel",
+    currentStatus: "UP",
+    lastCheckedAt: new Date(),
+    latestCheck: { latency: 0 },
+  },
+];
+
+const mockMetrics: ServerMetric = {
+  cpuPercent: 35.5,
+  memoryUsage: 8 * 1024 * 1024 * 1024, // 8GB
+  memoryTotal: 32 * 1024 * 1024 * 1024, // 32GB
+  diskUsage: 200 * 1024 * 1024 * 1024, // 200GB
+  diskTotal: 500 * 1024 * 1024 * 1024, // 500GB
+};
+
+const mockAlerts: any[] = [];
 
 const statusConfig: Record<MonitorStatus, { icon: React.ReactNode; label: string; color: string; bgColor: string }> = {
   UP: { icon: <CheckCircle className="h-4 w-4" />, label: "Çalışıyor", color: "text-green-600", bgColor: "bg-green-500" },
@@ -93,13 +151,16 @@ function MetricCard({ icon, label, value, total, unit, color }: {
 }
 
 export function HealthDashboard() {
-  const { data, isLoading, error } = trpc.watch.getOverview.useQuery(undefined, {
-    refetchInterval: 30000, // Refresh every 30 seconds
-  });
+  // TODO: Replace with tRPC query when watch router is ready
+  // const { data, isLoading, error } = trpc.watch.getOverview.useQuery(undefined, {
+  //   refetchInterval: 30000, // Refresh every 30 seconds
+  // });
+  const isLoading = false;
+  const error = null;
 
-  const monitors = data?.monitors || [];
-  const metrics = data?.metrics as ServerMetric | undefined;
-  const alerts = data?.activeAlerts || [];
+  const monitors = mockMonitors;
+  const metrics = mockMetrics;
+  const alerts = mockAlerts;
 
   if (isLoading) {
     return (

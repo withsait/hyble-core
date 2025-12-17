@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button } from "@hyble/ui";
 import {
   ArrowLeft,
@@ -13,7 +12,6 @@ import {
   Activity,
   Rocket,
   ExternalLink,
-  Loader2,
 } from "lucide-react";
 import { DeploymentLogs } from "@/components/cloud/DeploymentLogs";
 import { DomainManager } from "@/components/cloud/DomainManager";
@@ -22,31 +20,28 @@ import { UsageMeter } from "@/components/cloud/UsageMeter";
 
 type Tab = "overview" | "domains" | "env" | "usage" | "settings";
 
+// Mock site data - will be replaced with tRPC query when cloud router is implemented
+const mockSite = {
+  id: "1",
+  name: "My Portfolio",
+  slug: "my-portfolio",
+  framework: "nextjs",
+  nodeVersion: "20",
+  buildCommand: "pnpm build",
+  outputDirectory: ".next",
+  deployments: [
+    { id: "dep-1", status: "SUCCESS", createdAt: new Date() },
+  ],
+};
+
 export default function SiteDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const [activeTab, setActiveTab] = useState<Tab>("overview");
 
-  const { data: site, isLoading } = trpc.cloud.sites.getBySlug.useQuery({ slug });
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!site) {
-    return (
-      <div className="p-6 text-center">
-        <p>Site bulunamadı</p>
-        <Link href="/dashboard/cloud" className="text-primary hover:underline">
-          Sitelere dön
-        </Link>
-      </div>
-    );
-  }
+  // TODO: Replace with tRPC query when cloud router is ready
+  // const { data: site, isLoading } = trpc.cloud.sites.getBySlug.useQuery({ slug });
+  const site = { ...mockSite, slug };
 
   const tabs = [
     { id: "overview", label: "Genel Bakış", icon: <Globe className="h-4 w-4" /> },

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button } from "@hyble/ui";
 import {
   ArrowLeft,
@@ -30,27 +29,39 @@ const statusConfig: Record<TicketStatus, { icon: React.ReactNode; label: string;
   CLOSED: { icon: <XCircle className="h-4 w-4" />, label: "Kapatıldı", color: "bg-slate-100 text-slate-600" },
 };
 
+// Mock ticket data - will be replaced with tRPC query when support router is implemented
+const mockTicket = {
+  id: "1",
+  referenceNo: "TKT-2024-001",
+  subject: "Sunucu erişim sorunu",
+  status: "OPEN" as TicketStatus,
+  priority: "HIGH",
+  category: { nameTr: "Teknik Destek" },
+  createdAt: new Date("2024-12-15"),
+  updatedAt: new Date("2024-12-16"),
+  slaFirstResponseAt: new Date("2024-12-15T11:00:00"),
+  assignedAgent: { user: { name: "Destek Ekibi" } },
+  statusHistory: [
+    { id: "h1", newStatus: "NEW", createdAt: new Date("2024-12-15T10:00:00") },
+    { id: "h2", newStatus: "OPEN", createdAt: new Date("2024-12-15T11:00:00") },
+  ],
+};
+
 export default function TicketDetailPage() {
   const params = useParams();
   const referenceNo = params.referenceNo as string;
 
-  const { data: ticket, isLoading } = trpc.support.tickets.getByReference.useQuery({ referenceNo });
+  // TODO: Replace with tRPC query when support router is ready
+  // const { data: ticket, isLoading } = trpc.support.tickets.getByReference.useQuery({ referenceNo });
+  const isLoading = false;
+
+  // Use mock data for now
+  const ticket = { ...mockTicket, referenceNo };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!ticket) {
-    return (
-      <div className="p-6 text-center">
-        <p>Talep bulunamadı</p>
-        <Link href="/dashboard/support" className="text-primary hover:underline">
-          Taleplere dön
-        </Link>
       </div>
     );
   }

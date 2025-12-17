@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button, Input } from "@hyble/ui";
 
 const Label = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
@@ -33,11 +32,9 @@ export function CreateSiteWizard() {
   const [siteName, setSiteName] = useState("");
   const [siteSlug, setSiteSlug] = useState("");
 
-  const createSite = trpc.cloud.sites.create.useMutation({
-    onSuccess: (data) => {
-      router.push(`/dashboard/cloud/${data.slug}`);
-    },
-  });
+  // TODO: Replace with tRPC mutation when cloud router is ready
+  // const createSite = trpc.cloud.sites.create.useMutation({...});
+  const [isCreating, setIsCreating] = useState(false);
 
   const generateSlug = (name: string) => {
     return name
@@ -55,12 +52,11 @@ export function CreateSiteWizard() {
     }
   };
 
-  const handleCreate = () => {
-    createSite.mutate({
-      name: siteName,
-      slug: siteSlug,
-      framework: selectedFramework,
-    });
+  const handleCreate = async () => {
+    setIsCreating(true);
+    // Mock creation - will be replaced with tRPC mutation
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    router.push(`/dashboard/cloud/${siteSlug}`);
   };
 
   const canProceed = () => {
@@ -255,9 +251,9 @@ export function CreateSiteWizard() {
           {step === "confirm" ? (
             <Button
               onClick={handleCreate}
-              disabled={createSite.isPending}
+              disabled={isCreating}
             >
-              {createSite.isPending ? (
+              {isCreating ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
                 <Check className="h-4 w-4 mr-2" />

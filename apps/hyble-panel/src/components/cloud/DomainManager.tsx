@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { trpc } from "@/lib/trpc/client";
 import { Card, Button, Input } from "@hyble/ui";
 
 const Label = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
@@ -42,41 +41,56 @@ const statusConfig: Record<DomainStatus, { icon: React.ReactNode; label: string;
   FAILED: { icon: <XCircle className="h-4 w-4" />, label: "Başarısız", color: "text-red-600 bg-red-100" },
 };
 
+// Mock data - will be replaced with tRPC query when cloud router is implemented
+const mockDomains: Domain[] = [
+  {
+    id: "1",
+    domain: "my-site.hyble.net",
+    type: "HYBLE_SUBDOMAIN",
+    status: "VERIFIED",
+    isPrimary: true,
+    sslEnabled: true,
+  },
+  {
+    id: "2",
+    domain: "example.com",
+    type: "CUSTOM",
+    status: "PENDING",
+    isPrimary: false,
+    verificationToken: "hyble-verify-abc123xyz789",
+    sslEnabled: false,
+  },
+];
+
 export function DomainManager({ siteSlug }: DomainManagerProps) {
   const [showAddForm, setShowAddForm] = useState(false);
   const [newDomain, setNewDomain] = useState("");
+  const [domains, setDomains] = useState<Domain[]>(mockDomains);
+  const [isAdding, setIsAdding] = useState(false);
 
-  const { data, isLoading, refetch } = trpc.cloud.domains.list.useQuery({ siteSlug });
-  const domains = data?.domains || [];
-
-  const addDomain = trpc.cloud.domains.add.useMutation({
-    onSuccess: () => {
-      setShowAddForm(false);
-      setNewDomain("");
-      refetch();
-    },
-  });
-
-  const verifyDomain = trpc.cloud.domains.verify.useMutation({
-    onSuccess: () => {
-      refetch();
-    },
-  });
-
-  const removeDomain = trpc.cloud.domains.remove.useMutation({
-    onSuccess: () => {
-      refetch();
-    },
-  });
-
-  const setPrimary = trpc.cloud.domains.setPrimary.useMutation({
-    onSuccess: () => {
-      refetch();
-    },
-  });
+  // TODO: Replace with tRPC query when cloud router is ready
+  // const { data, isLoading, refetch } = trpc.cloud.domains.list.useQuery({ siteSlug });
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const handleAdd = async () => {
+    setIsAdding(true);
+    // Mock add - will be replaced with tRPC mutation
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setDomains([...domains, {
+      id: String(domains.length + 1),
+      domain: newDomain,
+      type: "CUSTOM",
+      status: "PENDING",
+      isPrimary: false,
+      verificationToken: "hyble-verify-" + Math.random().toString(36).substring(7),
+      sslEnabled: false,
+    }]);
+    setShowAddForm(false);
+    setNewDomain("");
+    setIsAdding(false);
   };
 
   return (
@@ -115,10 +129,10 @@ export function DomainManager({ siteSlug }: DomainManagerProps) {
           <div className="flex gap-2">
             <Button
               size="sm"
-              onClick={() => addDomain.mutate({ siteSlug, domain: newDomain })}
-              disabled={!newDomain || addDomain.isPending}
+              onClick={handleAdd}
+              disabled={!newDomain || isAdding}
             >
-              {addDomain.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
+              {isAdding && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
               Ekle
             </Button>
             <Button
@@ -133,20 +147,14 @@ export function DomainManager({ siteSlug }: DomainManagerProps) {
       )}
 
       {/* Domain List */}
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2].map((i) => (
-            <div key={i} className="h-16 bg-muted rounded-lg animate-pulse" />
-          ))}
-        </div>
-      ) : domains.length === 0 ? (
+      {domains.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <Globe className="h-12 w-12 mx-auto mb-3 opacity-30" />
           <p>Henüz domain eklenmemiş</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {domains.map((domain: Domain) => {
+          {domains.map((domain) => {
             const config = statusConfig[domain.status];
             const isHyble = domain.type === "HYBLE_SUBDOMAIN";
 
@@ -203,23 +211,14 @@ export function DomainManager({ siteSlug }: DomainManagerProps) {
                   )}
 
                   {domain.status === "PENDING" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => verifyDomain.mutate({ siteSlug, domainId: domain.id })}
-                      disabled={verifyDomain.isPending}
-                    >
-                      <RefreshCw className={`h-4 w-4 mr-1 ${verifyDomain.isPending ? 'animate-spin' : ''}`} />
+                    <Button variant="outline" size="sm">
+                      <RefreshCw className="h-4 w-4 mr-1" />
                       Doğrula
                     </Button>
                   )}
 
                   {!domain.isPrimary && domain.status === "VERIFIED" && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPrimary.mutate({ siteSlug, domainId: domain.id })}
-                    >
+                    <Button variant="ghost" size="sm">
                       Ana Yap
                     </Button>
                   )}
@@ -229,7 +228,6 @@ export function DomainManager({ siteSlug }: DomainManagerProps) {
                       variant="ghost"
                       size="icon"
                       className="text-destructive hover:text-destructive"
-                      onClick={() => removeDomain.mutate({ siteSlug, domainId: domain.id })}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
