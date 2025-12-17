@@ -3,7 +3,7 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { IntegrationLogos } from "@/components/landing/IntegrationLogos";
 import { FeatureBento } from "@/components/landing/FeatureBento";
 import { HowItWorks } from "@/components/landing/HowItWorks";
-import { ComparisonSection } from "@/components/landing/StatsSection";
+import { StatsSection } from "@/components/landing/StatsSection";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { TrustFloatingBar } from "@/components/landing/TrustFloatingBar";
@@ -26,7 +26,7 @@ export default function HomePage() {
       <IntegrationLogos />
       <FeatureBento />
       <HowItWorks />
-      <ComparisonSection />
+      <StatsSection />
       <PricingSection />
       <CTASection />
       <TrustFloatingBar />
