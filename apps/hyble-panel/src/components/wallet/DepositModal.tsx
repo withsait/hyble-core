@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { trpc } from "@/lib/trpc/client";
 import { Button, Input, Card } from "@hyble/ui";
 import {
   X,
@@ -30,18 +29,10 @@ const bonusTiers = [
 export function DepositModal({ isOpen, onClose }: DepositModalProps) {
   const [amount, setAmount] = useState<number>(50);
   const [customAmount, setCustomAmount] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const createDepositSession = trpc.wallet.createDepositSession.useMutation({
-    onSuccess: (data) => {
-      // Redirect to Stripe Checkout
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    },
-    onError: (error) => {
-      alert(`Hata: ${error.message}`);
-    },
-  });
+  // TODO: Replace with tRPC mutation when wallet router is ready
+  // const createDepositSession = trpc.wallet.createDepositSession.useMutation({...});
 
   const handleAmountSelect = (value: number) => {
     setAmount(value);
@@ -64,12 +55,17 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
   const currentBonus = getBonus(amount);
   const nextTier = bonusTiers.find(t => amount < t.min);
 
-  const handleDeposit = () => {
+  const handleDeposit = async () => {
     if (amount < 5) {
       alert("Minimum yükleme tutarı €5'dir");
       return;
     }
-    createDepositSession.mutate({ amount });
+    // TODO: Replace with tRPC mutation when wallet router is ready
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    alert("Demo: Ödeme sayfasına yönlendirilecektiniz");
+    setIsLoading(false);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -181,9 +177,9 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
           <Button
             className="flex-1"
             onClick={handleDeposit}
-            disabled={amount < 5 || createDepositSession.isPending}
+            disabled={amount < 5 || isLoading}
           >
-            {createDepositSession.isPending ? (
+            {isLoading ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
               <CreditCard className="h-4 w-4 mr-2" />

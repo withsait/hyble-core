@@ -1,8 +1,14 @@
 "use client";
 
-import { trpc } from "@/lib/trpc/client";
 import { Card } from "@hyble/ui";
 import { Wallet, Gift, Ticket, TrendingUp, Loader2 } from "lucide-react";
+
+// Mock data - will be replaced with tRPC query when wallet router is implemented
+const mockWallet = {
+  mainBalance: 125.50,
+  bonusBalance: 15.00,
+  promoBalance: 5.00,
+};
 
 interface BalanceCardProps {
   title: string;
@@ -60,7 +66,11 @@ function BalanceCardSkeleton() {
 }
 
 export function WalletCard() {
-  const { data: wallet, isLoading, error } = trpc.wallet.getBalance.useQuery();
+  // TODO: Replace with tRPC query when wallet router is ready
+  // const { data: wallet, isLoading, error } = trpc.wallet.getBalance.useQuery();
+  const wallet = mockWallet;
+  const isLoading = false;
+  const error = null;
 
   if (isLoading) {
     return (

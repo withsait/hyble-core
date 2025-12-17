@@ -1,49 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { trpc } from "@/lib/trpc/client";
 import { Button, Input } from "@hyble/ui";
 import { Tag, Loader2, Check, X, Percent } from "lucide-react";
+
+// Mock data - will be replaced with tRPC when cart router is ready
+const mockCart = { coupon: null };
 
 export function CouponInput() {
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<"idle" | "applying" | "applied" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isRemoving, setIsRemoving] = useState(false);
 
-  const utils = trpc.useUtils();
-  const { data: cart } = trpc.cart.get.useQuery();
+  // TODO: Replace with tRPC query when cart router is ready
+  const appliedCoupon = mockCart.coupon;
 
-  const applyCoupon = trpc.cart.applyCoupon.useMutation({
-    onSuccess: (data) => {
-      setStatus("applied");
-      utils.cart.get.invalidate();
-    },
-    onError: (error) => {
-      setStatus("error");
-      setErrorMessage(error.message);
-    },
-  });
-
-  const removeCoupon = trpc.cart.removeCoupon.useMutation({
-    onSuccess: () => {
-      setCode("");
-      setStatus("idle");
-      utils.cart.get.invalidate();
-    },
-  });
-
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!code.trim()) return;
     setStatus("applying");
     setErrorMessage("");
-    applyCoupon.mutate({ code: code.trim().toUpperCase() });
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setStatus("applied");
   };
 
-  const handleRemove = () => {
-    removeCoupon.mutate();
+  const handleRemove = async () => {
+    setIsRemoving(true);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    setCode("");
+    setStatus("idle");
+    setIsRemoving(false);
   };
-
-  const appliedCoupon = cart?.coupon;
 
   if (appliedCoupon) {
     return (
@@ -54,12 +41,10 @@ export function CouponInput() {
           </div>
           <div>
             <p className="font-medium text-green-800 dark:text-green-200 text-sm">
-              {appliedCoupon.code}
+              DEMO10
             </p>
             <p className="text-xs text-green-700 dark:text-green-300">
-              {appliedCoupon.type === "PERCENTAGE"
-                ? `%${appliedCoupon.value} indirim`
-                : `€${appliedCoupon.value} indirim`}
+              %10 indirim
             </p>
           </div>
         </div>
@@ -67,10 +52,10 @@ export function CouponInput() {
           variant="ghost"
           size="sm"
           onClick={handleRemove}
-          disabled={removeCoupon.isPending}
+          disabled={isRemoving}
           className="text-green-700 hover:text-red-600 hover:bg-red-50"
         >
-          {removeCoupon.isPending ? (
+          {isRemoving ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <X className="h-4 w-4" />
