@@ -1,289 +1,203 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
-import { useRef, useEffect, useState } from "react";
-import { Server, Globe, Shield, Zap } from "lucide-react";
+import { motion } from "framer-motion";
+import { Check, X, ArrowRight } from "lucide-react";
 
-// Animated counter hook
-function useCounter(end: number, duration: number = 2000, startOnView: boolean = true) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-
-  useEffect(() => {
-    if (!startOnView || !isInView) return;
-
-    let startTime: number;
-    let animationFrame: number;
-
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-
-      // Easing function for smooth animation
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      setCount(Math.floor(easeOutQuart * end));
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate);
-      }
-    };
-
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [end, duration, isInView, startOnView]);
-
-  return { count, ref };
-}
-
-// Datacenter locations
-const datacenters = [
-  { id: "fsn", name: "Falkenstein", country: "Almanya", lat: 50.47, lng: 12.37, primary: true },
-  { id: "nbg", name: "Nuremberg", country: "Almanya", lat: 49.45, lng: 11.08, primary: false },
-  { id: "hel", name: "Helsinki", country: "Finlandiya", lat: 60.17, lng: 24.94, primary: false },
+// Rekabet karşılaştırma tablosu - Vercel, Netlify, Railway, Render vs Hyble
+const competitors = [
+  { name: "Hyble", highlight: true },
+  { name: "Vercel" },
+  { name: "Netlify" },
+  { name: "Railway" },
+  { name: "Render" },
 ];
 
-const stats = [
+const comparisonData = [
   {
-    icon: Server,
-    value: 99.9,
-    suffix: "%",
-    label: "Uptime Garantisi",
-    description: "SLA ile desteklenen güvenilirlik",
+    feature: "Kimlik Doğrulama (Auth)",
+    hyble: true,
+    vercel: false,
+    netlify: false,
+    railway: false,
+    render: false,
   },
   {
-    icon: Zap,
-    value: 10,
-    suffix: "ms",
-    label: "Ortalama Yanıt",
-    description: "Avrupa'dan hızlı erişim",
+    feature: "Ödeme Altyapısı",
+    hyble: true,
+    vercel: false,
+    netlify: false,
+    railway: false,
+    render: false,
   },
   {
-    icon: Globe,
-    value: 3,
-    suffix: "",
-    label: "Datacenter",
-    description: "Avrupa genelinde dağıtık",
+    feature: "Lisans Yönetimi",
+    hyble: true,
+    vercel: false,
+    netlify: false,
+    railway: false,
+    render: false,
   },
   {
-    icon: Shield,
-    value: 256,
-    suffix: "-bit",
-    label: "SSL Şifreleme",
-    description: "Endüstri standardı güvenlik",
+    feature: "Durum Sayfaları",
+    hyble: true,
+    vercel: false,
+    netlify: false,
+    railway: false,
+    render: false,
+  },
+  {
+    feature: "Web Hosting",
+    hyble: true,
+    vercel: true,
+    netlify: true,
+    railway: true,
+    render: true,
+  },
+  {
+    feature: "Veritabanı",
+    hyble: true,
+    vercel: true,
+    netlify: false,
+    railway: true,
+    render: true,
+  },
+  {
+    feature: "GDPR Uyumlu (EU)",
+    hyble: true,
+    vercel: "Kısmi",
+    netlify: "Kısmi",
+    railway: "Kısmi",
+    render: "Kısmi",
+  },
+  {
+    feature: "Türkçe Destek",
+    hyble: true,
+    vercel: false,
+    netlify: false,
+    railway: false,
+    render: false,
   },
 ];
 
-function AnimatedStat({
-  icon: Icon,
-  value,
-  suffix,
-  label,
-  description,
-  index,
-}: {
-  icon: typeof Server;
-  value: number;
-  suffix: string;
-  label: string;
-  description: string;
-  index: number;
-}) {
-  const { count, ref } = useCounter(value, 2000);
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="text-center p-6"
-    >
-      <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-        <Icon className="w-7 h-7 text-blue-600 dark:text-blue-400" />
-      </div>
-      <div className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-2">
-        {count}
-        <span className="text-blue-600 dark:text-blue-400">{suffix}</span>
-      </div>
-      <div className="font-semibold text-slate-900 dark:text-white mb-1">{label}</div>
-      <div className="text-sm text-slate-500 dark:text-slate-400">{description}</div>
-    </motion.div>
-  );
+function CellValue({ value }: { value: boolean | string }) {
+  if (typeof value === "string") {
+    return <span className="text-amber-600 dark:text-amber-400 text-sm">{value}</span>;
+  }
+  if (value) {
+    return <Check className="w-5 h-5 text-green-500 mx-auto" />;
+  }
+  return <X className="w-5 h-5 text-slate-300 dark:text-slate-600 mx-auto" />;
 }
 
-export function StatsSection() {
+export function ComparisonSection() {
   return (
-    <section className="relative py-24 bg-slate-50 dark:bg-slate-800/50 overflow-hidden">
-      {/* Background pattern */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-50">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:40px_40px]" />
-      </div>
-
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-20 bg-slate-50 dark:bg-slate-800/50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-16"
+          className="text-center mb-10"
         >
-          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">
-            Güçlü Altyapı, Güvenilir Performans
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
+            Neden Hyble?
           </h2>
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Hetzner'in güvenilir altyapısı üzerinde, Avrupa'nın önde gelen datacenter'larında çalışıyoruz.
+          <p className="text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
+            Diğer platformlardan farkımız: Tek yerden tüm ihtiyaçlarınızı karşılıyoruz.
           </p>
         </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
-          {stats.map((stat, index) => (
-            <AnimatedStat key={stat.label} {...stat} index={index} />
-          ))}
-        </div>
-
-        {/* Map Section */}
+        {/* Comparison Table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-8 shadow-lg"
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-lg"
         >
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            {/* Map visualization */}
-            <div className="relative">
-              <div className="aspect-[4/3] bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden relative">
-                {/* Simplified Europe map background */}
-                <svg
-                  viewBox="0 0 400 300"
-                  className="w-full h-full opacity-30 dark:opacity-20"
-                  fill="none"
-                >
-                  <path
-                    d="M150,50 Q200,30 250,50 L280,80 Q300,100 290,130 L270,160 Q250,180 220,170 L180,180 Q150,190 130,170 L110,140 Q100,110 120,80 L150,50"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="text-slate-400 dark:text-slate-600"
-                  />
-                </svg>
-
-                {/* Datacenter markers */}
-                {datacenters.map((dc, index) => {
-                  // Simplified positioning
-                  const positions: { x: string; y: string }[] = [
-                    { x: "55%", y: "45%" }, // Falkenstein
-                    { x: "48%", y: "52%" }, // Nuremberg
-                    { x: "68%", y: "25%" }, // Helsinki
-                  ];
-                  const pos = positions[index] ?? { x: "50%", y: "50%" };
-
-                  return (
-                    <motion.div
-                      key={dc.id}
-                      initial={{ scale: 0 }}
-                      whileInView={{ scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: 0.5 + index * 0.2, type: "spring" }}
-                      className="absolute"
-                      style={{ left: pos.x, top: pos.y }}
-                    >
-                      {/* Pulse animation for primary */}
-                      {dc.primary && (
-                        <div className="absolute inset-0 -m-4">
-                          <div className="w-8 h-8 rounded-full bg-blue-500 animate-ping opacity-20" />
-                        </div>
-                      )}
-                      <div
-                        className={`relative w-4 h-4 rounded-full ${
-                          dc.primary
-                            ? "bg-blue-500 shadow-lg shadow-blue-500/50"
-                            : "bg-slate-400 dark:bg-slate-500"
-                        }`}
-                      />
-                      <div className="absolute left-6 top-1/2 -translate-y-1/2 whitespace-nowrap">
-                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                          {dc.name}
-                        </span>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-
-                {/* Connection lines */}
-                <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                  <line
-                    x1="55%"
-                    y1="45%"
-                    x2="48%"
-                    y2="52%"
-                    stroke="currentColor"
-                    strokeWidth="1"
-                    strokeDasharray="4,4"
-                    className="text-blue-400/50"
-                  />
-                  <line
-                    x1="55%"
-                    y1="45%"
-                    x2="68%"
-                    y2="25%"
-                    stroke="currentColor"
-                    strokeWidth="1"
-                    strokeDasharray="4,4"
-                    className="text-blue-400/50"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {/* Datacenter details */}
-            <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
-                Avrupa Datacenter Ağı
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400 mb-6">
-                Verileriniz Avrupa'da kalır. GDPR uyumlu altyapımız ile güvenle çalışın.
-              </p>
-
-              <div className="space-y-4">
-                {datacenters.map((dc) => (
-                  <div
-                    key={dc.id}
-                    className={`flex items-center gap-4 p-4 rounded-xl ${
-                      dc.primary
-                        ? "bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800"
-                        : "bg-slate-50 dark:bg-slate-800"
-                    }`}
-                  >
-                    <div
-                      className={`w-3 h-3 rounded-full ${
-                        dc.primary ? "bg-blue-500" : "bg-slate-400 dark:bg-slate-500"
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px]">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-slate-700">
+                  <th className="text-left p-4 font-semibold text-slate-900 dark:text-white w-1/4">
+                    Özellik
+                  </th>
+                  {competitors.map((comp) => (
+                    <th
+                      key={comp.name}
+                      className={`text-center p-4 font-semibold ${
+                        comp.highlight
+                          ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                          : "text-slate-600 dark:text-slate-300"
                       }`}
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium text-slate-900 dark:text-white">{dc.name}</p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">{dc.country}</p>
-                    </div>
-                    {dc.primary && (
-                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded">
-                        Birincil
-                      </span>
-                    )}
-                  </div>
+                    >
+                      {comp.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {comparisonData.map((row, index) => (
+                  <tr
+                    key={row.feature}
+                    className={
+                      index !== comparisonData.length - 1
+                        ? "border-b border-slate-100 dark:border-slate-700/50"
+                        : ""
+                    }
+                  >
+                    <td className="p-4 text-slate-700 dark:text-slate-300 text-sm">
+                      {row.feature}
+                    </td>
+                    <td className="p-4 text-center bg-blue-50/50 dark:bg-blue-900/10">
+                      <CellValue value={row.hyble} />
+                    </td>
+                    <td className="p-4 text-center">
+                      <CellValue value={row.vercel} />
+                    </td>
+                    <td className="p-4 text-center">
+                      <CellValue value={row.netlify} />
+                    </td>
+                    <td className="p-4 text-center">
+                      <CellValue value={row.railway} />
+                    </td>
+                    <td className="p-4 text-center">
+                      <CellValue value={row.render} />
+                    </td>
+                  </tr>
                 ))}
-              </div>
-
-              <div className="mt-6 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                <Shield className="w-4 h-4 text-green-500" />
-                <span>Tüm datacenter'lar ISO 27001 sertifikalı</span>
-              </div>
-            </div>
+              </tbody>
+            </table>
           </div>
+        </motion.div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="text-center mt-8"
+        >
+          <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+            Farklı platformları birleştirmek yerine, her şeyi tek yerden yönetin.
+          </p>
+          <a
+            href="https://id.hyble.co/register"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
+          >
+            Ücretsiz Deneyin
+            <ArrowRight className="w-4 h-4" />
+          </a>
         </motion.div>
       </div>
     </section>
   );
+}
+
+// Eski StatsSection'ı da export edelim (uyumluluk için)
+export function StatsSection() {
+  return <ComparisonSection />;
 }

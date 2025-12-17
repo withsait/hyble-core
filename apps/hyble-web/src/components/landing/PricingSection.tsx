@@ -457,7 +457,7 @@ export function PricingSection() {
           <div className="inline-flex items-center gap-3 px-6 py-3 bg-green-50 dark:bg-green-900/20 rounded-full border border-green-100 dark:border-green-800">
             <Shield className="w-5 h-5 text-green-600 dark:text-green-400" />
             <span className="text-sm text-green-700 dark:text-green-300 font-medium">
-              30 gün içinde memnun kalmazsanız, paranızı iade ediyoruz. Soru sormadan.
+              14 gün içinde memnun kalmazsanız, paranızı iade ediyoruz. Soru sormadan.
             </span>
           </div>
         </motion.div>
