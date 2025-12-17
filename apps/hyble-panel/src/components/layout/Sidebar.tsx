@@ -25,6 +25,14 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { LucideIcon } from "lucide-react";
+
+interface NavItem {
+  title: string;
+  href: string;
+  icon: LucideIcon;
+  external?: boolean;
+}
 
 interface SidebarProps {
   user: {
@@ -161,7 +169,7 @@ function NavSection({
   currentPath,
 }: {
   title: string;
-  items: typeof identityNavItems;
+  items: NavItem[];
   currentPath: string;
 }) {
   return (
