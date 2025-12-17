@@ -1106,3 +1106,378 @@ model BundleItem {
   @@unique([bundleProductId, includedProductId])
   @@index([bundleProductId])
 }
+
+// ==================== FAZ3: CART & ORDER SYSTEM ====================
+
+enum CartStatus {
+  ACTIVE        // Aktif sepet
+  CHECKOUT      // Ödeme aşamasında
+  CONVERTED     // Siparişe dönüştürüldü
+  ABANDONED     // Terk edilmiş
+}
+
+model Cart {
+  id            String      @id @default(cuid())
+  userId        String?
+  sessionId     String?     // Guest kullanıcılar için
+  status        CartStatus  @default(ACTIVE)
+
+  // Kupon
+  couponId      String?
+  coupon        Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  couponCode    String?
+  discountAmount Decimal    @default(0) @db.Decimal(10, 2)
+
+  // Totals (cache, checkout anında hesaplanır)
+  subtotal      Decimal     @default(0) @db.Decimal(10, 2)
+  taxAmount     Decimal     @default(0) @db.Decimal(10, 2)
+  total         Decimal     @default(0) @db.Decimal(10, 2)
+  currency      String      @default("EUR")
+
+  // Meta
+  ipAddress     String?
+  userAgent     String?
+
+  expiresAt     DateTime?   // Guest sepetler için son kullanma
+  convertedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  items         CartItem[]
+  order         Order?
+
+  @@unique([userId, status]) // Kullanıcı başına sadece 1 aktif sepet
+  @@index([sessionId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model CartItem {
+  id            String    @id @default(cuid())
+  cartId        String
+  cart          Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  productId     String
+  variantId     String?   // ProductVariant ID (varsa)
+  quantity      Int       @default(1)
+
+  // Snapshot (sepete eklendiğindeki fiyat)
+  unitPrice     Decimal   @db.Decimal(10, 2)
+  currency      String    @default("EUR")
+
+  // Ürün bilgileri snapshot
+  productName   String
+  variantName   String?
+  productSlug   String
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([cartId, productId, variantId])
+  @@index([cartId])
+}
+
+enum OrderStatus {
+  PENDING         // Ödeme bekleniyor
+  PROCESSING      // İşleniyor
+  COMPLETED       // Tamamlandı
+  FAILED          // Başarısız
+  CANCELLED       // İptal edildi
+  REFUNDED        // İade edildi
+  PARTIALLY_REFUNDED // Kısmi iade
+}
+
+enum PaymentStatus {
+  PENDING         // Ödeme bekleniyor
+  AUTHORIZED      // Yetkilendirildi
+  CAPTURED        // Çekildi
+  FAILED          // Başarısız
+  REFUNDED        // İade edildi
+  PARTIALLY_REFUNDED // Kısmi iade
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique // HYB-20250101-XXXX
+  userId          String
+  cartId          String?       @unique
+
+  status          OrderStatus   @default(PENDING)
+  paymentStatus   PaymentStatus @default(PENDING)
+
+  // Finansallar
+  subtotal        Decimal       @db.Decimal(10, 2)
+  discountAmount  Decimal       @default(0) @db.Decimal(10, 2)
+  taxRate         Decimal       @default(20) @db.Decimal(5, 2)
+  taxAmount       Decimal       @db.Decimal(10, 2)
+  total           Decimal       @db.Decimal(10, 2)
+  currency        String        @default("EUR")
+
+  // Ödeme bilgileri
+  paymentMethod   String?       // wallet, stripe, bank_transfer
+  paymentRef      String?       // Stripe PaymentIntent ID veya referans
+  walletAmount    Decimal       @default(0) @db.Decimal(10, 2) // Cüzdandan ödenen
+  cardAmount      Decimal       @default(0) @db.Decimal(10, 2) // Karttan ödenen
+
+  // Kupon
+  couponId        String?
+  couponCode      String?
+
+  // Fatura
+  invoiceId       String?
+
+  // Billing Address (snapshot)
+  billingAddress  Json?
+
+  // Meta
+  notes           String?
+  ipAddress       String?
+  userAgent       String?
+
+  paidAt          DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  cart            Cart?         @relation(fields: [cartId], references: [id])
+  items           OrderItem[]
+  subscriptions   Subscription[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([orderNumber])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id            String    @id @default(cuid())
+  orderId       String
+  order         Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId     String
+  variantId     String?
+  quantity      Int
+
+  // Snapshot
+  unitPrice     Decimal   @db.Decimal(10, 2)
+  totalPrice    Decimal   @db.Decimal(10, 2)
+  currency      String    @default("EUR")
+
+  productName   String
+  variantName   String?
+  productSlug   String
+
+  // Subscription products
+  isSubscription Boolean  @default(false)
+  billingPeriod  String?  // monthly, quarterly, annually
+
+  createdAt     DateTime  @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// ==================== FAZ3: SUBSCRIPTION SYSTEM ====================
+
+enum SubscriptionStatus {
+  TRIAL           // Deneme süresi
+  ACTIVE          // Aktif
+  PAST_DUE        // Ödeme gecikmiş
+  PAUSED          // Duraklatılmış
+  CANCELLED       // İptal edilmiş
+  EXPIRED         // Süresi dolmuş
+}
+
+model Subscription {
+  id                String             @id @default(cuid())
+  userId            String
+  orderId           String?
+  order             Order?             @relation(fields: [orderId], references: [id])
+
+  productId         String
+  variantId         String?
+
+  status            SubscriptionStatus @default(ACTIVE)
+
+  // Periyot
+  billingPeriod     String             // monthly, quarterly, annually
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+
+  // Fiyatlandırma
+  price             Decimal            @db.Decimal(10, 2)
+  currency          String             @default("EUR")
+
+  // Trial
+  trialStart        DateTime?
+  trialEnd          DateTime?
+
+  // Auto-renewal
+  autoRenew         Boolean            @default(true)
+  cancelAtPeriodEnd Boolean            @default(false)
+
+  // External refs
+  stripeSubscriptionId String?
+
+  // Snapshot
+  productName       String
+  variantName       String?
+
+  cancelledAt       DateTime?
+  cancelReason      String?
+  pausedAt          DateTime?
+  pauseReason       String?
+  resumesAt         DateTime?
+
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([currentPeriodEnd])
+  @@index([stripeSubscriptionId])
+}
+
+// ==================== FAZ3: VOUCHER/COUPON SYSTEM ====================
+
+enum CouponType {
+  PERCENTAGE      // Yüzde indirim
+  FIXED           // Sabit tutar
+  FREE_SHIPPING   // Ücretsiz kargo (gelecek için)
+}
+
+enum CouponStatus {
+  ACTIVE          // Aktif
+  INACTIVE        // Pasif
+  EXPIRED         // Süresi dolmuş
+  DEPLETED        // Kullanım limiti dolmuş
+}
+
+model Coupon {
+  id              String        @id @default(cuid())
+  code            String        @unique
+  description     String?
+
+  type            CouponType
+  status          CouponStatus  @default(ACTIVE)
+
+  // Değer
+  value           Decimal       @db.Decimal(10, 2) // Yüzde veya sabit tutar
+  minOrderAmount  Decimal?      @db.Decimal(10, 2) // Minimum sipariş tutarı
+  maxDiscount     Decimal?      @db.Decimal(10, 2) // Max indirim (yüzde için)
+
+  // Kullanım limitleri
+  usageLimit      Int?          // Toplam kullanım limiti
+  usagePerUser    Int           @default(1) // Kullanıcı başına limit
+  usedCount       Int           @default(0) // Toplam kullanılma sayısı
+
+  // Geçerlilik
+  startsAt        DateTime      @default(now())
+  expiresAt       DateTime?
+
+  // Kısıtlamalar
+  productIds      String[]      // Sadece belirli ürünler için
+  categoryIds     String[]      // Sadece belirli kategoriler için
+  excludeProductIds String[]    // Hariç tutulan ürünler
+  userIds         String[]      // Sadece belirli kullanıcılar için
+
+  // Referans
+  createdBy       String?
+  campaign        String?       // Kampanya adı/ID
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  usages          CouponUsage[]
+  carts           Cart[]
+
+  @@index([code])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model CouponUsage {
+  id          String    @id @default(cuid())
+  couponId    String
+  coupon      Coupon    @relation(fields: [couponId], references: [id], onDelete: Cascade)
+
+  userId      String
+  orderId     String?
+
+  discountAmount Decimal @db.Decimal(10, 2)
+
+  usedAt      DateTime  @default(now())
+
+  @@unique([couponId, userId, orderId])
+  @@index([couponId])
+  @@index([userId])
+}
+
+// ==================== FAZ3: VOUCHER/GIFT CARDS ====================
+
+enum VoucherType {
+  GIFT_CARD       // Hediye kartı (bakiye yükler)
+  PROMO_CREDIT    // Promosyon kredisi
+  REFERRAL        // Referans bonusu
+  BIRTHDAY        // Doğum günü hediyesi
+}
+
+enum VoucherStatus {
+  ACTIVE          // Kullanılabilir
+  USED            // Kullanılmış
+  EXPIRED         // Süresi dolmuş
+  CANCELLED       // İptal edilmiş
+}
+
+model Voucher {
+  id            String        @id @default(cuid())
+  code          String        @unique
+  type          VoucherType
+  status        VoucherStatus @default(ACTIVE)
+
+  // Değer
+  originalAmount Decimal      @db.Decimal(10, 2)
+  remainingAmount Decimal     @db.Decimal(10, 2)
+  currency      String        @default("EUR")
+
+  // Kısıtlamalar
+  userId        String?       // Belirli kullanıcıya özel
+  minOrderAmount Decimal?     @db.Decimal(10, 2)
+
+  // Geçerlilik
+  expiresAt     DateTime?
+
+  // Referans
+  createdBy     String?
+  reason        String?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  redemptions   VoucherRedemption[]
+
+  @@index([code])
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+model VoucherRedemption {
+  id          String    @id @default(cuid())
+  voucherId   String
+  voucher     Voucher   @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+
+  userId      String
+  amount      Decimal   @db.Decimal(10, 2)
+  type        String    // wallet_deposit, order_payment
+
+  balanceBefore Decimal @db.Decimal(10, 2)
+  balanceAfter  Decimal @db.Decimal(10, 2)
+
+  redeemedAt  DateTime  @default(now())
+
+  @@index([voucherId])
+  @@index([userId])
+}
