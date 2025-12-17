@@ -77,7 +77,7 @@ export function MediaGallery({ productId }: MediaGalleryProps) {
     }
   };
 
-  const handleAddUrl = () => {
+  const handleAddUrl = async () => {
     const url = window.prompt("Görsel URL'si girin:");
     if (!url) return;
 
