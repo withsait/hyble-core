@@ -261,7 +261,7 @@ export const paymentRouter = createTRPCRouter({
               total: order.total,
               currency: order.currency,
               paidAt: new Date(),
-              items: order.items ?? [],
+              items: [],
             },
           });
 
@@ -403,7 +403,7 @@ export const paymentRouter = createTRPCRouter({
               total: order.total,
               currency: order.currency,
               paidAt: new Date(),
-              items: order.items ?? [],
+              items: [],
             },
           });
 
@@ -603,7 +603,7 @@ export const paymentRouter = createTRPCRouter({
             total: order.total,
             currency: order.currency,
             paidAt: new Date(),
-            items: order.items ?? [],
+            items: [],
           },
         });
 
@@ -708,7 +708,7 @@ export const paymentRouter = createTRPCRouter({
             total: order.total,
             currency: order.currency,
             paidAt: new Date(),
-            items: order.items ?? [],
+            items: [],
           },
         });
 
