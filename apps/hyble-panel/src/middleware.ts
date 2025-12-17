@@ -4,6 +4,7 @@ import { generateRequestId } from "@/lib/middleware/logging";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const host = request.headers.get("host") || "";
   const startTime = Date.now();
 
   // Generate request ID for tracing
@@ -16,6 +17,31 @@ export function middleware(request: NextRequest) {
     pathname === "/favicon.ico"
   ) {
     return NextResponse.next();
+  }
+
+  // Host-based routing for secret.hyble.net (Admin Panel)
+  if (host.includes("secret.hyble.net")) {
+    // secret.hyble.net should only access /admin routes
+    if (!pathname.startsWith("/admin") && !pathname.startsWith("/api") && !pathname.startsWith("/login") && pathname !== "/") {
+      // Redirect non-admin routes to /admin
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+    // Root path redirects to /admin
+    if (pathname === "/") {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+  }
+
+  // Host-based routing for panel.hyble.co (User Dashboard)
+  if (host.includes("panel.hyble.co")) {
+    // panel.hyble.co should access /dashboard routes
+    if (pathname === "/") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    // Block /admin access from panel.hyble.co
+    if (pathname.startsWith("/admin")) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
   }
 
   // API route handling
