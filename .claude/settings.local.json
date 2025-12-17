@@ -40,7 +40,19 @@
       "Bash(powershell -Command \"& { cd 'C:\\Users\\ahmet\\Documents\\.claude-worktrees\\hyble-core\\angry-curie\\apps\\hyble-web'; npm run build }\":*)",
       "Bash(git checkout:*)",
       "Bash(git pull:*)",
-      "Bash(powershell -Command:*)"
+      "Bash(powershell -Command:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(sshpass -p '8WheEUDukgJ2Pr' ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git rev-parse HEAD && git log -1 --format=''%h %s'' && git status --short\")",
+      "Bash(git ls-remote:*)",
+      "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd build --filter @hyble/web)",
+      "Bash(taskkill:*)",
+      "Bash(tasklist /FI 'IMAGENAME eq node.exe')",
+      "Bash(curl:*)",
+      "Bash(sshpass -p '8WheEUDukgJ2Pr' ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git status && echo ''---'' && pm2 list && echo ''---'' && docker ps -a 2>/dev/null || echo ''Docker not running''\")",
+      "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd build --filter hyble-panel)",
+      "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd build --filter @hyble/panel)",
+      "Bash(sshpass -p '8WheEUDukgJ2Pr' ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git pull origin main && pnpm install && pnpm build && pm2 restart all && pm2 status\")",
+      "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd add date-fns)"
     ],
     "deny": [],
     "ask": []
