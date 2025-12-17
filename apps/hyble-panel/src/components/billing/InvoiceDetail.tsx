@@ -63,6 +63,7 @@ const mockInvoice = {
   billingName: "Demo User",
   billingAddress: {
     line1: "123 Test Street",
+    line2: "",
     city: "London",
     postalCode: "WC2H 9JQ",
     country: "United Kingdom",
