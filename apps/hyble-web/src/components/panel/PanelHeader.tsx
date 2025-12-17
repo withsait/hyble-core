@@ -1,8 +1,15 @@
 "use client";
 
-import { Bell, Menu, Search, User } from "lucide-react";
+import { useTheme } from "next-themes";
+import { Bell, Menu, Search, User, Sun, Moon } from "lucide-react";
 
 export function PanelHeader() {
+  const { theme, setTheme } = useTheme();
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   return (
     <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-slate-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:gap-x-6 sm:px-6 lg:px-8">
       <button
@@ -32,6 +39,20 @@ export function PanelHeader() {
           </div>
         </form>
         <div className="flex items-center gap-x-4 lg:gap-x-6">
+          {/* Dark mode toggle */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="-m-2.5 p-2.5 text-slate-400 hover:text-slate-500 dark:text-slate-500 dark:hover:text-slate-400 transition-colors"
+            title={theme === "dark" ? "Açık moda geç" : "Karanlık moda geç"}
+          >
+            <span className="sr-only">Tema değiştir</span>
+            {theme === "dark" ? (
+              <Sun className="h-6 w-6" aria-hidden="true" />
+            ) : (
+              <Moon className="h-6 w-6" aria-hidden="true" />
+            )}
+          </button>
           <button
             type="button"
             className="-m-2.5 p-2.5 text-slate-400 hover:text-slate-500 dark:text-slate-500 dark:hover:text-slate-400"
