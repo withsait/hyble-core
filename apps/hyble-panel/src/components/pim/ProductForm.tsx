@@ -47,7 +47,8 @@ export function ProductForm({ productId }: ProductFormProps) {
   const [isPending, setIsPending] = useState(false);
 
   // TODO: Replace with tRPC queries when pim router is ready
-  const product = null;
+  // const { data: product, isLoading: productLoading } = trpc.pim.products.getById.useQuery(productId);
+  const product: ProductFormData | null = null;
   const productLoading = false;
   const categories = mockCategories;
 
@@ -76,8 +77,8 @@ export function ProductForm({ productId }: ProductFormProps) {
         nameTr: product.nameTr,
         nameEn: product.nameEn,
         slug: product.slug,
-        type: product.type as ProductFormData["type"],
-        status: product.status as ProductFormData["status"],
+        type: product.type,
+        status: product.status,
         categoryId: product.categoryId,
         descriptionTr: product.descriptionTr || "",
         descriptionEn: product.descriptionEn || "",
@@ -86,7 +87,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         basePrice: product.basePrice?.toString() || "",
         currency: product.currency,
         taxRate: product.taxRate?.toString() || "20",
-        tags: product.tags?.join(", ") || "",
+        tags: product.tags || "",
         isFeatured: product.isFeatured,
       });
     }
