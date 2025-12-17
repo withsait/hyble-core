@@ -96,15 +96,6 @@ export function InvoiceDetail({ invoiceId }: InvoiceDetailProps) {
     return <DetailSkeleton />;
   }
 
-  if (error) {
-    return (
-      <Card className="p-6 border-destructive bg-destructive/10">
-        <p className="text-destructive text-sm">
-          Fatura yüklenemedi: {error.message}
-        </p>
-      </Card>
-    );
-  }
 
   if (!invoice) {
     return (
