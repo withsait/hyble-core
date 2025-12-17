@@ -740,6 +740,141 @@ export const organizationRouter = createTRPCRouter({
 
       return { available: !existing };
     }),
+
+  // ==================== ADMIN ENDPOINTS ====================
+
+  // Admin: List all organizations
+  adminList: protectedProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+        search: z.string().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      // Check if user is admin
+      if (ctx.user.role !== "ADMIN" && ctx.user.role !== "SUPPORT") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
+      }
+
+      const where: any = {};
+
+      if (input.search) {
+        where.OR = [
+          { name: { contains: input.search, mode: "insensitive" } },
+          { slug: { contains: input.search, mode: "insensitive" } },
+        ];
+      }
+
+      const [organizations, total] = await Promise.all([
+        prisma.organization.findMany({
+          where,
+          skip: (input.page - 1) * input.limit,
+          take: input.limit,
+          orderBy: { createdAt: "desc" },
+          include: {
+            owner: {
+              select: { id: true, name: true, email: true },
+            },
+            _count: {
+              select: { members: true },
+            },
+          },
+        }),
+        prisma.organization.count({ where }),
+      ]);
+
+      return {
+        organizations: organizations.map((org) => ({
+          id: org.id,
+          name: org.name,
+          slug: org.slug,
+          logo: org.logo,
+          owner: org.owner,
+          memberCount: org._count.members,
+          createdAt: org.createdAt,
+        })),
+        total,
+        totalPages: Math.ceil(total / input.limit),
+        page: input.page,
+      };
+    }),
+
+  // Admin: Get organization details
+  adminGet: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ ctx, input }) => {
+      if (ctx.user.role !== "ADMIN" && ctx.user.role !== "SUPPORT") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
+      }
+
+      const org = await prisma.organization.findUnique({
+        where: { id: input.id },
+        include: {
+          owner: {
+            select: { id: true, name: true, email: true, image: true },
+          },
+          members: {
+            include: {
+              user: {
+                select: { id: true, name: true, email: true, image: true, status: true },
+              },
+            },
+            orderBy: { joinedAt: "asc" },
+          },
+          invites: {
+            where: { status: "PENDING" },
+            orderBy: { createdAt: "desc" },
+          },
+          ssoConfig: true,
+          _count: {
+            select: { members: true, invites: true },
+          },
+        },
+      });
+
+      if (!org) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Organization not found" });
+      }
+
+      return org;
+    }),
+
+  // Admin: Organization stats
+  adminStats: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "ADMIN" && ctx.user.role !== "SUPPORT") {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
+    }
+
+    const now = new Date();
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [total, newThisMonth] = await Promise.all([
+      prisma.organization.count(),
+      prisma.organization.count({ where: { createdAt: { gte: thisMonth } } }),
+    ]);
+
+    return {
+      total,
+      newThisMonth,
+    };
+  }),
+
+  // Admin: Delete organization
+  adminDelete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user.role !== "ADMIN") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Admin access required" });
+      }
+
+      await prisma.organization.delete({
+        where: { id: input.id },
+      });
+
+      return { success: true };
+    }),
 });
 
 export type OrganizationRouter = typeof organizationRouter;

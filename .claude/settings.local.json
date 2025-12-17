@@ -52,7 +52,10 @@
       "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd build --filter hyble-panel)",
       "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd build --filter @hyble/panel)",
       "Bash(sshpass -p '8WheEUDukgJ2Pr' ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git pull origin main && pnpm install && pnpm build && pm2 restart all && pm2 status\")",
-      "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd add date-fns)"
+      "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd add date-fns)",
+      "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd install)",
+      "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd build --filter hyblegaming-web)",
+      "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd build --filter @hyble/gaming)"
     ],
     "deny": [],
     "ask": []
