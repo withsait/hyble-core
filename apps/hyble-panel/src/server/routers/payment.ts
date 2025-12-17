@@ -261,7 +261,7 @@ export const paymentRouter = createTRPCRouter({
               total: order.total,
               currency: order.currency,
               paidAt: new Date(),
-              items: order.items as unknown as Prisma.JsonValue,
+              items: order.items ?? [],
             },
           });
 
@@ -403,7 +403,7 @@ export const paymentRouter = createTRPCRouter({
               total: order.total,
               currency: order.currency,
               paidAt: new Date(),
-              items: order.items as unknown as Prisma.JsonValue,
+              items: order.items ?? [],
             },
           });
 
@@ -603,7 +603,7 @@ export const paymentRouter = createTRPCRouter({
             total: order.total,
             currency: order.currency,
             paidAt: new Date(),
-            items: order.items as unknown as Prisma.JsonValue,
+            items: order.items ?? [],
           },
         });
 
@@ -708,7 +708,7 @@ export const paymentRouter = createTRPCRouter({
             total: order.total,
             currency: order.currency,
             paidAt: new Date(),
-            items: order.items as unknown as Prisma.JsonValue,
+            items: order.items ?? [],
           },
         });
 
