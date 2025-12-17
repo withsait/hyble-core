@@ -6,7 +6,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure, adminProcedure } from "../trpc/trpc";
-import { prisma } from "@hyble/db";
+import { prisma, Prisma } from "@hyble/db";
 
 export const notificationRouter = createTRPCRouter({
   // ==================== USER PROCEDURES ====================
@@ -371,7 +371,7 @@ export async function createNotification(params: {
       actionLabel: params.actionLabel,
       icon: params.icon,
       expiresAt: params.expiresAt,
-      metadata: params.metadata,
+      metadata: params.metadata as Prisma.InputJsonValue | undefined,
     },
   });
 }
