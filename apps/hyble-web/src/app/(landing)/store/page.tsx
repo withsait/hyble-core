@@ -12,7 +12,7 @@ import {
   ArrowUpDown, Check, GitCompare, Heart
 } from "lucide-react";
 import { useCompare, MAX_COMPARE_ITEMS, CompareProduct } from "@/lib/compare-context";
-import { useWishlist, WishlistProduct } from "@/lib/wishlist-context";
+import { useWishlist } from "@/lib/wishlist-context";
 
 // API base URL
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.hyble.co";
@@ -584,21 +584,20 @@ function StoreContent() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                const wishlistProduct: WishlistProduct = {
-                                  id: product.id,
-                                  slug: product.slug,
-                                  nameTr: product.nameTr,
-                                  nameEn: product.nameEn,
-                                  shortDescTr: product.shortDescTr,
-                                  type: product.type,
-                                  category: product.category ? { nameTr: product.category.nameTr, slug: product.category.slug } : null,
-                                  primaryImage: product.primaryImage,
-                                  lowestPrice: product.lowestPrice,
-                                };
                                 if (isInWishlist(product.id)) {
                                   removeFromWishlist(product.id);
                                 } else {
-                                  addToWishlist(wishlistProduct);
+                                  addToWishlist({
+                                    id: product.id,
+                                    slug: product.slug,
+                                    nameTr: product.nameTr,
+                                    nameEn: product.nameEn,
+                                    shortDescTr: product.shortDescTr,
+                                    type: product.type,
+                                    category: product.category ? { nameTr: product.category.nameTr, slug: product.category.slug } : null,
+                                    primaryImage: product.primaryImage,
+                                    lowestPrice: product.lowestPrice,
+                                  });
                                 }
                               }}
                               className={`p-2 rounded-lg transition-all ${
