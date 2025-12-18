@@ -2,37 +2,52 @@
 
 import { useState } from "react";
 import { Button, Input } from "@hyble/ui";
-import { Tag, Loader2, Check, X, Percent } from "lucide-react";
-
-// Mock data - will be replaced with tRPC when cart router is ready
-const mockCart = { coupon: null };
+import { Tag, Loader2, X, Percent } from "lucide-react";
+import { trpc } from "@/lib/trpc/client";
 
 export function CouponInput() {
   const [code, setCode] = useState("");
-  const [status, setStatus] = useState<"idle" | "applying" | "applied" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const [isRemoving, setIsRemoving] = useState(false);
 
-  // TODO: Replace with tRPC query when cart router is ready
-  const appliedCoupon = mockCart.coupon;
+  const { data: cart } = trpc.cart.get.useQuery();
+  const utils = trpc.useUtils();
+
+  const applyMutation = trpc.cart.applyCoupon.useMutation({
+    onSuccess: () => {
+      utils.cart.get.invalidate();
+      setCode("");
+      setErrorMessage("");
+    },
+    onError: (error) => {
+      setErrorMessage(error.message);
+    },
+  });
+
+  const removeMutation = trpc.cart.removeCoupon.useMutation({
+    onSuccess: () => {
+      utils.cart.get.invalidate();
+    },
+  });
+
+  const appliedCoupon = cart?.coupon;
+  const isApplying = applyMutation.isPending;
+  const isRemoving = removeMutation.isPending;
 
   const handleApply = async () => {
     if (!code.trim()) return;
-    setStatus("applying");
     setErrorMessage("");
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setStatus("applied");
+    await applyMutation.mutateAsync({ code: code.trim() });
   };
 
   const handleRemove = async () => {
-    setIsRemoving(true);
-    await new Promise(resolve => setTimeout(resolve, 300));
-    setCode("");
-    setStatus("idle");
-    setIsRemoving(false);
+    await removeMutation.mutateAsync();
   };
 
   if (appliedCoupon) {
+    const discountText = appliedCoupon.type === "PERCENTAGE"
+      ? `%${appliedCoupon.value} indirim`
+      : `€${appliedCoupon.value} indirim`;
+
     return (
       <div className="flex items-center justify-between p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
         <div className="flex items-center gap-2">
@@ -41,10 +56,10 @@ export function CouponInput() {
           </div>
           <div>
             <p className="font-medium text-green-800 dark:text-green-200 text-sm">
-              DEMO10
+              {appliedCoupon.code}
             </p>
             <p className="text-xs text-green-700 dark:text-green-300">
-              %10 indirim
+              {discountText}
             </p>
           </div>
         </div>
@@ -75,20 +90,19 @@ export function CouponInput() {
             value={code}
             onChange={(e) => {
               setCode(e.target.value.toUpperCase());
-              if (status === "error") {
-                setStatus("idle");
+              if (errorMessage) {
                 setErrorMessage("");
               }
             }}
             className="pl-9 uppercase"
-            disabled={status === "applying"}
+            disabled={isApplying}
           />
         </div>
         <Button
           onClick={handleApply}
-          disabled={!code.trim() || status === "applying"}
+          disabled={!code.trim() || isApplying}
         >
-          {status === "applying" ? (
+          {isApplying ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             "Uygula"
@@ -96,7 +110,7 @@ export function CouponInput() {
         </Button>
       </div>
 
-      {status === "error" && errorMessage && (
+      {errorMessage && (
         <p className="text-xs text-destructive flex items-center gap-1">
           <X className="h-3 w-3" />
           {errorMessage}

@@ -2001,3 +2001,166 @@ model PaymentRecord {
   @@index([paparaPaymentId])
   @@index([stripePaymentIntentId])
 }
+
+// ==================== DIGITAL DELIVERY ====================
+
+enum FileStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+model ProductFile {
+  id            String      @id @default(cuid())
+  productId     String
+  variantId     String?
+
+  // File info
+  name          String      // Display name
+  filename      String      // Original filename
+  r2Key         String      @unique // R2 storage key
+  r2Url         String      // Public URL (if public) or empty
+  contentType   String      // MIME type
+  size          Int         // File size in bytes
+
+  // Version control
+  version       String      @default("1.0.0")
+  changelog     String?     @db.Text
+
+  // Access control
+  isPublic      Boolean     @default(false) // Public preview vs private download
+  status        FileStatus  @default(ACTIVE)
+
+  // Metadata
+  checksum      String?     // MD5 or SHA256 hash for integrity
+  metadata      Json?
+
+  // Relations
+  downloads     DownloadToken[]
+
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([productId])
+  @@index([variantId])
+  @@index([status])
+}
+
+model DownloadToken {
+  id            String      @id @default(cuid())
+  token         String      @unique @default(cuid())
+
+  // Relations
+  fileId        String
+  file          ProductFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  userId        String
+  orderId       String?     // Which order granted access
+  licenseId     String?     // Which license granted access
+
+  // Access control
+  maxDownloads  Int         @default(5) // Max download attempts
+  downloadCount Int         @default(0)
+  expiresAt     DateTime    // Token expiration
+  lastUsedAt    DateTime?
+  ipAddress     String?     // IP that created/used the token
+
+  // Audit
+  createdAt     DateTime    @default(now())
+
+  @@index([userId])
+  @@index([fileId])
+  @@index([orderId])
+  @@index([licenseId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+// ==================== LICENSE MANAGEMENT ====================
+
+enum LicenseStatus {
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  REVOKED
+  PENDING
+}
+
+enum LicenseType {
+  PERPETUAL     // Lifetime license
+  SUBSCRIPTION  // Recurring subscription
+  TRIAL         // Trial period
+  DEVELOPER     // Developer/testing license
+}
+
+model License {
+  id            String        @id @default(cuid())
+  licenseKey    String        @unique
+
+  // Relations
+  userId        String
+  productId     String
+  variantId     String?
+  orderId       String?       // Original purchase order
+
+  // License details
+  type          LicenseType   @default(PERPETUAL)
+  status        LicenseStatus @default(PENDING)
+
+  // Validity
+  activatedAt   DateTime?
+  expiresAt     DateTime?
+  lastCheckedAt DateTime?
+
+  // Usage limits
+  maxActivations Int          @default(1)
+  activationCount Int         @default(0)
+
+  // Domain/IP binding
+  allowedDomains String[]
+  allowedIps     String[]
+
+  // Metadata
+  productName   String        // Cached product name
+  variantName   String?
+  metadata      Json?
+  notes         String?       @db.Text
+
+  // Relations
+  activations   LicenseActivation[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([productId])
+  @@index([orderId])
+  @@index([status])
+  @@index([licenseKey])
+  @@index([expiresAt])
+}
+
+model LicenseActivation {
+  id            String    @id @default(cuid())
+  licenseId     String
+  license       License   @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  // Device/environment info
+  machineId     String?   // Hardware fingerprint
+  hostname      String?
+  domain        String?
+  ipAddress     String
+  userAgent     String?
+
+  // Status
+  isActive      Boolean   @default(true)
+  deactivatedAt DateTime?
+  deactivatedBy String?   // userId or "system"
+  deactivateReason String?
+
+  // Audit
+  createdAt     DateTime  @default(now())
+
+  @@index([licenseId])
+  @@index([machineId])
+  @@index([isActive])
+}

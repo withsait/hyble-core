@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@hyble/ui";
 import {
@@ -13,15 +13,7 @@ import {
 } from "lucide-react";
 import { CartItem } from "./CartItem";
 import { CouponInput } from "./CouponInput";
-
-// Mock cart data - will be replaced with tRPC query when cart router is implemented
-const mockCart = {
-  items: [],
-  subtotal: 0,
-  discount: 0,
-  total: 0,
-  currency: "EUR",
-};
+import { trpc } from "@/lib/trpc/client";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -29,16 +21,17 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  // TODO: Replace with tRPC query when cart router is ready
-  // const { data: cart, isLoading } = trpc.cart.get.useQuery(undefined, { enabled: isOpen });
-  const cart = mockCart;
-  const isLoading = false;
-  const [isClearing, setIsClearing] = useState(false);
+  const { data: cart, isLoading } = trpc.cart.get.useQuery(undefined, { enabled: isOpen });
+  const utils = trpc.useUtils();
+
+  const clearMutation = trpc.cart.clear.useMutation({
+    onSuccess: () => {
+      utils.cart.get.invalidate();
+    },
+  });
 
   const handleClearCart = async () => {
-    setIsClearing(true);
-    await new Promise(resolve => setTimeout(resolve, 300));
-    setIsClearing(false);
+    await clearMutation.mutateAsync();
   };
 
   // Close on escape key
@@ -59,10 +52,11 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   if (!isOpen) return null;
 
   const items = cart?.items || [];
-  const subtotal = cart?.subtotal || 0;
-  const discount = cart?.discount || 0;
-  const total = cart?.total || 0;
+  const subtotal = parseFloat(cart?.subtotal || "0");
+  const discount = parseFloat(cart?.discount || "0");
+  const total = parseFloat(cart?.total || "0");
   const currencySymbol = cart?.currency === "EUR" ? "€" : cart?.currency === "USD" ? "$" : "₺";
+  const isClearing = clearMutation.isPending;
 
   return (
     <>

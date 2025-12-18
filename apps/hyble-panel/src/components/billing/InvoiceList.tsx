@@ -7,7 +7,6 @@ import {
   FileText,
   Download,
   ExternalLink,
-  Loader2,
   ChevronLeft,
   ChevronRight,
   Filter,
@@ -18,27 +17,17 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import { trpc } from "@/lib/trpc/client";
 
-type InvoiceStatus = "DRAFT" | "PENDING" | "PAID" | "PARTIAL" | "OVERDUE" | "CANCELLED";
-
-interface Invoice {
-  id: string;
-  number: string;
-  status: InvoiceStatus;
-  total: number;
-  currency: string;
-  dueDate: Date;
-  createdAt: Date;
-  items: { name: string }[];
-}
+type InvoiceStatus = "DRAFT" | "PENDING" | "PAID" | "OVERDUE" | "CANCELLED" | "REFUNDED";
 
 const statusConfig: Record<InvoiceStatus, { icon: React.ReactNode; label: string; color: string }> = {
   DRAFT: { icon: <FileText className="h-4 w-4" />, label: "Taslak", color: "bg-slate-100 text-slate-600" },
   PENDING: { icon: <Clock className="h-4 w-4" />, label: "Beklemede", color: "bg-yellow-100 text-yellow-700" },
   PAID: { icon: <CheckCircle className="h-4 w-4" />, label: "Ödendi", color: "bg-green-100 text-green-700" },
-  PARTIAL: { icon: <AlertCircle className="h-4 w-4" />, label: "Kısmi Ödeme", color: "bg-orange-100 text-orange-700" },
   OVERDUE: { icon: <AlertCircle className="h-4 w-4" />, label: "Gecikmiş", color: "bg-red-100 text-red-700" },
   CANCELLED: { icon: <XCircle className="h-4 w-4" />, label: "İptal", color: "bg-slate-100 text-slate-500" },
+  REFUNDED: { icon: <AlertCircle className="h-4 w-4" />, label: "İade", color: "bg-orange-100 text-orange-700" },
 };
 
 function InvoiceSkeleton() {
@@ -59,41 +48,15 @@ function InvoiceSkeleton() {
   );
 }
 
-// Mock invoices - will be replaced with tRPC when invoice router is ready
-const mockInvoices: Invoice[] = [
-  {
-    id: "1",
-    number: "INV-2024-001",
-    status: "PAID",
-    total: 25.00,
-    currency: "EUR",
-    dueDate: new Date("2024-12-30"),
-    createdAt: new Date("2024-12-15"),
-    items: [{ name: "Hyble Pro Hosting" }],
-  },
-  {
-    id: "2",
-    number: "INV-2024-002",
-    status: "PENDING",
-    total: 9.99,
-    currency: "EUR",
-    dueDate: new Date("2024-12-25"),
-    createdAt: new Date("2024-12-10"),
-    items: [{ name: "Domain .com" }],
-  },
-];
-
 export function InvoiceList() {
-  const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<InvoiceStatus | "ALL">("ALL");
 
-  // TODO: Replace with tRPC query when invoice router is ready
-  const isLoading = false;
-  const error = null;
-  const invoices = filter === "ALL"
-    ? mockInvoices
-    : mockInvoices.filter(inv => inv.status === filter);
-  const totalPages = 1;
+  const { data, isLoading, error } = trpc.wallet.getInvoices.useQuery({
+    limit: 20,
+    status: filter === "ALL" ? undefined : filter,
+  });
+
+  const invoices = data?.invoices ?? [];
 
 
   return (
@@ -132,9 +95,10 @@ export function InvoiceList() {
             <p className="text-sm mt-1">Faturalarınız burada görünecek</p>
           </div>
         ) : (
-          invoices.map((invoice: Invoice) => {
-            const config = statusConfig[invoice.status];
+          invoices.map((invoice) => {
+            const config = statusConfig[invoice.status as InvoiceStatus] || statusConfig.PENDING;
             const currencySymbol = invoice.currency === "EUR" ? "€" : invoice.currency === "USD" ? "$" : "₺";
+            const total = parseFloat(invoice.total);
 
             return (
               <div
@@ -148,20 +112,16 @@ export function InvoiceList() {
                   <div>
                     <div className="flex items-center gap-2">
                       <Link
-                        href={`/billing/${invoice.id}`}
+                        href={`/dashboard/billing/${invoice.id}`}
                         className="font-medium hover:text-primary"
                       >
-                        {invoice.number}
+                        {invoice.invoiceNumber}
                       </Link>
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
                         {config.icon}
                         {config.label}
                       </span>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {invoice.items?.[0]?.name || "Fatura"}
-                      {invoice.items?.length > 1 && ` +${invoice.items.length - 1} kalem`}
-                    </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {format(new Date(invoice.createdAt), "d MMMM yyyy", { locale: tr })}
                     </p>
@@ -171,18 +131,23 @@ export function InvoiceList() {
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <p className="font-semibold">
-                      {currencySymbol}{invoice.total.toFixed(2)}
+                      {currencySymbol}{total.toFixed(2)}
                     </p>
-                    {invoice.status === "PENDING" && (
+                    {invoice.status === "PENDING" && invoice.dueDate && (
                       <p className="text-xs text-muted-foreground">
                         Son ödeme: {format(new Date(invoice.dueDate), "d MMM", { locale: tr })}
+                      </p>
+                    )}
+                    {invoice.status === "PAID" && invoice.paidAt && (
+                      <p className="text-xs text-green-600">
+                        Ödendi: {format(new Date(invoice.paidAt), "d MMM", { locale: tr })}
                       </p>
                     )}
                   </div>
 
                   <div className="flex gap-1">
                     <Link
-                      href={`/billing/${invoice.id}`}
+                      href={`/dashboard/billing/${invoice.id}`}
                       className="inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-muted transition-colors"
                     >
                       <ExternalLink className="h-4 w-4" />
@@ -198,30 +163,17 @@ export function InvoiceList() {
         )}
       </Card>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Sayfa {page} / {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1 || isLoading}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages || isLoading}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+      {/* Load More */}
+      {data?.nextCursor && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => {
+              // TODO: Implement pagination with cursor
+            }}
+          >
+            Daha Fazla Yükle
+          </Button>
         </div>
       )}
     </div>

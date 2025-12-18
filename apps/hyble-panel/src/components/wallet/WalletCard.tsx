@@ -1,14 +1,8 @@
 "use client";
 
 import { Card } from "@hyble/ui";
-import { Wallet, Gift, Ticket, TrendingUp, Loader2 } from "lucide-react";
-
-// Mock data - will be replaced with tRPC query when wallet router is implemented
-const mockWallet = {
-  mainBalance: 125.50,
-  bonusBalance: 15.00,
-  promoBalance: 5.00,
-};
+import { Wallet, Gift, Ticket, TrendingUp, AlertCircle } from "lucide-react";
+import { trpc } from "@/lib/trpc/client";
 
 interface BalanceCardProps {
   title: string;
@@ -66,11 +60,7 @@ function BalanceCardSkeleton() {
 }
 
 export function WalletCard() {
-  // TODO: Replace with tRPC query when wallet router is ready
-  // const { data: wallet, isLoading, error } = trpc.wallet.getBalance.useQuery();
-  const wallet = mockWallet;
-  const isLoading = false;
-  const error = null;
+  const { data: wallet, isLoading, error } = trpc.wallet.getBalance.useQuery();
 
   if (isLoading) {
     return (
@@ -96,6 +86,19 @@ export function WalletCard() {
     );
   }
 
+  if (error) {
+    return (
+      <Card className="p-6 border-destructive/50 bg-destructive/10">
+        <div className="flex items-center gap-3 text-destructive">
+          <AlertCircle className="h-5 w-5" />
+          <div>
+            <p className="font-medium">Bakiye yüklenemedi</p>
+            <p className="text-sm text-muted-foreground">{error.message}</p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   const mainBalance = wallet?.mainBalance ?? 0;
   const bonusBalance = wallet?.bonusBalance ?? 0;

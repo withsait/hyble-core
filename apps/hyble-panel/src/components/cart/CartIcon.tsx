@@ -4,13 +4,13 @@ import { useState } from "react";
 import { Button } from "@hyble/ui";
 import { ShoppingCart } from "lucide-react";
 import { CartDrawer } from "./CartDrawer";
+import { trpc } from "@/lib/trpc/client";
 
 export function CartIcon() {
   const [isOpen, setIsOpen] = useState(false);
 
-  // TODO: Replace with tRPC query when cart router is ready
-  // const { data: cart } = trpc.cart.get.useQuery(undefined, { refetchInterval: 30000 });
-  const itemCount = 0;
+  const { data: cart } = trpc.cart.get.useQuery(undefined, { refetchInterval: 30000 });
+  const itemCount = cart?.itemCount || 0;
 
   return (
     <>

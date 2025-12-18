@@ -10,7 +10,6 @@ import {
   Search,
   Download,
   Eye,
-  Send,
   RefreshCw,
   CheckCircle,
   Clock,
@@ -22,13 +21,15 @@ import {
   Wallet,
   Loader2,
   Plus,
-  Edit,
-  MoreHorizontal,
+  Package,
+  Users,
+  Gift,
+  Ticket,
 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
-type Tab = "invoices" | "transactions" | "subscriptions" | "wallets";
+type Tab = "invoices" | "orders" | "transactions" | "subscriptions" | "wallets";
 type InvoiceStatus = "DRAFT" | "PENDING" | "PAID" | "OVERDUE" | "CANCELLED" | "REFUNDED";
 
 const statusConfig: Record<InvoiceStatus, { label: string; color: string; icon: typeof Clock }> = {
@@ -55,6 +56,15 @@ const subscriptionStatusConfig: Record<string, { label: string; color: string }>
   PAUSED: { label: "Duraklatılmış", color: "bg-yellow-100 text-yellow-700" },
   CANCELLED: { label: "İptal", color: "bg-slate-100 text-slate-600" },
   EXPIRED: { label: "Süresi Dolmuş", color: "bg-slate-100 text-slate-500" },
+};
+
+const orderStatusConfig: Record<string, { label: string; color: string }> = {
+  PENDING: { label: "Bekliyor", color: "bg-yellow-100 text-yellow-700" },
+  PROCESSING: { label: "İşleniyor", color: "bg-blue-100 text-blue-700" },
+  COMPLETED: { label: "Tamamlandı", color: "bg-green-100 text-green-700" },
+  CANCELLED: { label: "İptal", color: "bg-slate-100 text-slate-500" },
+  REFUNDED: { label: "İade", color: "bg-red-100 text-red-700" },
+  FAILED: { label: "Başarısız", color: "bg-red-100 text-red-700" },
 };
 
 export default function AdminBillingPage() {
@@ -85,6 +95,7 @@ export default function AdminBillingPage() {
 
   const tabs = [
     { id: "invoices" as Tab, label: "Faturalar", icon: <Receipt className="h-4 w-4" /> },
+    { id: "orders" as Tab, label: "Siparişler", icon: <Package className="h-4 w-4" /> },
     { id: "transactions" as Tab, label: "İşlemler", icon: <CreditCard className="h-4 w-4" /> },
     { id: "subscriptions" as Tab, label: "Abonelikler", icon: <RefreshCw className="h-4 w-4" /> },
     { id: "wallets" as Tab, label: "Cüzdanlar", icon: <Wallet className="h-4 w-4" /> },
@@ -435,21 +446,232 @@ export default function AdminBillingPage() {
         </Card>
       )}
 
-      {/* Wallets Tab */}
-      {activeTab === "wallets" && (
-        <Card className="p-6">
-          <div className="text-center py-8">
-            <Wallet className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-medium mb-2">Cüzdan Yönetimi</h3>
+      {/* Orders Tab */}
+      {activeTab === "orders" && (
+        <Card>
+          <div className="p-4 border-b">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Sipariş Yönetimi</h3>
+              <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Yenile
+              </Button>
+            </div>
+          </div>
+          <div className="p-12 text-center">
+            <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="font-medium mb-2">Sipariş Listesi</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Kullanıcı cüzdanlarını yönetmek için kullanıcı detay sayfasını kullanın.
+              Siparişler order router entegrasyonu ile listelenecek.
             </p>
-            <Button variant="outline" onClick={() => window.location.href = "/admin/users"}>
-              Kullanıcılar Sayfasına Git
-            </Button>
+            <div className="flex justify-center gap-2">
+              <Button variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Excel İndir
+              </Button>
+            </div>
           </div>
         </Card>
       )}
+
+      {/* Wallets Tab */}
+      {activeTab === "wallets" && (
+        <WalletsTab />
+      )}
+    </div>
+  );
+}
+
+// Wallets Tab Component with Bulk Credit Feature
+function WalletsTab() {
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkUserIds, setBulkUserIds] = useState("");
+  const [bulkAmount, setBulkAmount] = useState("");
+  const [bulkBalanceType, setBulkBalanceType] = useState<"MAIN" | "BONUS" | "PROMO">("BONUS");
+  const [bulkDescription, setBulkDescription] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const utils = trpc.useUtils();
+
+  const addCreditMutation = trpc.wallet.adminAddTypedCredit.useMutation({
+    onSuccess: () => {
+      utils.invalidate();
+    },
+  });
+
+  const handleBulkCredit = async () => {
+    const userIds = bulkUserIds.split(/[\n,]/).map((id) => id.trim()).filter(Boolean);
+    const amount = parseFloat(bulkAmount);
+
+    if (!userIds.length || isNaN(amount) || amount <= 0) {
+      alert("Geçerli kullanıcı ID'leri ve tutar girin");
+      return;
+    }
+
+    if (!confirm(`${userIds.length} kullanıcıya €${amount} ${bulkBalanceType} bakiye eklenecek. Onaylıyor musunuz?`)) {
+      return;
+    }
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const userId of userIds) {
+      try {
+        await addCreditMutation.mutateAsync({
+          userId,
+          amount,
+          balanceType: bulkBalanceType,
+          description: bulkDescription || `Toplu ${bulkBalanceType} bakiye ekleme`,
+        });
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    alert(`İşlem tamamlandı!\nBaşarılı: ${successCount}\nBaşarısız: ${failCount}`);
+    setBulkUserIds("");
+    setBulkAmount("");
+    setBulkDescription("");
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Bulk Credit Section */}
+      <Card className="p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Toplu Bakiye Ekleme
+          </h3>
+          <Button
+            variant={bulkMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setBulkMode(!bulkMode)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {bulkMode ? "İptal" : "Toplu Ekle"}
+          </Button>
+        </div>
+
+        {bulkMode && (
+          <div className="space-y-4 border-t pt-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Kullanıcı ID'leri</label>
+                <textarea
+                  placeholder="Kullanıcı ID'lerini her satıra bir tane veya virgülle ayırarak girin..."
+                  value={bulkUserIds}
+                  onChange={(e) => setBulkUserIds(e.target.value)}
+                  className="w-full h-32 px-3 py-2 border rounded-lg bg-background text-sm resize-none"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Her satıra bir ID veya virgülle ayırın
+                </p>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Tutar (€)</label>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={bulkAmount}
+                    onChange={(e) => setBulkAmount(e.target.value)}
+                    min="0.01"
+                    step="0.01"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Bakiye Türü</label>
+                  <div className="flex gap-2">
+                    <Button
+                      variant={bulkBalanceType === "MAIN" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setBulkBalanceType("MAIN")}
+                      className="flex-1"
+                    >
+                      <Wallet className="h-4 w-4 mr-1" />
+                      Ana
+                    </Button>
+                    <Button
+                      variant={bulkBalanceType === "BONUS" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setBulkBalanceType("BONUS")}
+                      className="flex-1"
+                    >
+                      <Gift className="h-4 w-4 mr-1" />
+                      Bonus
+                    </Button>
+                    <Button
+                      variant={bulkBalanceType === "PROMO" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setBulkBalanceType("PROMO")}
+                      className="flex-1"
+                    >
+                      <Ticket className="h-4 w-4 mr-1" />
+                      Promo
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Açıklama</label>
+                  <Input
+                    placeholder="Bakiye ekleme sebebi..."
+                    value={bulkDescription}
+                    onChange={(e) => setBulkDescription(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setBulkMode(false)}>
+                İptal
+              </Button>
+              <Button
+                onClick={handleBulkCredit}
+                disabled={addCreditMutation.isPending || !bulkUserIds || !bulkAmount}
+              >
+                {addCreditMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4 mr-2" />
+                )}
+                Bakiye Ekle
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* Wallet Search & Info */}
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row gap-4 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Kullanıcı ID ile cüzdan ara..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button variant="outline" onClick={() => window.location.href = "/admin/users"}>
+            <Users className="h-4 w-4 mr-2" />
+            Kullanıcılar
+          </Button>
+        </div>
+
+        <div className="text-center py-8 text-muted-foreground">
+          <Wallet className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p className="font-medium">Cüzdan Yönetimi</p>
+          <p className="text-sm mt-1">
+            Bireysel cüzdan işlemleri için kullanıcı detay sayfasını kullanın.
+          </p>
+          <p className="text-sm mt-1">
+            Toplu bakiye eklemek için yukarıdaki formu kullanın.
+          </p>
+        </div>
+      </Card>
     </div>
   );
 }

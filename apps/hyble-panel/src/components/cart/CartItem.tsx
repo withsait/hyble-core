@@ -1,79 +1,77 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@hyble/ui";
 import { Minus, Plus, Trash2, Loader2 } from "lucide-react";
+import { trpc } from "@/lib/trpc/client";
 
 interface CartItemProps {
   item: {
     id: string;
     productId: string;
-    variantId?: string;
-    name: string;
-    variant?: string;
-    price: number;
+    variantId?: string | null;
+    productName: string;
+    variantName?: string | null;
+    unitPrice: string;
     quantity: number;
-    image?: string;
-    slug: string;
+    productSlug: string;
+    total: string;
   };
 }
 
 export function CartItem({ item }: CartItemProps) {
-  const [localQuantity, setLocalQuantity] = useState(item.quantity);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
+  const utils = trpc.useUtils();
 
-  // TODO: Replace with tRPC mutations when cart router is ready
+  const updateQuantityMutation = trpc.cart.updateQuantity.useMutation({
+    onSuccess: () => {
+      utils.cart.get.invalidate();
+    },
+  });
+
+  const removeMutation = trpc.cart.removeItem.useMutation({
+    onSuccess: () => {
+      utils.cart.get.invalidate();
+    },
+  });
+
+  const isUpdating = updateQuantityMutation.isPending;
+  const isRemoving = removeMutation.isPending;
+
   const handleQuantityChange = async (delta: number) => {
-    const newQuantity = localQuantity + delta;
-    if (newQuantity < 1) {
-      setIsRemoving(true);
-      await new Promise(resolve => setTimeout(resolve, 300));
-      setIsRemoving(false);
-    } else {
-      setIsUpdating(true);
-      await new Promise(resolve => setTimeout(resolve, 200));
-      setLocalQuantity(newQuantity);
-      setIsUpdating(false);
-    }
+    const newQuantity = item.quantity + delta;
+    await updateQuantityMutation.mutateAsync({
+      itemId: item.id,
+      quantity: newQuantity,
+    });
   };
 
   const handleRemove = async () => {
-    setIsRemoving(true);
-    await new Promise(resolve => setTimeout(resolve, 300));
-    setIsRemoving(false);
+    await removeMutation.mutateAsync({ itemId: item.id });
   };
+
+  const unitPrice = parseFloat(item.unitPrice);
+  const total = parseFloat(item.total);
 
   return (
     <div className="flex gap-4 p-3 rounded-lg border bg-card">
-      {/* Image */}
+      {/* Image Placeholder */}
       <div className="relative w-20 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
-        {item.image ? (
-          <Image
-            src={item.image}
-            alt={item.name}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-            No Image
-          </div>
-        )}
+        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+          {item.productName.slice(0, 2).toUpperCase()}
+        </div>
       </div>
 
       {/* Details */}
       <div className="flex-1 min-w-0">
         <Link
-          href={`/products/${item.slug}`}
+          href={`/products/${item.productSlug}`}
           className="font-medium text-sm hover:text-primary line-clamp-1"
         >
-          {item.name}
+          {item.productName}
         </Link>
-        {item.variant && (
-          <p className="text-xs text-muted-foreground mt-0.5">{item.variant}</p>
+        {item.variantName && (
+          <p className="text-xs text-muted-foreground mt-0.5">{item.variantName}</p>
         )}
 
         <div className="flex items-center justify-between mt-2">
@@ -92,7 +90,7 @@ export function CartItem({ item }: CartItemProps) {
               {isUpdating ? (
                 <Loader2 className="h-3 w-3 animate-spin mx-auto" />
               ) : (
-                localQuantity
+                item.quantity
               )}
             </span>
             <Button
@@ -109,11 +107,11 @@ export function CartItem({ item }: CartItemProps) {
           {/* Price */}
           <div className="text-right">
             <p className="font-semibold text-sm">
-              €{(item.price * localQuantity).toFixed(2)}
+              €{total.toFixed(2)}
             </p>
-            {localQuantity > 1 && (
+            {item.quantity > 1 && (
               <p className="text-xs text-muted-foreground">
-                €{item.price.toFixed(2)} / adet
+                €{unitPrice.toFixed(2)} / adet
               </p>
             )}
           </div>

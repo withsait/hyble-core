@@ -5,14 +5,15 @@ import { Card, Button } from "@hyble/ui";
 import {
   ArrowUpRight,
   ArrowDownLeft,
-  Loader2,
   Receipt,
   Gift,
   RefreshCw,
-  Filter
+  Filter,
+  AlertCircle
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
+import { trpc } from "@/lib/trpc/client";
 
 type TransactionType = "DEPOSIT" | "CHARGE" | "REFUND" | "ADJUSTMENT" | "BONUS";
 
@@ -23,29 +24,6 @@ const typeConfig: Record<TransactionType, { icon: React.ReactNode; label: string
   ADJUSTMENT: { icon: <RefreshCw className="h-4 w-4" />, label: "Düzeltme", color: "text-blue-600" },
   BONUS: { icon: <Gift className="h-4 w-4" />, label: "Bonus", color: "text-emerald-600" },
 };
-
-// Mock data - will be replaced with tRPC query when wallet router is implemented
-const mockTransactions = [
-  {
-    id: "1",
-    type: "DEPOSIT",
-    amount: "50.00",
-    currency: "EUR",
-    description: "Bakiye yüklemesi",
-    status: "COMPLETED",
-    createdAt: new Date("2024-12-15"),
-  },
-  {
-    id: "2",
-    type: "CHARGE",
-    amount: "25.00",
-    currency: "EUR",
-    description: "Hosting ödemesi",
-    status: "COMPLETED",
-    createdAt: new Date("2024-12-14"),
-  },
-];
-
 
 function TransactionSkeleton() {
   return (
@@ -65,15 +43,27 @@ function TransactionSkeleton() {
 export function TransactionList() {
   const [filter, setFilter] = useState<TransactionType | "ALL">("ALL");
 
-  // TODO: Replace with tRPC query when wallet router is ready
-  // const { data, isLoading, error } = trpc.wallet.getTransactions.useQuery({ limit: 20 });
-  const isLoading = false;
-  const error = null;
+  const { data, isLoading, error } = trpc.wallet.getTransactions.useQuery({
+    limit: 20,
+    type: filter === "ALL" ? undefined : filter,
+  });
 
-  const transactions = filter === "ALL"
-    ? mockTransactions
-    : mockTransactions.filter(t => t.type === filter);
+  const transactions = data?.transactions ?? [];
 
+
+  if (error) {
+    return (
+      <Card className="p-6 border-destructive/50 bg-destructive/10">
+        <div className="flex items-center gap-3 text-destructive">
+          <AlertCircle className="h-5 w-5" />
+          <div>
+            <p className="font-medium">İşlem geçmişi yüklenemedi</p>
+            <p className="text-sm text-muted-foreground">{error.message}</p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">
