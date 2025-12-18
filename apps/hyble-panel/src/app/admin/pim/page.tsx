@@ -124,6 +124,29 @@ export default function AdminPIMPage() {
     onSuccess: () => refetchProducts(),
   });
 
+  const duplicateProduct = trpc.pim.duplicateProduct.useMutation({
+    onSuccess: (product) => {
+      refetchProducts();
+      // Show success message (could use toast in the future)
+      alert(`"${product.nameTr}" oluşturuldu. Düzenlemek için yönlendiriliyorsunuz...`);
+      window.location.href = `/admin/pim/products/${product.id}`;
+    },
+    onError: (error) => {
+      alert(`Hata: ${error.message}`);
+    },
+  });
+
+  const bulkUpdateProducts = trpc.pim.bulkUpdateProducts.useMutation({
+    onSuccess: (result) => {
+      refetchProducts();
+      setSelectedProducts([]);
+      alert(`${result.count} ürün başarıyla güncellendi`);
+    },
+    onError: (error) => {
+      alert(`Hata: ${error.message}`);
+    },
+  });
+
   const deleteCategory = trpc.pim.deleteCategory.useMutation({
     onSuccess: () => refetchCategories(),
   });
@@ -185,11 +208,32 @@ export default function AdminPIMPage() {
     }
   };
 
+  const handleDuplicateProduct = (id: string, name: string) => {
+    if (window.confirm(`"${name}" ürününü kopyalamak istediğinize emin misiniz?`)) {
+      duplicateProduct.mutate({ id });
+    }
+  };
+
   const handleBulkDelete = () => {
     if (selectedProducts.length === 0) return;
     if (window.confirm(`${selectedProducts.length} ürünü silmek istediğinize emin misiniz?`)) {
       selectedProducts.forEach((id) => deleteProduct.mutate({ id }));
     }
+  };
+
+  const handleBulkStatusChange = (status: "DRAFT" | "ACTIVE" | "ARCHIVED") => {
+    if (selectedProducts.length === 0) return;
+    bulkUpdateProducts.mutate({ ids: selectedProducts, status });
+  };
+
+  const handleBulkCategoryChange = (categoryId: string | null) => {
+    if (selectedProducts.length === 0) return;
+    bulkUpdateProducts.mutate({ ids: selectedProducts, categoryId });
+  };
+
+  const handleBulkFeaturedToggle = (isFeatured: boolean) => {
+    if (selectedProducts.length === 0) return;
+    bulkUpdateProducts.mutate({ ids: selectedProducts, isFeatured });
   };
 
   const handleToggleFeatured = (id: string, currentState: boolean) => {
@@ -574,9 +618,56 @@ export default function AdminPIMPage() {
           {/* Bulk Actions */}
           {selectedProducts.length > 0 && (
             <Card className="p-3 bg-primary/5 border-primary/20">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <p className="text-sm font-medium">{selectedProducts.length} ürün seçildi</p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Status Change */}
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) handleBulkStatusChange(e.target.value as any);
+                      e.target.value = "";
+                    }}
+                    className="h-8 px-2 rounded-md border border-input bg-background text-sm"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>Durum değiştir</option>
+                    <option value="DRAFT">Taslak yap</option>
+                    <option value="ACTIVE">Aktif yap</option>
+                    <option value="ARCHIVED">Arşivle</option>
+                  </select>
+
+                  {/* Category Change */}
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value === "none") {
+                        handleBulkCategoryChange(null);
+                      } else if (e.target.value) {
+                        handleBulkCategoryChange(e.target.value);
+                      }
+                      e.target.value = "";
+                    }}
+                    className="h-8 px-2 rounded-md border border-input bg-background text-sm"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>Kategori değiştir</option>
+                    <option value="none">Kategorisiz yap</option>
+                    {categoriesData?.map((cat: any) => (
+                      <option key={cat.id} value={cat.id}>{cat.nameTr}</option>
+                    ))}
+                  </select>
+
+                  {/* Featured Toggle */}
+                  <Button size="sm" variant="outline" onClick={() => handleBulkFeaturedToggle(true)}>
+                    <Star className="h-4 w-4 mr-1 text-amber-500" />
+                    Öne Çıkar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleBulkFeaturedToggle(false)}>
+                    <StarOff className="h-4 w-4 mr-1" />
+                    Çıkar
+                  </Button>
+
+                  <div className="h-4 w-px bg-border mx-1" />
+
                   <Button size="sm" variant="outline" onClick={() => setSelectedProducts([])}>
                     Seçimi Temizle
                   </Button>
@@ -724,6 +815,15 @@ export default function AdminPIMPage() {
                                   <StarOff className="h-4 w-4" />
                                 )}
                               </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDuplicateProduct(product.id, product.nameTr)}
+                                disabled={duplicateProduct.isPending}
+                                title="Kopyala"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
                               <Link href={`/admin/pim/products/${product.id}`}>
                                 <Button variant="ghost" size="icon" title="Düzenle">
                                   <Edit className="h-4 w-4" />
@@ -772,6 +872,15 @@ export default function AdminPIMPage() {
                           <span className={`text-xs px-2 py-1 rounded ${status.color}`}>{status.label}</span>
                         </div>
                         <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => handleDuplicateProduct(product.id, product.nameTr)}
+                            disabled={duplicateProduct.isPending}
+                          >
+                            <Copy className="h-4 w-4 mr-1" />
+                            Kopyala
+                          </Button>
                           <Link href={`/admin/pim/products/${product.id}`}>
                             <Button size="sm" variant="secondary">
                               <Edit className="h-4 w-4 mr-1" />

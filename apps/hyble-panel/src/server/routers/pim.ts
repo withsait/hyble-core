@@ -453,6 +453,156 @@ export const pimRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  // Bulk update products (admin)
+  bulkUpdateProducts: adminProcedure
+    .input(z.object({
+      ids: z.array(z.string()).min(1),
+      status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).optional(),
+      categoryId: z.string().nullable().optional(),
+      isFeatured: z.boolean().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const { ids, ...data } = input;
+
+      // Remove undefined values
+      const updateData: Record<string, unknown> = {};
+      if (data.status !== undefined) updateData.status = data.status;
+      if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
+      if (data.isFeatured !== undefined) updateData.isFeatured = data.isFeatured;
+
+      const result = await prisma.product.updateMany({
+        where: { id: { in: ids } },
+        data: updateData,
+      });
+
+      return { success: true, count: result.count };
+    }),
+
+  // Duplicate product (admin)
+  duplicateProduct: adminProcedure
+    .input(z.object({
+      id: z.string(),
+      newSlug: z.string().min(2).max(200).regex(/^[a-z0-9-]+$/, "Slug sadece küçük harf, rakam ve tire içerebilir").optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Fetch original product with relations
+      const original = await prisma.product.findUnique({
+        where: { id: input.id },
+        include: {
+          variants: true,
+          media: true,
+          meta: true,
+        },
+      });
+
+      if (!original) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Ürün bulunamadı" });
+      }
+
+      // Generate unique slug
+      let baseSlug = input.newSlug || `${original.slug}-kopya`;
+      let uniqueSlug = baseSlug;
+      let counter = 1;
+
+      while (await prisma.product.findUnique({ where: { slug: uniqueSlug } })) {
+        uniqueSlug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+
+      // Create duplicated product
+      const duplicated = await prisma.product.create({
+        data: {
+          type: original.type,
+          status: "DRAFT", // Always start as draft
+          nameTr: `${original.nameTr} (Kopya)`,
+          nameEn: `${original.nameEn} (Copy)`,
+          slug: uniqueSlug,
+          categoryId: original.categoryId,
+          descriptionTr: original.descriptionTr,
+          descriptionEn: original.descriptionEn,
+          shortDescTr: original.shortDescTr,
+          shortDescEn: original.shortDescEn,
+          targetAudience: original.targetAudience,
+          tags: original.tags,
+          basePrice: original.basePrice,
+          currency: original.currency,
+          taxRate: original.taxRate,
+          isFeatured: false, // Don't copy featured status
+          createdBy: ctx.user.id,
+        },
+      });
+
+      // Duplicate variants with new SKUs
+      if (original.variants.length > 0) {
+        for (const variant of original.variants) {
+          let baseSku = `${variant.sku}-COPY`;
+          let uniqueSku = baseSku;
+          let skuCounter = 1;
+
+          while (await prisma.productVariant.findUnique({ where: { sku: uniqueSku } })) {
+            uniqueSku = `${baseSku}-${skuCounter}`;
+            skuCounter++;
+          }
+
+          await prisma.productVariant.create({
+            data: {
+              productId: duplicated.id,
+              sku: uniqueSku,
+              name: variant.name,
+              price: variant.price,
+              currency: variant.currency,
+              features: variant.features || {},
+              stockType: variant.stockType,
+              stockQty: variant.stockQty,
+              billingPeriod: variant.billingPeriod,
+              sortOrder: variant.sortOrder,
+              isDefault: variant.isDefault,
+              isActive: variant.isActive,
+            },
+          });
+        }
+      }
+
+      // Duplicate media
+      if (original.media.length > 0) {
+        for (const media of original.media) {
+          await prisma.productMedia.create({
+            data: {
+              productId: duplicated.id,
+              type: media.type,
+              url: media.url,
+              alt: media.alt,
+              title: media.title,
+              width: media.width,
+              height: media.height,
+              fileSize: media.fileSize,
+              sortOrder: media.sortOrder,
+              isPrimary: media.isPrimary,
+            },
+          });
+        }
+      }
+
+      // Duplicate meta (SEO)
+      if (original.meta) {
+        await prisma.productMeta.create({
+          data: {
+            productId: duplicated.id,
+            metaTitleTr: original.meta.metaTitleTr ? `${original.meta.metaTitleTr} (Kopya)` : null,
+            metaTitleEn: original.meta.metaTitleEn ? `${original.meta.metaTitleEn} (Copy)` : null,
+            metaDescTr: original.meta.metaDescTr,
+            metaDescEn: original.meta.metaDescEn,
+            ogImage: original.meta.ogImage,
+            keywordsTr: original.meta.keywordsTr,
+            keywordsEn: original.meta.keywordsEn,
+            // Don't copy canonical URL
+          },
+        });
+      }
+
+      return duplicated;
+    }),
+
   // ==================== VARIANT ====================
 
   // Create variant (admin)
