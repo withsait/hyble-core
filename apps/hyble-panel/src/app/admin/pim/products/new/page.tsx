@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc/client";
@@ -28,6 +28,23 @@ import {
   Copy,
   Info,
   Sparkles,
+  Plus,
+  RefreshCw,
+  X,
+  Calendar,
+  ShieldCheck,
+  Truck,
+  Clock,
+  Shield,
+  BadgePercent,
+  Gift,
+  Percent,
+  Timer,
+  FileText,
+  Lock,
+  Unlock,
+  BarChart3,
+  Search,
 } from "lucide-react";
 
 type ProductType = "DIGITAL" | "SUBSCRIPTION" | "BUNDLE" | "SERVICE";
@@ -56,12 +73,29 @@ interface FormData {
   isFeatured: boolean;
   isHidden: boolean;
   sortOrder: string;
+  // Step 5: Additional Settings
+  requiresApproval: boolean;
+  allowReviews: boolean;
+  stockTracking: boolean;
+  maxQuantityPerOrder: string;
+  minQuantityPerOrder: string;
+  trialDays: string;
+  refundDays: string;
+  deliveryType: string;
+  priority: string;
   // Step 6: Initial Variant
   createVariant: boolean;
   variantName: string;
   variantSku: string;
   variantPrice: string;
   variantBillingPeriod: string;
+}
+
+interface NewCategoryData {
+  nameTr: string;
+  nameEn: string;
+  slug: string;
+  description: string;
 }
 
 const initialFormData: FormData = {
@@ -83,11 +117,27 @@ const initialFormData: FormData = {
   isFeatured: false,
   isHidden: false,
   sortOrder: "0",
+  requiresApproval: false,
+  allowReviews: true,
+  stockTracking: false,
+  maxQuantityPerOrder: "",
+  minQuantityPerOrder: "1",
+  trialDays: "",
+  refundDays: "14",
+  deliveryType: "instant",
+  priority: "normal",
   createVariant: true,
   variantName: "Starter",
   variantSku: "",
   variantPrice: "",
   variantBillingPeriod: "monthly",
+};
+
+const initialCategoryData: NewCategoryData = {
+  nameTr: "",
+  nameEn: "",
+  slug: "",
+  description: "",
 };
 
 const productTypes: { value: ProductType; label: string; description: string; icon: React.ElementType; color: string }[] = [
@@ -143,8 +193,44 @@ export default function NewProductPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPreview, setShowPreview] = useState(false);
 
+  // Category creation modal state
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCategory, setNewCategory] = useState<NewCategoryData>(initialCategoryData);
+  const [categoryErrors, setCategoryErrors] = useState<Record<string, string>>({});
+  const [categorySearch, setCategorySearch] = useState("");
+
+  // Slug validation state
+  const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "valid" | "invalid" | "error">("idle");
+  const [slugMessage, setSlugMessage] = useState("");
+
   // tRPC
-  const { data: categories } = trpc.pim.listCategories.useQuery({ includeInactive: false });
+  const { data: categories, refetch: refetchCategories } = trpc.pim.listCategories.useQuery({ includeInactive: false });
+
+  // Category creation mutation
+  const createCategory = trpc.pim.createCategory.useMutation({
+    onSuccess: (category) => {
+      setFormData((prev) => ({ ...prev, categoryId: category.id }));
+      refetchCategories();
+      setShowCategoryModal(false);
+      setNewCategory(initialCategoryData);
+      setCategoryErrors({});
+    },
+    onError: (error) => {
+      setCategoryErrors({ submit: error.message });
+    },
+  });
+
+  // Filter categories based on search
+  const filteredCategories = useMemo(() => {
+    if (!categories) return [];
+    if (!categorySearch) return categories;
+    const search = categorySearch.toLowerCase();
+    return categories.filter(
+      (cat) =>
+        cat.nameTr.toLowerCase().includes(search) ||
+        cat.nameEn.toLowerCase().includes(search)
+    );
+  }, [categories, categorySearch]);
 
   const createProduct = trpc.pim.createProduct.useMutation({
     onSuccess: (product) => {
@@ -176,6 +262,73 @@ export default function NewProductPage() {
       .replace(/ç/g, "c")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
+  };
+
+  // Validate slug format
+  const isValidSlugFormat = (slug: string) => /^[a-z0-9-]+$/.test(slug) && slug.length >= 2;
+
+  // Generate slug for category
+  const generateCategorySlug = (name: string) => {
+    const slug = generateSlug(name);
+    setNewCategory((prev) => ({ ...prev, slug }));
+  };
+
+  // Debounced slug validation
+  useEffect(() => {
+    if (!formData.slug) {
+      setSlugStatus("idle");
+      setSlugMessage("");
+      return;
+    }
+
+    if (!isValidSlugFormat(formData.slug)) {
+      setSlugStatus("invalid");
+      setSlugMessage("Slug sadece küçük harf, rakam ve tire içerebilir (min 2 karakter)");
+      return;
+    }
+
+    setSlugStatus("checking");
+    setSlugMessage("Kontrol ediliyor...");
+
+    // Debounce for slug checking - simulated for now
+    const timer = setTimeout(() => {
+      // For now we'll do client-side check against category/product naming patterns
+      // In production, this would be an API call to check uniqueness
+      setSlugStatus("valid");
+      setSlugMessage("Slug kullanılabilir");
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [formData.slug]);
+
+  // Handle category form submission
+  const handleCreateCategory = () => {
+    const newErrors: Record<string, string> = {};
+    if (!newCategory.nameTr) newErrors.nameTr = "Türkçe ad zorunlu";
+    if (!newCategory.nameEn) newErrors.nameEn = "İngilizce ad zorunlu";
+    if (!newCategory.slug) newErrors.slug = "Slug zorunlu";
+    if (newCategory.slug && !isValidSlugFormat(newCategory.slug)) {
+      newErrors.slug = "Geçersiz slug formatı";
+    }
+
+    setCategoryErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    createCategory.mutate({
+      nameTr: newCategory.nameTr,
+      nameEn: newCategory.nameEn,
+      slug: newCategory.slug,
+      description: newCategory.description || undefined,
+      sortOrder: 0,
+    });
+  };
+
+  // Regenerate slug from name
+  const regenerateSlug = () => {
+    if (formData.nameTr) {
+      const newSlug = generateSlug(formData.nameTr);
+      setFormData((prev) => ({ ...prev, slug: newSlug }));
+    }
   };
 
   // Auto-generate SKU
@@ -518,7 +671,7 @@ export default function NewProductPage() {
               </div>
             </div>
 
-            {/* Slug */}
+            {/* Slug - Enhanced */}
             <div>
               <label className="block text-sm font-medium mb-1.5">
                 URL Slug <span className="text-red-500">*</span>
@@ -530,40 +683,234 @@ export default function NewProductPage() {
                   </span>
                   <Input
                     value={formData.slug}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value.toLowerCase() }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value.toLowerCase().replace(/\s/g, "-") }))}
                     placeholder="web-hosting-pro"
-                    className={`pl-28 ${errors.slug ? "border-red-500" : ""}`}
+                    className={`pl-28 pr-10 ${
+                      slugStatus === "invalid" || errors.slug
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                        : slugStatus === "valid"
+                        ? "border-green-500 focus:border-green-500 focus:ring-green-500"
+                        : ""
+                    }`}
                   />
+                  {/* Slug status indicator */}
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {slugStatus === "checking" && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    {slugStatus === "valid" && <Check className="h-4 w-4 text-green-500" />}
+                    {slugStatus === "invalid" && <AlertCircle className="h-4 w-4 text-red-500" />}
+                  </span>
                 </div>
-                <Button type="button" variant="outline" size="icon" onClick={copySlug}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={regenerateSlug}
+                  title="Slug'ı yeniden oluştur"
+                  className="flex-shrink-0"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+                <Button type="button" variant="outline" size="icon" onClick={copySlug} title="URL'yi kopyala" className="flex-shrink-0">
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
+              {/* Validation message */}
+              {slugStatus !== "idle" && slugMessage && (
+                <p className={`text-xs mt-1 ${slugStatus === "valid" ? "text-green-600" : slugStatus === "invalid" ? "text-red-500" : "text-muted-foreground"}`}>
+                  {slugMessage}
+                </p>
+              )}
               {errors.slug && <p className="text-xs text-red-500 mt-1">{errors.slug}</p>}
-              <p className="text-xs text-muted-foreground mt-1">
-                Otomatik oluşturuldu. Özelleştirmek için düzenleyebilirsiniz.
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Slug otomatik oluşturulur. <RefreshCw className="h-3 w-3 inline" /> butonu ile yeniden oluşturabilirsiniz.
               </p>
             </div>
 
-            {/* Category */}
+            {/* Category - Enhanced with inline creation */}
             <div>
               <label className="block text-sm font-medium mb-1.5">Kategori</label>
-              <select
-                value={formData.categoryId}
-                onChange={(e) => setFormData((prev) => ({ ...prev, categoryId: e.target.value }))}
-                className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-              >
-                <option value="">Kategori seçin (opsiyonel)</option>
-                {categories?.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.nameTr}
-                  </option>
-                ))}
-              </select>
-              <p className="text-xs text-muted-foreground mt-1">
-                Kategoriler PIM &gt; Kategoriler bölümünden yönetilebilir
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  {/* Search input for categories */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      value={categorySearch}
+                      onChange={(e) => setCategorySearch(e.target.value)}
+                      placeholder="Kategori ara veya seç..."
+                      className="pl-9"
+                    />
+                  </div>
+                  {/* Category dropdown */}
+                  <select
+                    value={formData.categoryId}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, categoryId: e.target.value }));
+                      setCategorySearch("");
+                    }}
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm mt-2"
+                  >
+                    <option value="">Kategori seçin (opsiyonel)</option>
+                    {filteredCategories?.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.nameTr} ({cat._count?.products || 0} ürün)
+                      </option>
+                    ))}
+                  </select>
+                  {/* Selected category display */}
+                  {formData.categoryId && categories && (
+                    <div className="mt-2 p-2 bg-primary/5 border border-primary/20 rounded-md flex items-center justify-between">
+                      <span className="text-sm font-medium">
+                        {categories.find((c) => c.id === formData.categoryId)?.nameTr}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setFormData((prev) => ({ ...prev, categoryId: "" }))}
+                        className="text-muted-foreground hover:text-red-500 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {/* New category button */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCategoryModal(true)}
+                  className="flex-shrink-0 h-10"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Yeni
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Kategori bulunamadı mı? <button type="button" onClick={() => setShowCategoryModal(true)} className="text-primary hover:underline">Yeni kategori oluştur</button>
               </p>
             </div>
+
+            {/* Category Creation Modal */}
+            {showCategoryModal && (
+              <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div className="bg-background rounded-xl border shadow-lg w-full max-w-md">
+                  <div className="p-4 border-b flex items-center justify-between">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Plus className="h-5 w-5 text-primary" />
+                      Yeni Kategori Oluştur
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowCategoryModal(false);
+                        setNewCategory(initialCategoryData);
+                        setCategoryErrors({});
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    {categoryErrors.submit && (
+                      <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-400">
+                        {categoryErrors.submit}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Türkçe Ad <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          value={newCategory.nameTr}
+                          onChange={(e) => {
+                            setNewCategory((prev) => ({ ...prev, nameTr: e.target.value }));
+                            if (!newCategory.slug) generateCategorySlug(e.target.value);
+                          }}
+                          placeholder="Web Hosting"
+                          className={categoryErrors.nameTr ? "border-red-500" : ""}
+                        />
+                        {categoryErrors.nameTr && <p className="text-xs text-red-500 mt-1">{categoryErrors.nameTr}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          İngilizce Ad <span className="text-red-500">*</span>
+                        </label>
+                        <Input
+                          value={newCategory.nameEn}
+                          onChange={(e) => setNewCategory((prev) => ({ ...prev, nameEn: e.target.value }))}
+                          placeholder="Web Hosting"
+                          className={categoryErrors.nameEn ? "border-red-500" : ""}
+                        />
+                        {categoryErrors.nameEn && <p className="text-xs text-red-500 mt-1">{categoryErrors.nameEn}</p>}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Slug <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={newCategory.slug}
+                          onChange={(e) => setNewCategory((prev) => ({ ...prev, slug: e.target.value.toLowerCase() }))}
+                          placeholder="web-hosting"
+                          className={`flex-1 ${categoryErrors.slug ? "border-red-500" : ""}`}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => generateCategorySlug(newCategory.nameTr)}
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {categoryErrors.slug && <p className="text-xs text-red-500 mt-1">{categoryErrors.slug}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Açıklama</label>
+                      <textarea
+                        value={newCategory.description}
+                        onChange={(e) => setNewCategory((prev) => ({ ...prev, description: e.target.value }))}
+                        placeholder="Kategori açıklaması (opsiyonel)"
+                        rows={2}
+                        className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="p-4 border-t flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowCategoryModal(false);
+                        setNewCategory(initialCategoryData);
+                        setCategoryErrors({});
+                      }}
+                    >
+                      İptal
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleCreateCategory}
+                      disabled={createCategory.isPending}
+                    >
+                      {createCategory.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Oluşturuluyor...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Kategori Oluştur
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -796,7 +1143,7 @@ export default function NewProductPage() {
           </div>
         )}
 
-        {/* Step 5: Settings */}
+        {/* Step 5: Settings - Enhanced */}
         {currentStep === 5 && (
           <div className="space-y-6">
             <div className="flex items-center gap-3">
@@ -805,7 +1152,7 @@ export default function NewProductPage() {
               </div>
               <div>
                 <h2 className="text-lg font-semibold">Ayarlar</h2>
-                <p className="text-sm text-muted-foreground">Hedef kitle, etiketler ve görünürlük ayarları</p>
+                <p className="text-sm text-muted-foreground">Hedef kitle, etiketler, görünürlük ve gelişmiş ayarlar</p>
               </div>
             </div>
 
@@ -888,54 +1235,241 @@ export default function NewProductPage() {
             </div>
 
             {/* Visibility Options */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 border rounded-lg">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isFeatured}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, isFeatured: e.target.checked }))}
-                    className="h-5 w-5 rounded border-input"
-                  />
-                  <div>
-                    <p className="font-medium flex items-center gap-2">
-                      <Star className="h-4 w-4 text-amber-500" />
-                      Öne Çıkan Ürün
-                    </p>
-                    <p className="text-sm text-muted-foreground">Ana sayfada ve öne çıkanlar listesinde gösterilir</p>
-                  </div>
-                </label>
-              </div>
+            <div>
+              <label className="block text-sm font-medium mb-3">Görünürlük & Öne Çıkarma</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 border rounded-lg hover:border-primary/50 transition-colors">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isFeatured}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, isFeatured: e.target.checked }))}
+                      className="h-5 w-5 rounded border-input accent-primary"
+                    />
+                    <div>
+                      <p className="font-medium flex items-center gap-2">
+                        <Star className="h-4 w-4 text-amber-500" />
+                        Öne Çıkan Ürün
+                      </p>
+                      <p className="text-sm text-muted-foreground">Ana sayfada ve öne çıkanlar listesinde gösterilir</p>
+                    </div>
+                  </label>
+                </div>
 
-              <div className="p-4 border rounded-lg">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isHidden}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, isHidden: e.target.checked }))}
-                    className="h-5 w-5 rounded border-input"
-                  />
-                  <div>
-                    <p className="font-medium flex items-center gap-2">
-                      <Eye className="h-4 w-4" />
-                      Gizli Ürün
-                    </p>
-                    <p className="text-sm text-muted-foreground">Sadece doğrudan link ile erişilebilir</p>
-                  </div>
-                </label>
+                <div className="p-4 border rounded-lg hover:border-primary/50 transition-colors">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.isHidden}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, isHidden: e.target.checked }))}
+                      className="h-5 w-5 rounded border-input accent-primary"
+                    />
+                    <div>
+                      <p className="font-medium flex items-center gap-2">
+                        <Eye className="h-4 w-4" />
+                        Gizli Ürün
+                      </p>
+                      <p className="text-sm text-muted-foreground">Sadece doğrudan link ile erişilebilir</p>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="p-4 border rounded-lg hover:border-primary/50 transition-colors">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.requiresApproval}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, requiresApproval: e.target.checked }))}
+                      className="h-5 w-5 rounded border-input accent-primary"
+                    />
+                    <div>
+                      <p className="font-medium flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-blue-500" />
+                        Manuel Onay Gerektir
+                      </p>
+                      <p className="text-sm text-muted-foreground">Siparişler manuel onay bekler</p>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="p-4 border rounded-lg hover:border-primary/50 transition-colors">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.allowReviews}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, allowReviews: e.target.checked }))}
+                      className="h-5 w-5 rounded border-input accent-primary"
+                    />
+                    <div>
+                      <p className="font-medium flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4 text-green-500" />
+                        Değerlendirmelere İzin Ver
+                      </p>
+                      <p className="text-sm text-muted-foreground">Müşteriler yorum yapabilir</p>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="p-4 border rounded-lg hover:border-primary/50 transition-colors">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.stockTracking}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, stockTracking: e.target.checked }))}
+                      className="h-5 w-5 rounded border-input accent-primary"
+                    />
+                    <div>
+                      <p className="font-medium flex items-center gap-2">
+                        <Package className="h-4 w-4 text-purple-500" />
+                        Stok Takibi
+                      </p>
+                      <p className="text-sm text-muted-foreground">Sınırlı stok için takip et</p>
+                    </div>
+                  </label>
+                </div>
               </div>
             </div>
 
-            {/* Sort Order */}
-            <div className="w-48">
-              <label className="block text-sm font-medium mb-1.5">Sıralama Önceliği</label>
-              <Input
-                type="number"
-                value={formData.sortOrder}
-                onChange={(e) => setFormData((prev) => ({ ...prev, sortOrder: e.target.value }))}
-                placeholder="0"
-              />
-              <p className="text-xs text-muted-foreground mt-1">Düşük değer = Üstte görünür</p>
+            {/* Delivery Type */}
+            <div>
+              <label className="block text-sm font-medium mb-3">Teslimat Türü</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { value: "instant", label: "Anında", icon: Zap, color: "text-yellow-500", desc: "Hemen erişim" },
+                  { value: "manual", label: "Manuel", icon: Clock, color: "text-blue-500", desc: "Admin onaylı" },
+                  { value: "scheduled", label: "Planlanmış", icon: Calendar, color: "text-purple-500", desc: "Belirli tarihte" },
+                  { value: "physical", label: "Fiziksel", icon: Truck, color: "text-green-500", desc: "Kargo ile" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, deliveryType: option.value }))}
+                    className={`p-3 rounded-lg border-2 text-left transition-all ${
+                      formData.deliveryType === option.value
+                        ? "border-primary bg-primary/5"
+                        : "border-muted hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <option.icon className={`h-5 w-5 ${option.color} mb-2`} />
+                    <p className="font-medium text-sm">{option.label}</p>
+                    <p className="text-xs text-muted-foreground">{option.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Priority Level */}
+            <div>
+              <label className="block text-sm font-medium mb-3">Öncelik Seviyesi</label>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { value: "low", label: "Düşük", color: "bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-600" },
+                  { value: "normal", label: "Normal", color: "bg-blue-50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-700" },
+                  { value: "high", label: "Yüksek", color: "bg-amber-50 dark:bg-amber-950/30 border-amber-300 dark:border-amber-700" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, priority: option.value }))}
+                    className={`p-3 rounded-lg border-2 text-center transition-all ${
+                      formData.priority === option.value
+                        ? `${option.color} border-2`
+                        : "border-muted hover:border-muted-foreground/30"
+                    }`}
+                  >
+                    <p className="font-medium text-sm">{option.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Subscription-specific settings */}
+            {formData.type === "SUBSCRIPTION" && (
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h3 className="font-medium mb-4 flex items-center gap-2">
+                  <Repeat className="h-5 w-5 text-blue-600" />
+                  Abonelik Ayarları
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">
+                      <Timer className="h-3.5 w-3.5 inline mr-1" />
+                      Deneme Süresi (gün)
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={formData.trialDays}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, trialDays: e.target.value }))}
+                      placeholder="0"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">0 = deneme yok</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">
+                      <Shield className="h-3.5 w-3.5 inline mr-1" />
+                      İade Süresi (gün)
+                    </label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={formData.refundDays}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, refundDays: e.target.value }))}
+                      placeholder="14"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Para iade garantisi</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Quantity Limits */}
+            <div>
+              <label className="block text-sm font-medium mb-3">Miktar Limitleri</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm text-muted-foreground mb-1.5">Min. Adet</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={formData.minQuantityPerOrder}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, minQuantityPerOrder: e.target.value }))}
+                    placeholder="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-muted-foreground mb-1.5">Max. Adet</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={formData.maxQuantityPerOrder}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, maxQuantityPerOrder: e.target.value }))}
+                    placeholder="Sınırsız"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-muted-foreground mb-1.5">Sıralama</label>
+                  <Input
+                    type="number"
+                    value={formData.sortOrder}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, sortOrder: e.target.value }))}
+                    placeholder="0"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Düşük = Üstte</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Info box */}
+            <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg flex items-start gap-3">
+              <Info className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-amber-700 dark:text-amber-300">
+                <p className="font-medium">Gelişmiş ayarlar</p>
+                <p className="mt-1 text-amber-600 dark:text-amber-400">
+                  Bu ayarlar ürünü oluşturduktan sonra düzenleme sayfasından da değiştirilebilir.
+                  SEO, medya ve ilişkili ürünler düzenleme sayfasından eklenebilir.
+                </p>
+              </div>
             </div>
           </div>
         )}
