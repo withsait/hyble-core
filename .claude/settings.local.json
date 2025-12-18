@@ -55,7 +55,9 @@
       "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd add date-fns)",
       "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd install)",
       "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd build --filter hyblegaming-web)",
-      "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd build --filter @hyble/gaming)"
+      "Bash(/c/Users/ahmet/AppData/Roaming/npm/pnpm.cmd build --filter @hyble/gaming)",
+      "Bash(find:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

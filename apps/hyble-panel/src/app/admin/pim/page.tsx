@@ -14,11 +14,12 @@ import {
   Edit,
   Trash2,
   Loader2,
-  MoreVertical,
   Tag,
   Image,
   Eye,
   EyeOff,
+  X,
+  AlertCircle,
 } from "lucide-react";
 
 type Tab = "products" | "categories" | "media";
@@ -40,6 +41,17 @@ export default function AdminPIMPage() {
   const [activeTab, setActiveTab] = useState<Tab>("products");
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Category modal state
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categoryForm, setCategoryForm] = useState({
+    nameTr: "",
+    nameEn: "",
+    slug: "",
+    icon: "",
+    description: "",
+  });
+  const [categoryError, setCategoryError] = useState("");
+
   // tRPC queries
   const { data: productsData, isLoading: productsLoading, refetch: refetchProducts } = trpc.pim.listProducts.useQuery({
     search: searchTerm || undefined,
@@ -59,9 +71,21 @@ export default function AdminPIMPage() {
     onSuccess: () => refetchCategories(),
   });
 
+  const createCategory = trpc.pim.createCategory.useMutation({
+    onSuccess: () => {
+      setShowCategoryModal(false);
+      setCategoryForm({ nameTr: "", nameEn: "", slug: "", icon: "", description: "" });
+      setCategoryError("");
+      refetchCategories();
+    },
+    onError: (error) => {
+      setCategoryError(error.message);
+    },
+  });
+
   const tabs = [
-    { id: "products" as Tab, label: "Ürünler", icon: <Package className="h-4 w-4" /> },
-    { id: "categories" as Tab, label: "Kategoriler", icon: <Tag className="h-4 w-4" /> },
+    { id: "products" as Tab, label: "Ürünler", icon: <Package className="h-4 w-4" />, count: productsData?.products.length },
+    { id: "categories" as Tab, label: "Kategoriler", icon: <Tag className="h-4 w-4" />, count: categoriesData?.length },
     { id: "media" as Tab, label: "Medya", icon: <Image className="h-4 w-4" /> },
   ];
 
@@ -77,6 +101,36 @@ export default function AdminPIMPage() {
     }
   };
 
+  // Auto-generate slug from Turkish name
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/ş/g, "s")
+      .replace(/ı/g, "i")
+      .replace(/ö/g, "o")
+      .replace(/ç/g, "c")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  };
+
+  const handleCategoryNameChange = (value: string) => {
+    setCategoryForm((prev) => ({
+      ...prev,
+      nameTr: value,
+      slug: prev.slug || generateSlug(value),
+    }));
+  };
+
+  const handleCreateCategory = () => {
+    if (!categoryForm.nameTr || !categoryForm.nameEn || !categoryForm.slug) {
+      setCategoryError("Tüm zorunlu alanları doldurun");
+      return;
+    }
+    createCategory.mutate(categoryForm);
+  };
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
@@ -90,12 +144,20 @@ export default function AdminPIMPage() {
             Ürünleri, kategorileri ve medyayı yönetin
           </p>
         </div>
-        <Link href="/dashboard/pim/products/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Yeni Ürün
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          {activeTab === "categories" && (
+            <Button variant="outline" onClick={() => setShowCategoryModal(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Yeni Kategori
+            </Button>
+          )}
+          <Link href="/admin/pim/products/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Yeni Ürün
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -113,6 +175,9 @@ export default function AdminPIMPage() {
             >
               {tab.icon}
               {tab.label}
+              {tab.count !== undefined && (
+                <span className="ml-1 px-1.5 py-0.5 bg-muted rounded text-xs">{tab.count}</span>
+              )}
             </button>
           ))}
         </div>
@@ -146,9 +211,10 @@ export default function AdminPIMPage() {
           ) : productsData?.products.length === 0 ? (
             <div className="p-12 text-center">
               <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Henüz ürün yok</p>
-              <Link href="/dashboard/pim/products/new">
-                <Button className="mt-4">
+              <p className="text-muted-foreground mb-2">Henüz ürün yok</p>
+              <p className="text-sm text-muted-foreground mb-4">İlk ürününüzü oluşturarak başlayın</p>
+              <Link href="/admin/pim/products/new">
+                <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   İlk Ürünü Oluştur
                 </Button>
@@ -172,7 +238,7 @@ export default function AdminPIMPage() {
                     return (
                       <tr key={product.id} className="border-b hover:bg-muted/30">
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
+                          <Link href={`/admin/pim/products/${product.id}`} className="flex items-center gap-3 hover:opacity-80">
                             <div className="h-10 w-10 bg-muted rounded flex items-center justify-center">
                               {product.primaryImage ? (
                                 <img src={product.primaryImage} alt="" className="h-10 w-10 rounded object-cover" />
@@ -184,7 +250,7 @@ export default function AdminPIMPage() {
                               <p className="font-medium">{product.nameTr}</p>
                               <p className="text-xs text-muted-foreground">{product.slug}</p>
                             </div>
-                          </div>
+                          </Link>
                         </td>
                         <td className="px-4 py-3 text-sm">{typeLabels[product.type] || product.type}</td>
                         <td className="px-4 py-3 text-sm font-medium">
@@ -197,7 +263,7 @@ export default function AdminPIMPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-1">
-                            <Link href={`/dashboard/pim/products/${product.id}`}>
+                            <Link href={`/admin/pim/products/${product.id}`}>
                               <Button variant="ghost" size="icon" title="Düzenle">
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -235,7 +301,12 @@ export default function AdminPIMPage() {
           ) : categoriesData?.length === 0 ? (
             <div className="p-12 text-center">
               <Tag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Henüz kategori yok</p>
+              <p className="text-muted-foreground mb-2">Henüz kategori yok</p>
+              <p className="text-sm text-muted-foreground mb-4">Ürünlerinizi organize etmek için kategori oluşturun</p>
+              <Button onClick={() => setShowCategoryModal(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                İlk Kategoriyi Oluştur
+              </Button>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -316,6 +387,92 @@ export default function AdminPIMPage() {
             <p className="text-sm mt-1">Bir ürüne görsel eklemek için ürün detay sayfasını kullanın</p>
           </div>
         </Card>
+      )}
+
+      {/* Category Creation Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md p-6 m-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg">Yeni Kategori</h3>
+              <Button variant="ghost" size="icon" onClick={() => setShowCategoryModal(false)}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {categoryError && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-700 dark:text-red-400 text-sm">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                {categoryError}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1.5">
+                  Kategori Adı (TR) <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={categoryForm.nameTr}
+                  onChange={(e) => handleCategoryNameChange(e.target.value)}
+                  placeholder="Web Hosting"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5">
+                  Kategori Adı (EN) <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={categoryForm.nameEn}
+                  onChange={(e) => setCategoryForm((p) => ({ ...p, nameEn: e.target.value }))}
+                  placeholder="Web Hosting"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5">
+                  URL Slug <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  value={categoryForm.slug}
+                  onChange={(e) => setCategoryForm((p) => ({ ...p, slug: e.target.value.toLowerCase() }))}
+                  placeholder="web-hosting"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5">İkon (Lucide)</label>
+                <Input
+                  value={categoryForm.icon}
+                  onChange={(e) => setCategoryForm((p) => ({ ...p, icon: e.target.value }))}
+                  placeholder="server, cloud, globe..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1.5">Açıklama</label>
+                <textarea
+                  value={categoryForm.description}
+                  onChange={(e) => setCategoryForm((p) => ({ ...p, description: e.target.value }))}
+                  placeholder="Kategori açıklaması..."
+                  rows={3}
+                  className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6 pt-4 border-t">
+              <Button variant="outline" onClick={() => setShowCategoryModal(false)}>
+                İptal
+              </Button>
+              <Button onClick={handleCreateCategory} disabled={createCategory.isPending}>
+                {createCategory.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Oluştur
+              </Button>
+            </div>
+          </Card>
+        </div>
       )}
     </div>
   );
