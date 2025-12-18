@@ -9,8 +9,9 @@ import {
   Search, Star, Eye, Code, Palette, Zap,
   Shield, ArrowRight, Filter, Grid3X3, List, Loader2,
   Monitor, X, SlidersHorizontal, ChevronDown,
-  ArrowUpDown, Check
+  ArrowUpDown, Check, GitCompare
 } from "lucide-react";
+import { useCompare, MAX_COMPARE_ITEMS, CompareProduct } from "@/lib/compare-context";
 
 // API base URL
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.hyble.co";
@@ -89,6 +90,7 @@ const typeLabels: Record<string, string> = {
 
 function StoreContent() {
   const searchParams = useSearchParams();
+  const { addItem: addToCompare, removeItem: removeFromCompare, isInCompare, itemCount: compareCount } = useCompare();
 
   // State
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -572,6 +574,44 @@ function StoreContent() {
                               Öne Çıkan
                             </span>
                           )}
+
+                          {/* Compare Button */}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const compareProduct: CompareProduct = {
+                                id: product.id,
+                                slug: product.slug,
+                                nameTr: product.nameTr,
+                                nameEn: product.nameEn,
+                                shortDescTr: product.shortDescTr,
+                                shortDescEn: product.shortDescEn,
+                                type: product.type,
+                                category: product.category,
+                                primaryImage: product.primaryImage,
+                                lowestPrice: product.lowestPrice,
+                                basePrice: product.basePrice,
+                                tags: product.tags,
+                                isFeatured: product.isFeatured,
+                                demoUrl: product.demoUrl,
+                                variantCount: product.variantCount,
+                              };
+                              if (isInCompare(product.id)) {
+                                removeFromCompare(product.id);
+                              } else if (compareCount < MAX_COMPARE_ITEMS) {
+                                addToCompare(compareProduct);
+                              }
+                            }}
+                            className={`absolute top-3 right-3 p-2 rounded-lg transition-all z-10 ${
+                              isInCompare(product.id)
+                                ? "bg-blue-600 text-white"
+                                : "bg-white/90 text-slate-600 hover:bg-blue-600 hover:text-white"
+                            } ${compareCount >= MAX_COMPARE_ITEMS && !isInCompare(product.id) ? "opacity-50 cursor-not-allowed" : ""}`}
+                            title={isInCompare(product.id) ? "Karşılaştırmadan Çıkar" : "Karşılaştırmaya Ekle"}
+                          >
+                            <GitCompare className="w-4 h-4" />
+                          </button>
 
                           {/* Hover Actions */}
                           <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
