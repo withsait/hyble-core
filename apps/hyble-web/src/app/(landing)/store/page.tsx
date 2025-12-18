@@ -1,26 +1,24 @@
-import { Metadata } from "next";
+"use client";
+
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Card } from "@hyble/ui";
 import {
-  ShoppingBag, Package, Cloud, Globe, Database, Shield,
+  ShoppingBag, Cloud, Globe, Database, Shield,
   Gamepad2, Server, Layout, ShoppingCart, Rocket, Zap,
-  ChevronRight, Search, Filter, Star, ArrowRight, Sparkles
+  ChevronRight, Search, ArrowRight, Sparkles, Check,
+  Cpu, HardDrive, MemoryStick, MapPin, Plus, Minus,
+  Play, Users, Settings, Terminal, Lock, Headphones,
+  Clock, RefreshCw, Star
 } from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "Ürün Mağazası | Hyble",
-  description: "Hyble hosting, şablonlar, SSL sertifikaları ve daha fazlasını keşfedin. Profesyonel altyapı ile projelerinizi hayata geçirin.",
-};
-
-// Statik kategoriler
+// Statik kategoriler - Minimal ve profesyonel renkler
 const categories = [
   {
     slug: "website-templates",
     name: "Web Sitesi Şablonları",
     description: "Kurumsal ve kişisel web siteleri",
     icon: Layout,
-    color: "from-blue-500 to-indigo-600",
-    bgColor: "bg-blue-50 dark:bg-blue-950/30",
     count: 12,
   },
   {
@@ -28,8 +26,6 @@ const categories = [
     name: "E-ticaret Şablonları",
     description: "Online mağaza çözümleri",
     icon: ShoppingCart,
-    color: "from-green-500 to-emerald-600",
-    bgColor: "bg-green-50 dark:bg-green-950/30",
     count: 8,
   },
   {
@@ -37,177 +33,474 @@ const categories = [
     name: "Landing Page",
     description: "Dönüşüm odaklı sayfalar",
     icon: Rocket,
-    color: "from-purple-500 to-pink-600",
-    bgColor: "bg-purple-50 dark:bg-purple-950/30",
     count: 15,
-  },
-  {
-    slug: "vps",
-    name: "VPS Sunucular",
-    description: "Yüksek performanslı sanal sunucular",
-    icon: Server,
-    color: "from-sky-500 to-cyan-600",
-    bgColor: "bg-sky-50 dark:bg-sky-950/30",
-    count: 6,
-  },
-  {
-    slug: "web-hosting",
-    name: "Web Hosting",
-    description: "Paylaşımlı hosting paketleri",
-    icon: Globe,
-    color: "from-orange-500 to-red-600",
-    bgColor: "bg-orange-50 dark:bg-orange-950/30",
-    count: 4,
-  },
-  {
-    slug: "game-servers",
-    name: "Oyun Sunucuları",
-    description: "Minecraft, FiveM ve daha fazlası",
-    icon: Gamepad2,
-    color: "from-red-500 to-rose-600",
-    bgColor: "bg-red-50 dark:bg-red-950/30",
-    count: 10,
-    badge: "Popüler",
   },
   {
     slug: "ssl",
     name: "SSL Sertifikaları",
     description: "DV, OV, EV sertifikalar",
     icon: Shield,
-    color: "from-amber-500 to-yellow-600",
-    bgColor: "bg-amber-50 dark:bg-amber-950/30",
     count: 5,
   },
-  {
-    slug: "database",
-    name: "Veritabanı",
-    description: "Managed database çözümleri",
-    icon: Database,
-    color: "from-violet-500 to-purple-600",
-    bgColor: "bg-violet-50 dark:bg-violet-950/30",
-    count: 3,
-    badge: "Yakında",
-  },
 ];
 
-// Örnek ürünler (API'den gelecek)
-const featuredProducts = [
-  {
-    slug: "starter-business-website",
-    name: "Business Starter",
-    description: "Küçük işletmeler için profesyonel web sitesi şablonu",
-    category: "website-templates",
-    price: 49,
-    originalPrice: 79,
-    image: null,
-    badge: "En Çok Satan",
-    features: ["Responsive tasarım", "SEO optimizasyonu", "5 sayfa"],
-  },
-  {
-    slug: "ecommerce-starter",
-    name: "E-commerce Starter",
-    description: "Hızlı başlangıç için e-ticaret şablonu",
-    category: "ecommerce",
-    price: 89,
-    originalPrice: 129,
-    image: null,
-    badge: "Yeni",
-    features: ["Ödeme entegrasyonu", "Ürün yönetimi", "Stok takibi"],
-  },
-  {
-    slug: "vps-basic",
-    name: "VPS Basic",
-    description: "2 vCPU, 4GB RAM, 80GB SSD",
-    category: "vps",
-    price: 9.99,
-    billingPeriod: "monthly",
-    image: null,
-    features: ["99.9% Uptime", "DDoS koruması", "Root erişimi"],
-  },
-  {
-    slug: "minecraft-starter",
-    name: "Minecraft Starter",
-    description: "10 slot, 2GB RAM",
-    category: "game-servers",
-    price: 2.99,
-    billingPeriod: "monthly",
-    image: null,
-    badge: "Popüler",
-    features: ["Tek tıkla kurulum", "Mod desteği", "DDoS koruması"],
-  },
-  {
-    slug: "saas-landing",
-    name: "SaaS Landing",
-    description: "SaaS ürünleri için modern landing page",
-    category: "landing-pages",
-    price: 39,
-    originalPrice: 59,
-    image: null,
-    features: ["Animasyonlar", "Dark mode", "CTA optimize"],
-  },
-  {
-    slug: "web-hosting-pro",
-    name: "Web Hosting Pro",
-    description: "50GB SSD, Sınırsız bandwidth",
-    category: "web-hosting",
-    price: 4.99,
-    billingPeriod: "monthly",
-    image: null,
-    features: ["cPanel", "Ücretsiz SSL", "E-posta hesapları"],
-  },
-];
+// VPS Konfigürasyon seçenekleri
+const vpsOptions = {
+  cpu: [
+    { value: 1, label: "1 vCPU", price: 0 },
+    { value: 2, label: "2 vCPU", price: 5 },
+    { value: 4, label: "4 vCPU", price: 15 },
+    { value: 8, label: "8 vCPU", price: 35 },
+    { value: 16, label: "16 vCPU", price: 75 },
+  ],
+  ram: [
+    { value: 1, label: "1 GB", price: 0 },
+    { value: 2, label: "2 GB", price: 2 },
+    { value: 4, label: "4 GB", price: 6 },
+    { value: 8, label: "8 GB", price: 14 },
+    { value: 16, label: "16 GB", price: 30 },
+    { value: 32, label: "32 GB", price: 62 },
+  ],
+  storage: [
+    { value: 20, label: "20 GB SSD", price: 0 },
+    { value: 40, label: "40 GB SSD", price: 2 },
+    { value: 80, label: "80 GB SSD", price: 6 },
+    { value: 160, label: "160 GB SSD", price: 14 },
+    { value: 320, label: "320 GB SSD", price: 30 },
+    { value: 640, label: "640 GB SSD", price: 62 },
+  ],
+  locations: [
+    { value: "germany", label: "Almanya", flag: "🇩🇪", latency: "8ms" },
+    { value: "finland", label: "Finlandiya", flag: "🇫🇮", latency: "15ms" },
+    { value: "usa", label: "ABD (Ashburn)", flag: "🇺🇸", latency: "85ms" },
+    { value: "singapore", label: "Singapur", flag: "🇸🇬", latency: "145ms" },
+  ],
+};
+
+// Oyun Sunucusu Konfigürasyon seçenekleri
+const gameServerOptions = {
+  games: [
+    { value: "minecraft", label: "Minecraft", icon: "⛏️", basePrice: 2.99, ramMultiplier: 1 },
+    { value: "fivem", label: "FiveM", icon: "🚗", basePrice: 9.99, ramMultiplier: 1.5 },
+    { value: "rust", label: "Rust", icon: "🔧", basePrice: 14.99, ramMultiplier: 2 },
+    { value: "ark", label: "ARK", icon: "🦖", basePrice: 12.99, ramMultiplier: 1.8 },
+    { value: "csgo", label: "CS2", icon: "🔫", basePrice: 4.99, ramMultiplier: 0.8 },
+    { value: "valheim", label: "Valheim", icon: "⚔️", basePrice: 6.99, ramMultiplier: 1.2 },
+  ],
+  ram: [
+    { value: 2, label: "2 GB", price: 0 },
+    { value: 4, label: "4 GB", price: 3 },
+    { value: 8, label: "8 GB", price: 8 },
+    { value: 16, label: "16 GB", price: 18 },
+    { value: 32, label: "32 GB", price: 38 },
+  ],
+  slots: [
+    { value: 10, label: "10 Slot", price: 0 },
+    { value: 25, label: "25 Slot", price: 2 },
+    { value: 50, label: "50 Slot", price: 5 },
+    { value: 100, label: "100 Slot", price: 10 },
+    { value: 200, label: "200 Slot", price: 20 },
+  ],
+  locations: [
+    { value: "germany", label: "Almanya", flag: "🇩🇪", latency: "8ms" },
+    { value: "finland", label: "Finlandiya", flag: "🇫🇮", latency: "15ms" },
+    { value: "france", label: "Fransa", flag: "🇫🇷", latency: "12ms" },
+  ],
+};
+
+// VPS Configurator Component
+function VPSConfigurator() {
+  const [cpuIndex, setCpuIndex] = useState(1);
+  const [ramIndex, setRamIndex] = useState(2);
+  const [storageIndex, setStorageIndex] = useState(2);
+  const [location, setLocation] = useState("germany");
+
+  const basePrice = 4.99;
+  const totalPrice = useMemo(() => {
+    const cpuPrice = vpsOptions.cpu[cpuIndex]?.price ?? 0;
+    const ramPrice = vpsOptions.ram[ramIndex]?.price ?? 0;
+    const storagePrice = vpsOptions.storage[storageIndex]?.price ?? 0;
+    return basePrice + cpuPrice + ramPrice + storagePrice;
+  }, [cpuIndex, ramIndex, storageIndex]);
+
+  return (
+    <div className="space-y-6">
+      {/* CPU */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Cpu className="w-4 h-4 text-slate-500" />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">İşlemci</span>
+          </div>
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+            {vpsOptions.cpu[cpuIndex]?.label ?? ""}
+          </span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max={vpsOptions.cpu.length - 1}
+          value={cpuIndex}
+          onChange={(e) => setCpuIndex(parseInt(e.target.value))}
+          className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+        />
+        <div className="flex justify-between mt-1">
+          {vpsOptions.cpu.map((opt, i) => (
+            <span key={opt.value} className={`text-xs ${i === cpuIndex ? "text-blue-600 font-medium" : "text-slate-400"}`}>
+              {opt.value}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* RAM */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <MemoryStick className="w-4 h-4 text-slate-500" />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Bellek (RAM)</span>
+          </div>
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+            {vpsOptions.ram[ramIndex]?.label ?? ""}
+          </span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max={vpsOptions.ram.length - 1}
+          value={ramIndex}
+          onChange={(e) => setRamIndex(parseInt(e.target.value))}
+          className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+        />
+        <div className="flex justify-between mt-1">
+          {vpsOptions.ram.map((opt, i) => (
+            <span key={opt.value} className={`text-xs ${i === ramIndex ? "text-blue-600 font-medium" : "text-slate-400"}`}>
+              {opt.value}GB
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Storage */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <HardDrive className="w-4 h-4 text-slate-500" />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Depolama (NVMe SSD)</span>
+          </div>
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+            {vpsOptions.storage[storageIndex]?.label ?? ""}
+          </span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max={vpsOptions.storage.length - 1}
+          value={storageIndex}
+          onChange={(e) => setStorageIndex(parseInt(e.target.value))}
+          className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+        />
+        <div className="flex justify-between mt-1">
+          {vpsOptions.storage.map((opt, i) => (
+            <span key={opt.value} className={`text-xs ${i === storageIndex ? "text-blue-600 font-medium" : "text-slate-400"}`}>
+              {opt.value}GB
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Location */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <MapPin className="w-4 h-4 text-slate-500" />
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Lokasyon</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {vpsOptions.locations.map((loc) => (
+            <button
+              key={loc.value}
+              onClick={() => setLocation(loc.value)}
+              className={`p-3 rounded-lg border text-left transition-all ${
+                location === loc.value
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                  : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{loc.flag}</span>
+                <div>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">{loc.label}</p>
+                  <p className="text-xs text-slate-500">{loc.latency}</p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Aylık fiyat</p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white">
+              €{totalPrice.toFixed(2)}
+              <span className="text-sm font-normal text-slate-500">/ay</span>
+            </p>
+          </div>
+          <div className="text-right text-xs text-slate-500 dark:text-slate-400">
+            <p>Yıllık ödemede</p>
+            <p className="text-green-600 font-medium">2 ay ücretsiz</p>
+          </div>
+        </div>
+        <Link
+          href={`/store/configure/vps?cpu=${vpsOptions.cpu[cpuIndex]?.value ?? 1}&ram=${vpsOptions.ram[ramIndex]?.value ?? 1}&storage=${vpsOptions.storage[storageIndex]?.value ?? 20}&location=${location}`}
+          className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+        >
+          <Server className="w-4 h-4" />
+          VPS Oluştur
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// Game Server Configurator Component
+function GameServerConfigurator() {
+  const [selectedGame, setSelectedGame] = useState(0);
+  const [ramIndex, setRamIndex] = useState(1);
+  const [slotsIndex, setSlotsIndex] = useState(1);
+  const [location, setLocation] = useState("germany");
+
+  const game = gameServerOptions.games[selectedGame] ?? gameServerOptions.games[0]!;
+  const totalPrice = useMemo(() => {
+    const ramOption = gameServerOptions.ram[ramIndex];
+    const slotsOption = gameServerOptions.slots[slotsIndex];
+    const currentGame = game ?? gameServerOptions.games[0]!;
+    const ramPrice = (ramOption?.price ?? 0) * currentGame.ramMultiplier;
+    const slotsPrice = slotsOption?.price ?? 0;
+    return currentGame.basePrice + ramPrice + slotsPrice;
+  }, [selectedGame, ramIndex, slotsIndex, game]);
+
+  return (
+    <div className="space-y-6">
+      {/* Game Selection */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Gamepad2 className="w-4 h-4 text-slate-500" />
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Oyun Seçin</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {gameServerOptions.games.map((g, i) => (
+            <button
+              key={g.value}
+              onClick={() => setSelectedGame(i)}
+              className={`p-3 rounded-lg border text-center transition-all ${
+                selectedGame === i
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                  : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+              }`}
+            >
+              <span className="text-2xl block mb-1">{g.icon}</span>
+              <p className="text-xs font-medium text-slate-900 dark:text-white">{g.label}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* RAM */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <MemoryStick className="w-4 h-4 text-slate-500" />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Bellek (RAM)</span>
+          </div>
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+            {gameServerOptions.ram[ramIndex]?.label ?? ""}
+          </span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max={gameServerOptions.ram.length - 1}
+          value={ramIndex}
+          onChange={(e) => setRamIndex(parseInt(e.target.value))}
+          className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+        />
+        <div className="flex justify-between mt-1">
+          {gameServerOptions.ram.map((opt, i) => (
+            <span key={opt.value} className={`text-xs ${i === ramIndex ? "text-blue-600 font-medium" : "text-slate-400"}`}>
+              {opt.value}GB
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Slots */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-slate-500" />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Oyuncu Slotu</span>
+          </div>
+          <span className="text-sm font-semibold text-slate-900 dark:text-white">
+            {gameServerOptions.slots[slotsIndex]?.label ?? ""}
+          </span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max={gameServerOptions.slots.length - 1}
+          value={slotsIndex}
+          onChange={(e) => setSlotsIndex(parseInt(e.target.value))}
+          className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600"
+        />
+        <div className="flex justify-between mt-1">
+          {gameServerOptions.slots.map((opt, i) => (
+            <span key={opt.value} className={`text-xs ${i === slotsIndex ? "text-blue-600 font-medium" : "text-slate-400"}`}>
+              {opt.value}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Location */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <MapPin className="w-4 h-4 text-slate-500" />
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Lokasyon</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {gameServerOptions.locations.map((loc) => (
+            <button
+              key={loc.value}
+              onClick={() => setLocation(loc.value)}
+              className={`p-2 rounded-lg border text-center transition-all ${
+                location === loc.value
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                  : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600"
+              }`}
+            >
+              <span className="text-lg">{loc.flag}</span>
+              <p className="text-xs text-slate-500 mt-1">{loc.latency}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Aylık fiyat</p>
+            <p className="text-3xl font-bold text-slate-900 dark:text-white">
+              €{totalPrice.toFixed(2)}
+              <span className="text-sm font-normal text-slate-500">/ay</span>
+            </p>
+          </div>
+          <div className="text-right text-xs text-slate-500 dark:text-slate-400">
+            <p>{game.label} Sunucusu</p>
+            <p className="text-green-600 font-medium">Anında kurulum</p>
+          </div>
+        </div>
+        <Link
+          href={`/store/configure/game-server?game=${game.value}&ram=${gameServerOptions.ram[ramIndex]?.value ?? 2}&slots=${gameServerOptions.slots[slotsIndex]?.value ?? 10}&location=${location}`}
+          className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+        >
+          <Play className="w-4 h-4" />
+          Sunucu Oluştur
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 export default function StorePage() {
+  const [activeConfigurator, setActiveConfigurator] = useState<"vps" | "game">("vps");
+
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative py-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800" />
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
-
-        <div className="relative max-w-7xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium mb-6">
-            <ShoppingBag className="w-4 h-4" />
-            Ürün Mağazası
-          </div>
-
-          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6">
-            İhtiyacınız olan her şey
-            <span className="block bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              tek platformda
-            </span>
-          </h1>
-
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8">
-            Web sitesi şablonları, hosting paketleri, SSL sertifikaları ve daha fazlası.
-            Projelerinizi profesyonel altyapı ile hayata geçirin.
-          </p>
-
-          {/* Search Bar */}
-          <div className="max-w-xl mx-auto">
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Ürün ara..."
-                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+    <div className="min-h-screen bg-white dark:bg-slate-900">
+      {/* Hero Section - Minimal */}
+      <section className="relative pt-12 pb-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-3xl mx-auto">
+            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">
+              Altyapınızı Özelleştirin
+            </h1>
+            <p className="text-lg text-slate-600 dark:text-slate-400">
+              İhtiyacınıza göre yapılandırın, sadece kullandığınız kadar ödeyin.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Categories Grid */}
+      {/* Server Configurators */}
+      <section className="py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* VPS Configurator */}
+            <Card className="p-6 border border-slate-200 dark:border-slate-700">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <Server className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">VPS Sunucu</h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Sanal özel sunucu yapılandırın</p>
+                </div>
+              </div>
+              <VPSConfigurator />
+            </Card>
+
+            {/* Game Server Configurator */}
+            <Card className="p-6 border border-slate-200 dark:border-slate-700">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <Gamepad2 className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Oyun Sunucusu</h2>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Oyun sunucunuzu yapılandırın</p>
+                </div>
+              </div>
+              <GameServerConfigurator />
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Strip */}
+      <section className="py-6 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/50">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { icon: Zap, text: "Anında aktivasyon" },
+              { icon: Shield, text: "DDoS koruması dahil" },
+              { icon: RefreshCw, text: "Günlük yedekleme" },
+              { icon: Headphones, text: "7/24 teknik destek" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 justify-center">
+                <item.icon className="w-4 h-4 text-slate-500" />
+                <span className="text-sm text-slate-600 dark:text-slate-400">{item.text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Categories */}
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Kategoriler
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
+              Diğer Ürünler
             </h2>
-            <button className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400">
-              <Filter className="w-4 h-4" />
-              Filtrele
-            </button>
+            <Link
+              href="/store/all"
+              className="text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1"
+            >
+              Tümünü gör <ChevronRight className="w-4 h-4" />
+            </Link>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -217,205 +510,84 @@ export default function StorePage() {
                 href={`/store/category/${category.slug}`}
                 className="group"
               >
-                <Card className={`p-5 h-full ${category.bgColor} border-0 hover:shadow-lg transition-all duration-300 hover:-translate-y-1`}>
-                  <div className="flex items-start justify-between mb-3">
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${category.color} flex items-center justify-center shadow-lg`}>
-                      <category.icon className="w-5 h-5 text-white" />
+                <Card className="p-4 h-full border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors">
+                      <category.icon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                     </div>
-                    {category.badge && (
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        category.badge === "Popüler"
-                          ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400"
-                      }`}>
-                        {category.badge}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
-                    {category.name}
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
-                    {category.description}
-                  </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500">
-                    {category.count} ürün
-                  </p>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Products */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                Öne Çıkan Ürünler
-              </h2>
-              <p className="text-slate-600 dark:text-slate-400">
-                En popüler ve çok satan ürünlerimiz
-              </p>
-            </div>
-            <Link
-              href="/store/all"
-              className="hidden sm:flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-            >
-              Tümünü Gör
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProducts.map((product) => (
-              <Link
-                key={product.slug}
-                href={`/store/${product.slug}`}
-                className="group"
-              >
-                <Card className="overflow-hidden h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                  {/* Image */}
-                  <div className="aspect-video bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center relative">
-                    <Package className="w-12 h-12 text-slate-300 dark:text-slate-600" />
-                    {product.badge && (
-                      <span className={`absolute top-3 right-3 text-xs px-2 py-1 rounded-full font-medium ${
-                        product.badge === "Popüler" || product.badge === "En Çok Satan"
-                          ? "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400"
-                          : "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400"
-                      }`}>
-                        {product.badge}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <div>
-                        <p className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
-                          {categories.find(c => c.slug === product.category)?.name}
-                        </p>
-                        <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                          {product.name}
-                        </h3>
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
-                      {product.description}
-                    </p>
-
-                    {/* Features */}
-                    {product.features && (
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        {product.features.slice(0, 3).map((feature, i) => (
-                          <span
-                            key={i}
-                            className="text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400"
-                          >
-                            {feature}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Price */}
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-bold text-slate-900 dark:text-white">
-                          €{product.price}
-                        </span>
-                        {product.billingPeriod && (
-                          <span className="text-sm text-slate-500 dark:text-slate-400">
-                            /{product.billingPeriod === "monthly" ? "ay" : "yıl"}
-                          </span>
-                        )}
-                        {product.originalPrice && (
-                          <span className="text-sm text-slate-400 line-through">
-                            €{product.originalPrice}
-                          </span>
-                        )}
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                    <div>
+                      <h3 className="font-medium text-slate-900 dark:text-white text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {category.name}
+                      </h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {category.count} ürün
+                      </p>
                     </div>
                   </div>
                 </Card>
               </Link>
             ))}
           </div>
-
-          {/* Mobile View All */}
-          <div className="mt-8 text-center sm:hidden">
-            <Link
-              href="/store/all"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
-            >
-              Tüm Ürünleri Gör
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
         </div>
       </section>
 
-      {/* Why Choose Us */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      {/* Why Hyble - Minimal */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-100 dark:border-slate-800">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
-              Neden Hyble?
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Binlerce müşterinin tercih ettiği güvenilir altyapı
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[
-              { icon: Zap, title: "Anında Aktivasyon", desc: "Siparişleriniz saniyeler içinde aktif" },
-              { icon: Shield, title: "Güvenli Ödeme", desc: "Stripe ile güvenli işlemler" },
-              { icon: Star, title: "7/24 Destek", desc: "Her zaman yanınızdayız" },
-              { icon: Sparkles, title: "Para İade", desc: "30 gün koşulsuz iade" },
-            ].map((item, i) => (
-              <Card key={i} className="p-6 text-center">
-                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-4">
-                  <item.icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {item.desc}
-                </p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-600 to-purple-700">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Özel bir çözüm mü arıyorsunuz?
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-white text-center mb-8">
+            Neden Hyble?
           </h2>
-          <p className="text-lg text-blue-100 mb-8">
-            İhtiyaçlarınıza özel yapılandırılmış çözümler için bizimle iletişime geçin.
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Terminal,
+                title: "Tam Kontrol",
+                desc: "Root erişimi, özel IP, tam yönetim paneli. Sunucunuz tamamen sizin kontrolünüzde.",
+              },
+              {
+                icon: Lock,
+                title: "Güvenli Altyapı",
+                desc: "Hetzner veri merkezleri, GDPR uyumlu, enterprise seviye güvenlik.",
+              },
+              {
+                icon: Clock,
+                title: "Anında Başlangıç",
+                desc: "Siparişiniz saniyeler içinde aktif. Hemen kullanmaya başlayın.",
+              },
+            ].map((item, i) => (
+              <div key={i} className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                  <item.icon className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+                </div>
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">{item.title}</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section - Minimal */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-900 dark:bg-slate-950">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl font-bold text-white mb-3">
+            Özel çözüm mü gerekiyor?
+          </h2>
+          <p className="text-slate-400 mb-6">
+            Kurumsal altyapı, özel yapılandırma ve toplu indirimler için iletişime geçin.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/contact"
-              className="px-8 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors"
+              className="px-6 py-2.5 bg-white text-slate-900 font-medium rounded-lg hover:bg-slate-100 transition-colors"
             >
               İletişime Geç
             </Link>
             <Link
               href="/solutions"
-              className="px-8 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors"
+              className="px-6 py-2.5 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-700 transition-colors"
             >
-              Çözümlerimiz
+              Ekosistem Çözümleri
             </Link>
           </div>
         </div>

@@ -15,8 +15,6 @@ const categoriesData: Record<string, {
   description: string;
   longDescription: string;
   icon: typeof Layout;
-  color: string;
-  bgColor: string;
   products: {
     slug: string;
     name: string;
@@ -36,8 +34,6 @@ const categoriesData: Record<string, {
     description: "Kurumsal ve kişisel web siteleri için hazır şablonlar",
     longDescription: "Profesyonel web sitesi şablonlarımız ile dakikalar içinde online olun. SEO optimize, responsive ve modern tasarımlar.",
     icon: Layout,
-    color: "from-blue-500 to-indigo-600",
-    bgColor: "bg-blue-50 dark:bg-blue-950/30",
     products: [
       {
         slug: "starter-business-website",
@@ -92,8 +88,6 @@ const categoriesData: Record<string, {
     description: "Online mağaza ve e-ticaret çözümleri",
     longDescription: "Hazır e-ticaret şablonları ile hemen satışa başlayın. Ödeme entegrasyonu, stok yönetimi ve sipariş takibi dahil.",
     icon: ShoppingCart,
-    color: "from-green-500 to-emerald-600",
-    bgColor: "bg-green-50 dark:bg-green-950/30",
     products: [
       {
         slug: "ecommerce-starter",
@@ -135,8 +129,6 @@ const categoriesData: Record<string, {
     description: "Dönüşüm odaklı landing page tasarımları",
     longDescription: "Yüksek dönüşüm oranları için optimize edilmiş landing page şablonları. A/B test ready, hızlı yükleme.",
     icon: Rocket,
-    color: "from-purple-500 to-pink-600",
-    bgColor: "bg-purple-50 dark:bg-purple-950/30",
     products: [
       {
         slug: "saas-landing",
@@ -189,8 +181,6 @@ const categoriesData: Record<string, {
     description: "Yüksek performanslı sanal sunucular",
     longDescription: "Hetzner altyapısı üzerinde güçlü VPS sunucular. Tam root erişimi, SSD depolama ve DDoS koruması.",
     icon: Server,
-    color: "from-sky-500 to-cyan-600",
-    bgColor: "bg-sky-50 dark:bg-sky-950/30",
     products: [
       {
         slug: "vps-basic",
@@ -241,8 +231,6 @@ const categoriesData: Record<string, {
     description: "Paylaşımlı hosting paketleri",
     longDescription: "Kolay kullanımlı cPanel ile web hosting. Ücretsiz SSL, otomatik yedekleme ve 7/24 destek.",
     icon: Globe,
-    color: "from-orange-500 to-red-600",
-    bgColor: "bg-orange-50 dark:bg-orange-950/30",
     products: [
       {
         slug: "web-hosting-starter",
@@ -283,8 +271,6 @@ const categoriesData: Record<string, {
     description: "Minecraft, FiveM ve daha fazlası",
     longDescription: "Düşük ping, yüksek performans oyun sunucuları. Tek tıkla kurulum, mod desteği ve DDoS koruması.",
     icon: Gamepad2,
-    color: "from-red-500 to-rose-600",
-    bgColor: "bg-red-50 dark:bg-red-950/30",
     products: [
       {
         slug: "minecraft-starter",
@@ -346,8 +332,6 @@ const categoriesData: Record<string, {
     description: "DV, OV, EV SSL sertifikaları",
     longDescription: "Web sitenizi güvenli hale getirin. Domain validation'dan extended validation'a kadar tüm SSL seçenekleri.",
     icon: Shield,
-    color: "from-amber-500 to-yellow-600",
-    bgColor: "bg-amber-50 dark:bg-amber-950/30",
     products: [
       {
         slug: "ssl-dv",
@@ -399,8 +383,6 @@ const categoriesData: Record<string, {
     description: "Managed database çözümleri",
     longDescription: "Yönetilen veritabanı hizmetleri. Otomatik yedekleme, scaling ve yüksek erişilebilirlik.",
     icon: Database,
-    color: "from-violet-500 to-purple-600",
-    bgColor: "bg-violet-50 dark:bg-violet-950/30",
     products: [
       {
         slug: "mysql-starter",
@@ -482,11 +464,11 @@ export default async function CategoryPage({ params }: Props) {
       </div>
 
       {/* Category Header */}
-      <section className={`py-12 px-4 sm:px-6 lg:px-8 ${category.bgColor}`}>
+      <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-4 mb-4">
-            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${category.color} flex items-center justify-center shadow-lg`}>
-              <CategoryIcon className="w-7 h-7 text-white" />
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+              <CategoryIcon className="w-7 h-7 text-slate-600 dark:text-slate-400" />
             </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">
@@ -643,9 +625,9 @@ export default async function CategoryPage({ params }: Props) {
                     href={`/store/category/${cat.slug}`}
                     className="group"
                   >
-                    <Card className={`p-4 ${cat.bgColor} border-0 hover:shadow-lg transition-all`}>
-                      <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${cat.color} flex items-center justify-center shadow-md mb-3`}>
-                        <CatIcon className="w-5 h-5 text-white" />
+                    <Card className="p-4 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all">
+                      <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3 group-hover:bg-slate-200 dark:group-hover:bg-slate-700 transition-colors">
+                        <CatIcon className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                       </div>
                       <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-sm">
                         {cat.name}
