@@ -41,6 +41,7 @@ import {
   ChevronDown,
   Link as LinkIcon,
   FolderTree,
+  FileText,
 } from "lucide-react";
 
 type ProductType = "DIGITAL" | "SUBSCRIPTION" | "BUNDLE" | "SERVICE";
@@ -85,6 +86,8 @@ interface FormData {
   variantSku: string;
   variantPrice: string;
   variantBillingPeriod: string;
+  // Publish status
+  publishImmediately: boolean;
 }
 
 interface NewCategoryData {
@@ -127,6 +130,7 @@ const initialFormData: FormData = {
   variantSku: "",
   variantPrice: "",
   variantBillingPeriod: "monthly",
+  publishImmediately: true,
 };
 
 const initialCategoryData: NewCategoryData = {
@@ -375,6 +379,9 @@ export default function NewProductPage() {
   const handleSubmit = () => {
     if (!validateStep(currentStep)) return;
 
+    // Generate SKU if not provided
+    const sku = formData.variantSku || generateSku();
+
     createProduct.mutate({
       type: formData.type,
       nameTr: formData.nameTr,
@@ -391,6 +398,14 @@ export default function NewProductPage() {
       targetAudience: formData.targetAudience,
       tags: formData.tags,
       isFeatured: formData.isFeatured,
+      publishImmediately: formData.publishImmediately,
+      // Add initial variant for subscription/digital products
+      initialVariant: (formData.type === "SUBSCRIPTION" || formData.type === "DIGITAL") && formData.variantName ? {
+        name: formData.variantName,
+        sku: sku,
+        price: formData.variantPrice ? parseFloat(formData.variantPrice) : (formData.basePrice ? parseFloat(formData.basePrice) : 0),
+        billingPeriod: formData.type === "SUBSCRIPTION" ? formData.variantBillingPeriod : undefined,
+      } : undefined,
     });
   };
 
@@ -1118,21 +1133,25 @@ export default function NewProductPage() {
             <div>
               <label className="block text-sm font-medium mb-3">Hedef Kitle</label>
               <div className="flex flex-wrap gap-2">
-                {audienceOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => toggleAudience(option.value)}
-                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      formData.targetAudience.includes(option.value)
-                        ? "bg-primary text-white shadow-md"
-                        : "bg-muted hover:bg-muted/80"
-                    }`}
-                  >
-                    <option.icon className="h-4 w-4" />
-                    {option.label}
-                  </button>
-                ))}
+                {audienceOptions.map((option) => {
+                  const isSelected = formData.targetAudience.includes(option.value);
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => toggleAudience(option.value)}
+                      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all border-2 ${
+                        isSelected
+                          ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                          : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                      }`}
+                    >
+                      <option.icon className="h-4 w-4" />
+                      {option.label}
+                      {isSelected && <Check className="h-4 w-4 ml-1" />}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -1293,26 +1312,37 @@ export default function NewProductPage() {
               <label className="block text-sm font-medium mb-3">Teslimat Türü</label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                  { value: "instant", label: "Anında", icon: Zap, color: "text-yellow-500", desc: "Hemen erişim" },
-                  { value: "manual", label: "Manuel", icon: Clock, color: "text-blue-500", desc: "Admin onaylı" },
-                  { value: "scheduled", label: "Planlanmış", icon: Calendar, color: "text-purple-500", desc: "Belirli tarihte" },
-                  { value: "physical", label: "Fiziksel", icon: Truck, color: "text-green-500", desc: "Kargo ile" },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, deliveryType: option.value }))}
-                    className={`p-3 rounded-lg border-2 text-left transition-all ${
-                      formData.deliveryType === option.value
-                        ? "border-primary bg-primary/5"
-                        : "border-muted hover:border-muted-foreground/30"
-                    }`}
-                  >
-                    <option.icon className={`h-5 w-5 ${option.color} mb-2`} />
-                    <p className="font-medium text-sm">{option.label}</p>
-                    <p className="text-xs text-muted-foreground">{option.desc}</p>
-                  </button>
-                ))}
+                  { value: "instant", label: "Anında", icon: Zap, color: "text-yellow-500", bgColor: "bg-yellow-50 dark:bg-yellow-950/30", desc: "Hemen erişim" },
+                  { value: "manual", label: "Manuel", icon: Clock, color: "text-blue-500", bgColor: "bg-blue-50 dark:bg-blue-950/30", desc: "Admin onaylı" },
+                  { value: "scheduled", label: "Planlanmış", icon: Calendar, color: "text-purple-500", bgColor: "bg-purple-50 dark:bg-purple-950/30", desc: "Belirli tarihte" },
+                  { value: "physical", label: "Fiziksel", icon: Truck, color: "text-green-500", bgColor: "bg-green-50 dark:bg-green-950/30", desc: "Kargo ile" },
+                ].map((option) => {
+                  const isSelected = formData.deliveryType === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, deliveryType: option.value }))}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        isSelected
+                          ? `border-blue-500 ${option.bgColor} shadow-md`
+                          : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600"
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-lg ${isSelected ? option.bgColor : "bg-slate-100 dark:bg-slate-700"} flex items-center justify-center mb-3`}>
+                        <option.icon className={`h-5 w-5 ${option.color}`} />
+                      </div>
+                      <p className="font-medium text-sm">{option.label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{option.desc}</p>
+                      {isSelected && (
+                        <div className="mt-2 flex items-center text-xs text-blue-600">
+                          <Check className="h-3 w-3 mr-1" />
+                          Seçili
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -1559,13 +1589,70 @@ export default function NewProductPage() {
               </div>
             </div>
 
-            <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-lg flex items-start gap-3">
-              <Info className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div className="text-sm text-amber-700 dark:text-amber-300">
-                <p className="font-medium">Ürün "Taslak" olarak oluşturulacak</p>
-                <p className="mt-1 text-amber-600 dark:text-amber-400">
-                  Ürünü düzenleme sayfasından yayınlayabilir, varyant ekleyebilir ve medya yükleyebilirsiniz.
-                </p>
+            {/* Publish Option */}
+            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-start gap-3">
+                  <div className={`p-2 rounded-lg ${formData.publishImmediately ? 'bg-green-100 dark:bg-green-900/30' : 'bg-amber-100 dark:bg-amber-900/30'}`}>
+                    {formData.publishImmediately ? (
+                      <Globe className="h-5 w-5 text-green-600" />
+                    ) : (
+                      <FileText className="h-5 w-5 text-amber-600" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">
+                      {formData.publishImmediately ? 'Ürün hemen yayınlanacak' : 'Taslak olarak kaydedilecek'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {formData.publishImmediately
+                        ? 'Ürün oluşturulduktan sonra mağazada görünür olacak'
+                        : 'Ürünü düzenleme sayfasından yayınlayabilirsiniz'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, publishImmediately: false }))}
+                  className={`flex-1 p-3 rounded-lg border-2 transition-all text-left ${
+                    !formData.publishImmediately
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/30'
+                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className={`h-4 w-4 ${!formData.publishImmediately ? 'text-amber-600' : 'text-slate-400'}`} />
+                    <span className={`text-sm font-medium ${!formData.publishImmediately ? 'text-amber-700 dark:text-amber-300' : 'text-slate-600 dark:text-slate-400'}`}>
+                      Taslak
+                    </span>
+                    {!formData.publishImmediately && (
+                      <Check className="h-4 w-4 text-amber-600 ml-auto" />
+                    )}
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, publishImmediately: true }))}
+                  className={`flex-1 p-3 rounded-lg border-2 transition-all text-left ${
+                    formData.publishImmediately
+                      ? 'border-green-500 bg-green-50 dark:bg-green-950/30'
+                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Globe className={`h-4 w-4 ${formData.publishImmediately ? 'text-green-600' : 'text-slate-400'}`} />
+                    <span className={`text-sm font-medium ${formData.publishImmediately ? 'text-green-700 dark:text-green-300' : 'text-slate-600 dark:text-slate-400'}`}>
+                      Hemen Yayınla
+                    </span>
+                    {formData.publishImmediately && (
+                      <Check className="h-4 w-4 text-green-600 ml-auto" />
+                    )}
+                  </div>
+                </button>
               </div>
             </div>
           </div>

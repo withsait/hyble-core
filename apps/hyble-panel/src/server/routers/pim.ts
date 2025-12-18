@@ -37,6 +37,14 @@ const productCreateSchema = z.object({
   taxRate: z.number().min(0).max(100).default(20),
   isFeatured: z.boolean().default(false),
   demoUrl: z.string().url().optional().or(z.literal("")),
+  // New fields for publish and initial variant
+  publishImmediately: z.boolean().default(false),
+  initialVariant: z.object({
+    name: z.string().min(1),
+    sku: z.string().min(2),
+    price: z.number().min(0),
+    billingPeriod: z.string().optional(),
+  }).optional(),
 });
 
 const productUpdateSchema = productCreateSchema.partial().extend({
@@ -395,13 +403,44 @@ export const pimRouter = createTRPCRouter({
         throw new TRPCError({ code: "CONFLICT", message: "Bu slug zaten kullanılıyor" });
       }
 
+      // Check SKU uniqueness if variant is provided
+      if (input.initialVariant?.sku) {
+        const existingSku = await prisma.productVariant.findUnique({
+          where: { sku: input.initialVariant.sku }
+        });
+        if (existingSku) {
+          throw new TRPCError({ code: "CONFLICT", message: "Bu SKU zaten kullanılıyor" });
+        }
+      }
+
+      // Extract variant and publish data before creating product
+      const { publishImmediately, initialVariant, ...productData } = input;
+
       const product = await prisma.product.create({
         data: {
-          ...input,
-          basePrice: input.basePrice,
+          ...productData,
+          basePrice: productData.basePrice,
+          status: publishImmediately ? "ACTIVE" : "DRAFT",
           createdBy: ctx.user.id,
         },
       });
+
+      // Create initial variant if provided
+      if (initialVariant && initialVariant.name && initialVariant.sku) {
+        await prisma.productVariant.create({
+          data: {
+            productId: product.id,
+            name: initialVariant.name,
+            sku: initialVariant.sku,
+            price: initialVariant.price || productData.basePrice || 0,
+            currency: productData.currency || "EUR",
+            billingPeriod: initialVariant.billingPeriod || null,
+            isDefault: true,
+            isActive: true,
+            sortOrder: 0,
+          },
+        });
+      }
 
       return product;
     }),
