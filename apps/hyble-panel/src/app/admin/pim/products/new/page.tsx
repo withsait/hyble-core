@@ -202,6 +202,39 @@ export default function NewProductPage() {
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "valid" | "invalid" | "error">("idle");
   const [slugMessage, setSlugMessage] = useState("");
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger when typing in inputs
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) {
+        return;
+      }
+
+      // Ctrl/Cmd + Arrow Right = Next step
+      if ((e.ctrlKey || e.metaKey) && e.key === "ArrowRight" && currentStep < 6) {
+        e.preventDefault();
+        if (validateStep(currentStep)) {
+          setCurrentStep(prev => Math.min(prev + 1, 6));
+        }
+      }
+
+      // Ctrl/Cmd + Arrow Left = Previous step
+      if ((e.ctrlKey || e.metaKey) && e.key === "ArrowLeft" && currentStep > 1) {
+        e.preventDefault();
+        setCurrentStep(prev => Math.max(prev - 1, 1));
+      }
+
+      // Ctrl/Cmd + Enter = Submit (on last step)
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && currentStep === 6) {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentStep]);
+
   // tRPC
   const { data: categories, refetch: refetchCategories } = trpc.pim.listCategories.useQuery({ includeInactive: false });
 
@@ -442,6 +475,25 @@ export default function NewProductPage() {
 
   const selectedType = productTypes.find((t) => t.value === formData.type);
 
+  // Calculate form completion percentage
+  const calculateProgress = () => {
+    let filled = 0;
+    const total = 8; // Core required fields
+
+    if (formData.type) filled++;
+    if (formData.nameTr) filled++;
+    if (formData.nameEn) filled++;
+    if (formData.slug) filled++;
+    if (formData.shortDescTr || formData.descriptionTr) filled++;
+    if (formData.basePrice) filled++;
+    if (formData.targetAudience.length > 0) filled++;
+    if (formData.deliveryType) filled++;
+
+    return Math.round((filled / total) * 100);
+  };
+
+  const progress = calculateProgress();
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       {/* Header */}
@@ -457,10 +509,26 @@ export default function NewProductPage() {
             <p className="text-muted-foreground">Ürün bilgilerini adım adım girin</p>
           </div>
         </div>
-        <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
-          <Eye className="h-4 w-4 mr-2" />
-          {showPreview ? "Formu Göster" : "Önizleme"}
-        </Button>
+        <div className="flex items-center gap-4">
+          {/* Progress Indicator */}
+          <div className="hidden md:flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-full">
+            <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 rounded-full ${
+                  progress === 100 ? 'bg-green-500' : progress >= 75 ? 'bg-blue-500' : progress >= 50 ? 'bg-amber-500' : 'bg-slate-400'
+                }`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <span className={`text-xs font-medium ${progress === 100 ? 'text-green-600' : 'text-muted-foreground'}`}>
+              %{progress}
+            </span>
+          </div>
+          <Button variant="outline" onClick={() => setShowPreview(!showPreview)}>
+            <Eye className="h-4 w-4 mr-2" />
+            {showPreview ? "Formu Göster" : "Önizleme"}
+          </Button>
+        </div>
       </div>
 
       {/* Progress Steps */}
@@ -626,6 +694,87 @@ export default function NewProductPage() {
                 </p>
               </div>
             </div>
+
+            {/* Quick Templates */}
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                Hızlı Başlangıç Şablonları
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({
+                    ...prev,
+                    type: "SUBSCRIPTION",
+                    variantName: "Starter",
+                    variantBillingPeriod: "monthly",
+                    targetAudience: ["freelancer", "startup"],
+                    deliveryType: "instant",
+                    currency: "EUR",
+                    taxRate: "20",
+                  }))}
+                  className="p-3 text-left rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-all group"
+                >
+                  <p className="text-sm font-medium group-hover:text-blue-600">Web Hosting</p>
+                  <p className="text-xs text-muted-foreground">Aylık abonelik</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({
+                    ...prev,
+                    type: "DIGITAL",
+                    variantName: "Standard License",
+                    variantBillingPeriod: "",
+                    targetAudience: ["freelancer", "startup"],
+                    deliveryType: "instant",
+                    currency: "EUR",
+                    taxRate: "20",
+                  }))}
+                  className="p-3 text-left rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-all group"
+                >
+                  <p className="text-sm font-medium group-hover:text-purple-600">Website Template</p>
+                  <p className="text-xs text-muted-foreground">Tek seferlik</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({
+                    ...prev,
+                    type: "SERVICE",
+                    variantName: "Basic Setup",
+                    variantBillingPeriod: "",
+                    targetAudience: ["startup", "enterprise"],
+                    deliveryType: "scheduled",
+                    currency: "EUR",
+                    taxRate: "20",
+                  }))}
+                  className="p-3 text-left rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-all group"
+                >
+                  <p className="text-sm font-medium group-hover:text-emerald-600">Kurulum Hizmeti</p>
+                  <p className="text-xs text-muted-foreground">Profesyonel hizmet</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({
+                    ...prev,
+                    type: "BUNDLE",
+                    variantName: "Complete Package",
+                    variantBillingPeriod: "",
+                    targetAudience: ["enterprise"],
+                    deliveryType: "instant",
+                    currency: "EUR",
+                    taxRate: "20",
+                  }))}
+                  className="p-3 text-left rounded-lg border border-dashed border-slate-300 dark:border-slate-600 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-all group"
+                >
+                  <p className="text-sm font-medium group-hover:text-amber-600">Komple Paket</p>
+                  <p className="text-xs text-muted-foreground">Birden fazla ürün</p>
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -657,8 +806,18 @@ export default function NewProductPage() {
                 {errors.nameTr && <p className="text-xs text-red-500 mt-1">{errors.nameTr}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1.5">
-                  Ürün Adı (İngilizce) <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium mb-1.5 flex items-center justify-between">
+                  <span>Ürün Adı (İngilizce) <span className="text-red-500">*</span></span>
+                  {formData.nameTr && !formData.nameEn && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, nameEn: prev.nameTr }))}
+                      className="text-xs text-primary hover:underline flex items-center gap-1"
+                    >
+                      <Copy className="h-3 w-3" />
+                      Türkçe'den kopyala
+                    </button>
+                  )}
                 </label>
                 <Input
                   value={formData.nameEn}
@@ -1064,6 +1223,44 @@ export default function NewProductPage() {
                 </div>
               </div>
             </div>
+
+            {/* Price Calculator */}
+            {formData.basePrice && parseFloat(formData.basePrice) > 0 && (
+              <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-lg border border-green-200 dark:border-green-800">
+                <h3 className="font-medium text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Fiyat Hesaplayıcı
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                    <p className="text-xs text-muted-foreground">KDV Hariç</p>
+                    <p className="text-lg font-bold text-foreground">
+                      {parseFloat(formData.basePrice).toFixed(2)} {formData.currency}
+                    </p>
+                  </div>
+                  <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                    <p className="text-xs text-muted-foreground">KDV (%{formData.taxRate || 0})</p>
+                    <p className="text-lg font-bold text-orange-600">
+                      +{(parseFloat(formData.basePrice) * (parseFloat(formData.taxRate || "0") / 100)).toFixed(2)} {formData.currency}
+                    </p>
+                  </div>
+                  <div className="bg-green-100 dark:bg-green-900/50 p-3 rounded-lg border border-green-300 dark:border-green-700">
+                    <p className="text-xs text-green-700 dark:text-green-400 font-medium">KDV Dahil (Toplam)</p>
+                    <p className="text-lg font-bold text-green-700 dark:text-green-300">
+                      {(parseFloat(formData.basePrice) * (1 + parseFloat(formData.taxRate || "0") / 100)).toFixed(2)} {formData.currency}
+                    </p>
+                  </div>
+                  {formData.setupFee && parseFloat(formData.setupFee) > 0 && (
+                    <div className="bg-white dark:bg-slate-800 p-3 rounded-lg">
+                      <p className="text-xs text-muted-foreground">+ Kurulum</p>
+                      <p className="text-lg font-bold text-blue-600">
+                        {parseFloat(formData.setupFee).toFixed(2)} {formData.currency}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {formData.type === "SUBSCRIPTION" && (
               <div className="p-4 bg-muted/50 rounded-lg">
@@ -1660,14 +1857,23 @@ export default function NewProductPage() {
 
         {/* Navigation Buttons */}
         <div className="flex justify-between mt-8 pt-6 border-t">
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 1}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Geri
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 1}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Geri
+            </Button>
+            {/* Keyboard shortcut hint */}
+            <span className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground">
+              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Ctrl</kbd>
+              <span>+</span>
+              <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">←→</kbd>
+              <span className="ml-1">ile gezin</span>
+            </span>
+          </div>
 
           {currentStep < 6 ? (
             <Button onClick={nextStep}>
@@ -1675,23 +1881,31 @@ export default function NewProductPage() {
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           ) : (
-            <Button
-              onClick={handleSubmit}
-              disabled={createProduct.isPending}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {createProduct.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Oluşturuluyor...
-                </>
-              ) : (
-                <>
-                  <Check className="h-4 w-4 mr-2" />
-                  Ürünü Oluştur
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-3">
+              {/* Keyboard shortcut hint for submit */}
+              <span className="hidden lg:flex items-center gap-1 text-xs text-muted-foreground">
+                <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Ctrl</kbd>
+                <span>+</span>
+                <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Enter</kbd>
+              </span>
+              <Button
+                onClick={handleSubmit}
+                disabled={createProduct.isPending}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {createProduct.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Oluşturuluyor...
+                  </>
+                ) : (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Ürünü Oluştur
+                  </>
+                )}
+              </Button>
+            </div>
           )}
         </div>
       </Card>
