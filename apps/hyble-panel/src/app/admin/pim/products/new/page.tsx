@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc/client";
@@ -36,15 +36,11 @@ import {
   Truck,
   Clock,
   Shield,
-  BadgePercent,
-  Gift,
-  Percent,
   Timer,
-  FileText,
-  Lock,
-  Unlock,
   BarChart3,
-  Search,
+  ChevronDown,
+  Link as LinkIcon,
+  FolderTree,
 } from "lucide-react";
 
 type ProductType = "DIGITAL" | "SUBSCRIPTION" | "BUNDLE" | "SERVICE";
@@ -197,7 +193,6 @@ export default function NewProductPage() {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [newCategory, setNewCategory] = useState<NewCategoryData>(initialCategoryData);
   const [categoryErrors, setCategoryErrors] = useState<Record<string, string>>({});
-  const [categorySearch, setCategorySearch] = useState("");
 
   // Slug validation state
   const [slugStatus, setSlugStatus] = useState<"idle" | "checking" | "valid" | "invalid" | "error">("idle");
@@ -220,17 +215,6 @@ export default function NewProductPage() {
     },
   });
 
-  // Filter categories based on search
-  const filteredCategories = useMemo(() => {
-    if (!categories) return [];
-    if (!categorySearch) return categories;
-    const search = categorySearch.toLowerCase();
-    return categories.filter(
-      (cat) =>
-        cat.nameTr.toLowerCase().includes(search) ||
-        cat.nameEn.toLowerCase().includes(search)
-    );
-  }, [categories, categorySearch]);
 
   const createProduct = trpc.pim.createProduct.useMutation({
     onSuccess: (product) => {
@@ -678,14 +662,15 @@ export default function NewProductPage() {
               </label>
               <div className="flex items-center gap-2">
                 <div className="flex-1 relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    hyble.co/store/
-                  </span>
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-muted-foreground pointer-events-none">
+                    <LinkIcon className="h-3.5 w-3.5" />
+                    <span className="text-xs">/store/</span>
+                  </div>
                   <Input
                     value={formData.slug}
                     onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value.toLowerCase().replace(/\s/g, "-") }))}
                     placeholder="web-hosting-pro"
-                    className={`pl-28 pr-10 ${
+                    className={`pl-20 pr-10 ${
                       slugStatus === "invalid" || errors.slug
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : slugStatus === "valid"
@@ -726,62 +711,35 @@ export default function NewProductPage() {
               </p>
             </div>
 
-            {/* Category - Enhanced with inline creation */}
+            {/* Category - Simplified selector */}
             <div>
               <label className="block text-sm font-medium mb-1.5">Kategori</label>
               <div className="flex gap-2">
                 <div className="flex-1 relative">
-                  {/* Search input for categories */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      value={categorySearch}
-                      onChange={(e) => setCategorySearch(e.target.value)}
-                      placeholder="Kategori ara veya seç..."
-                      className="pl-9"
-                    />
-                  </div>
-                  {/* Category dropdown */}
+                  <FolderTree className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
                   <select
                     value={formData.categoryId}
-                    onChange={(e) => {
-                      setFormData((prev) => ({ ...prev, categoryId: e.target.value }));
-                      setCategorySearch("");
-                    }}
-                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm mt-2"
+                    onChange={(e) => setFormData((prev) => ({ ...prev, categoryId: e.target.value }))}
+                    className="w-full h-10 pl-10 pr-8 rounded-md border border-input bg-background text-sm appearance-none cursor-pointer"
                   >
                     <option value="">Kategori seçin (opsiyonel)</option>
-                    {filteredCategories?.map((cat) => (
+                    {categories?.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.nameTr} ({cat._count?.products || 0} ürün)
                       </option>
                     ))}
                   </select>
-                  {/* Selected category display */}
-                  {formData.categoryId && categories && (
-                    <div className="mt-2 p-2 bg-primary/5 border border-primary/20 rounded-md flex items-center justify-between">
-                      <span className="text-sm font-medium">
-                        {categories.find((c) => c.id === formData.categoryId)?.nameTr}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setFormData((prev) => ({ ...prev, categoryId: "" }))}
-                        className="text-muted-foreground hover:text-red-500 transition-colors"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 </div>
                 {/* New category button */}
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setShowCategoryModal(true)}
-                  className="flex-shrink-0 h-10"
+                  className="flex-shrink-0 h-10 whitespace-nowrap"
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  Yeni
+                  Yeni Kategori
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-1.5">
@@ -792,7 +750,7 @@ export default function NewProductPage() {
             {/* Category Creation Modal */}
             {showCategoryModal && (
               <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                <div className="bg-background rounded-xl border shadow-lg w-full max-w-md">
+                <div className="bg-background rounded-xl border shadow-lg w-full max-w-lg">
                   <div className="p-4 border-b flex items-center justify-between">
                     <h3 className="font-semibold flex items-center gap-2">
                       <Plus className="h-5 w-5 text-primary" />
@@ -873,7 +831,7 @@ export default function NewProductPage() {
                         value={newCategory.description}
                         onChange={(e) => setNewCategory((prev) => ({ ...prev, description: e.target.value }))}
                         placeholder="Kategori açıklaması (opsiyonel)"
-                        rows={2}
+                        rows={3}
                         className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm resize-none"
                       />
                     </div>
