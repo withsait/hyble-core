@@ -453,6 +453,54 @@ export const pimRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  // Export products to CSV (admin)
+  exportProducts: adminProcedure
+    .input(z.object({
+      status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).optional(),
+      type: z.enum(["DIGITAL", "SUBSCRIPTION", "BUNDLE", "SERVICE"]).optional(),
+      categoryId: z.string().optional(),
+    }).optional())
+    .query(async ({ input }) => {
+      const where = {
+        ...(input?.status && { status: input.status }),
+        ...(input?.type && { type: input.type }),
+        ...(input?.categoryId && { categoryId: input.categoryId }),
+      };
+
+      const products = await prisma.product.findMany({
+        where,
+        include: {
+          category: { select: { nameTr: true } },
+          variants: { orderBy: { sortOrder: "asc" } },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      // Transform to CSV-friendly format
+      const csvData = products.map((p) => ({
+        id: p.id,
+        type: p.type,
+        status: p.status,
+        nameTr: p.nameTr,
+        nameEn: p.nameEn,
+        slug: p.slug,
+        shortDescTr: p.shortDescTr || "",
+        shortDescEn: p.shortDescEn || "",
+        category: p.category?.nameTr || "",
+        basePrice: p.basePrice?.toString() || "",
+        currency: p.currency,
+        taxRate: p.taxRate?.toString() || "",
+        isFeatured: p.isFeatured ? "Yes" : "No",
+        tags: p.tags.join(", "),
+        targetAudience: p.targetAudience.join(", "),
+        variantCount: p.variants.length,
+        createdAt: p.createdAt.toISOString(),
+        updatedAt: p.updatedAt.toISOString(),
+      }));
+
+      return csvData;
+    }),
+
   // Bulk update products (admin)
   bulkUpdateProducts: adminProcedure
     .input(z.object({

@@ -45,6 +45,7 @@ import {
   Cpu,
   Database,
   HardDrive,
+  Download,
 } from "lucide-react";
 
 type Tab = "overview" | "products" | "categories" | "media";
@@ -82,6 +83,7 @@ export default function AdminPIMPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [statusFilter, setStatusFilter] = useState<ProductFilter>("all");
   const [typeFilter, setTypeFilter] = useState<ProductType>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
@@ -104,6 +106,7 @@ export default function AdminPIMPage() {
     search: searchTerm || undefined,
     status: statusFilter !== "all" && statusFilter !== "featured" ? statusFilter.toUpperCase() as any : undefined,
     type: typeFilter !== "all" ? typeFilter : undefined,
+    categoryId: categoryFilter !== "all" ? categoryFilter : undefined,
     isFeatured: statusFilter === "featured" ? true : undefined,
     limit: 100,
   });
@@ -274,6 +277,50 @@ export default function AdminPIMPage() {
       .replace(/ç/g, "c")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
+  };
+
+  // CSV Export
+  const { refetch: fetchExport, isFetching: isExporting } = trpc.pim.exportProducts.useQuery(
+    {
+      status: statusFilter !== "all" && statusFilter !== "featured" ? statusFilter.toUpperCase() as any : undefined,
+      type: typeFilter !== "all" ? typeFilter as any : undefined,
+    },
+    { enabled: false }
+  );
+
+  const handleExportCSV = async () => {
+    const result = await fetchExport();
+    if (!result.data) return;
+
+    const data = result.data;
+    if (data.length === 0) {
+      alert("Dışa aktarılacak ürün bulunamadı");
+      return;
+    }
+
+    // Create CSV
+    const headers = Object.keys(data[0]);
+    const csvContent = [
+      headers.join(","),
+      ...data.map((row: any) =>
+        headers.map((h) => {
+          const val = row[h]?.toString() || "";
+          // Escape quotes and wrap in quotes if contains comma
+          return val.includes(",") || val.includes('"') || val.includes("\n")
+            ? `"${val.replace(/"/g, '""')}"`
+            : val;
+        }).join(",")
+      ),
+    ].join("\n");
+
+    // Download
+    const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `products-export-${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleCategoryNameChange = (value: string) => {
@@ -592,6 +639,35 @@ export default function AdminPIMPage() {
                 <option value="SERVICE">Hizmet</option>
                 <option value="BUNDLE">Paket</option>
               </select>
+
+              {/* Category Filter */}
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="h-10 px-3 rounded-md border border-input bg-background text-sm"
+              >
+                <option value="all">Tüm Kategoriler</option>
+                {categoriesData?.map((cat: any) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.nameTr} ({cat._count?.products || 0})
+                  </option>
+                ))}
+              </select>
+
+              {/* Export Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+                disabled={isExporting}
+              >
+                {isExporting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                CSV İndir
+              </Button>
 
               {/* View Mode Toggle */}
               <div className="flex items-center border rounded-md">

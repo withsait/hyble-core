@@ -4,6 +4,7 @@ import { IntegrationLogos } from "@/components/landing/IntegrationLogos";
 import { FeatureBento } from "@/components/landing/FeatureBento";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { WhyHyble } from "@/components/landing/WhyHyble";
+import { FeaturedProducts } from "@/components/landing/FeaturedProducts";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { ScrollCTA } from "@/components/landing/ScrollCTA";
 
@@ -18,6 +19,7 @@ export default function HomePage() {
       <HeroSection />
       <IntegrationLogos />
       <FeatureBento />
+      <FeaturedProducts />
       <HowItWorks />
       <WhyHyble />
       <PricingSection />
