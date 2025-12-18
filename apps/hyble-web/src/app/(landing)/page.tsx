@@ -1,12 +1,18 @@
 import { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { IntegrationLogos } from "@/components/landing/IntegrationLogos";
 import { FeatureBento } from "@/components/landing/FeatureBento";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { WhyHyble } from "@/components/landing/WhyHyble";
-import { FeaturedProducts } from "@/components/landing/FeaturedProducts";
 import { PricingSection } from "@/components/landing/PricingSection";
 import { ScrollCTA } from "@/components/landing/ScrollCTA";
+
+// Dynamic import for client component that uses tRPC
+const FeaturedProducts = dynamic(
+  () => import("@/components/landing/FeaturedProducts").then((mod) => mod.FeaturedProducts),
+  { ssr: false }
+);
 
 export const metadata: Metadata = {
   title: "Hyble - All in One. All in Hyble.",
