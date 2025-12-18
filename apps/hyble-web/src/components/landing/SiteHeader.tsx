@@ -6,80 +6,150 @@ import {
   Sun, Moon, Menu, X, ChevronDown,
   Shield, Wallet, Cloud, Key, Activity, Wrench,
   BookOpen, Headphones, FileText, Users, Gamepad2,
-  Server, CreditCard, ArrowUpRight
+  Server, CreditCard, ArrowUpRight, Layout, ShoppingCart,
+  Globe, Palette, Code, Rocket, FileCode, Database
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-// Ürün kategorileri - Vercel tarzı
+// Ürünler - Satılık hazır ürünler (PIM'den gelecek)
 const productCategories = [
   {
-    title: "Kimlik & Güvenlik",
+    title: "Hazır Şablonlar",
     products: [
+      {
+        icon: Layout,
+        name: "Web Siteleri",
+        description: "Kurumsal & kişisel siteler",
+        href: "/store?category=website-templates",
+      },
+      {
+        icon: ShoppingCart,
+        name: "E-ticaret",
+        description: "Online mağaza şablonları",
+        href: "/store?category=ecommerce",
+      },
+      {
+        icon: Rocket,
+        name: "Landing Page",
+        description: "Dönüşüm odaklı sayfalar",
+        href: "/store?category=landing-pages",
+      },
+    ],
+  },
+  {
+    title: "Hosting Paketleri",
+    products: [
+      {
+        icon: Cloud,
+        name: "VPS Sunucular",
+        description: "Yüksek performans VPS",
+        href: "/store?category=vps",
+      },
+      {
+        icon: Globe,
+        name: "Web Hosting",
+        description: "Paylaşımlı hosting",
+        href: "/store?category=web-hosting",
+      },
+      {
+        icon: Gamepad2,
+        name: "Oyun Sunucuları",
+        description: "Minecraft, FiveM ve daha fazlası",
+        href: "/store?category=game-servers",
+        badge: "Popüler",
+      },
+    ],
+  },
+  {
+    title: "Güvenlik & Araçlar",
+    products: [
+      {
+        icon: Shield,
+        name: "SSL Sertifikaları",
+        description: "DV, OV, EV sertifikalar",
+        href: "/store?category=ssl",
+      },
+      {
+        icon: Database,
+        name: "Veritabanı",
+        description: "Managed databases",
+        href: "/store?category=database",
+        badge: "Yakında",
+      },
+    ],
+  },
+];
+
+// Çözümler - Hyble ekosistem servisleri
+const solutionCategories = [
+  {
+    title: "Kimlik & Güvenlik",
+    solutions: [
       {
         icon: Shield,
         name: "Hyble ID",
         description: "OAuth 2.0, MFA, SSO",
-        href: "/products/id",
+        href: "/solutions/id",
       },
       {
         icon: Key,
         name: "Hyble License",
         description: "Yazılım lisanslama",
-        href: "/products/license",
+        href: "/solutions/license",
       },
     ],
   },
   {
     title: "Ödeme & Finans",
-    products: [
+    solutions: [
       {
         icon: CreditCard,
         name: "Hyble Wallet",
         description: "Ödeme ve cüzdan",
-        href: "/products/wallet",
+        href: "/solutions/wallet",
       },
     ],
   },
   {
     title: "Altyapı & Hosting",
-    products: [
+    solutions: [
       {
         icon: Cloud,
         name: "Hyble Cloud",
         description: "VPS ve web hosting",
-        href: "/products/cloud",
+        href: "/solutions/cloud",
         badge: "Yakında",
       },
       {
         icon: Gamepad2,
         name: "Hyble Gaming",
         description: "Game server hosting",
-        href: "/products/gaming",
+        href: "/solutions/gaming",
         badge: "Popüler",
       },
       {
         icon: Server,
         name: "Hyble CDN",
         description: "İçerik dağıtım",
-        href: "/products/cdn",
+        href: "/solutions/cdn",
         badge: "Yakında",
       },
     ],
   },
   {
     title: "İzleme & Araçlar",
-    products: [
+    solutions: [
       {
         icon: Activity,
         name: "Hyble Status",
         description: "Uptime monitoring",
-        href: "/products/status",
+        href: "/solutions/status",
       },
       {
         icon: Wrench,
         name: "Hyble Tools",
         description: "Geliştirici araçları",
-        href: "/tools",
+        href: "/solutions/tools",
       },
     ],
   },
@@ -104,7 +174,7 @@ const navLinks = [
   { href: "/contact", label: "İletişim" },
 ];
 
-type DropdownType = "products" | "resources" | null;
+type DropdownType = "products" | "solutions" | "resources" | null;
 
 export function SiteHeader() {
   const { theme, setTheme } = useTheme();
@@ -211,11 +281,93 @@ export function SiteHeader() {
                   {/* Footer */}
                   <div className="border-t border-slate-200 dark:border-slate-700/50 p-3 bg-slate-50 dark:bg-slate-800/50">
                     <Link
-                      href="/products"
+                      href="/store"
                       onClick={() => setActiveDropdown(null)}
                       className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                     >
-                      <span>Tüm ürünleri keşfet</span>
+                      <span>Tüm ürünlere göz at</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Çözümler Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => handleMouseEnter("solutions")}
+              onMouseLeave={handleMouseLeave}
+            >
+              <button
+                className={`flex items-center gap-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
+                  activeDropdown === "solutions" ? "text-blue-600 dark:text-blue-400" : ""
+                }`}
+              >
+                Çözümler
+                <ChevronDown className={`w-4 h-4 transition-transform duration-150 ${activeDropdown === "solutions" ? "rotate-180" : ""}`} />
+              </button>
+
+              {/* Solutions Dropdown - Kategorili */}
+              <div
+                className={`absolute top-full left-0 pt-2 transition-all duration-150 ${
+                  activeDropdown === "solutions" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"
+                }`}
+              >
+                <div className="w-[560px] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+                  <div className="grid grid-cols-2 gap-0">
+                    {solutionCategories.map((category, catIndex) => (
+                      <div
+                        key={category.title}
+                        className={`p-4 ${catIndex % 2 === 1 ? "border-l border-slate-200 dark:border-slate-700/50" : ""} ${catIndex >= 2 ? "border-t border-slate-200 dark:border-slate-700/50" : ""}`}
+                      >
+                        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+                          {category.title}
+                        </p>
+                        <div className="space-y-1">
+                          {category.solutions.map((solution) => (
+                            <Link
+                              key={solution.name}
+                              href={solution.href}
+                              onClick={() => setActiveDropdown(null)}
+                              className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-300 dark:group-hover:border-blue-500/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 transition-all">
+                                <solution.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                    {solution.name}
+                                  </span>
+                                  {"badge" in solution && solution.badge && (
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                                      solution.badge === "Popüler"
+                                        ? "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
+                                        : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                                    }`}>
+                                      {solution.badge}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-slate-500 dark:text-slate-500">
+                                  {solution.description}
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Footer */}
+                  <div className="border-t border-slate-200 dark:border-slate-700/50 p-3 bg-slate-50 dark:bg-slate-800/50">
+                    <Link
+                      href="/solutions"
+                      onClick={() => setActiveDropdown(null)}
+                      className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                      <span>Tüm çözümleri keşfet</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
@@ -364,37 +516,92 @@ export function SiteHeader() {
         {mobileMenuOpen && (
           <div className="lg:hidden py-4 border-t border-slate-200 dark:border-slate-800">
             <nav className="flex flex-col gap-1">
-              {/* Ürünler - Kategorili */}
-              {productCategories.map((category) => (
-                <div key={category.title} className="mb-4">
-                  <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    {category.title}
-                  </p>
-                  {category.products.map((product) => (
-                    <Link
-                      key={product.name}
-                      href={product.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
-                    >
-                      <product.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{product.name}</span>
-                      {"badge" in product && product.badge && (
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                          product.badge === "Popüler"
-                            ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
-                            : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                        }`}>
-                          {product.badge}
-                        </span>
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              ))}
+              {/* Ürünler Section */}
+              <div className="mb-2">
+                <p className="px-3 py-2 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
+                  Ürünler
+                </p>
+                {productCategories.map((category) => (
+                  <div key={category.title} className="mt-3">
+                    <p className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      {category.title}
+                    </p>
+                    {category.products.map((product) => (
+                      <Link
+                        key={product.name}
+                        href={product.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
+                      >
+                        <product.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{product.name}</span>
+                        {"badge" in product && product.badge && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                            product.badge === "Popüler"
+                              ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
+                              : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                          }`}>
+                            {product.badge}
+                          </span>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+                <Link
+                  href="/store"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2.5 mt-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg"
+                >
+                  Tüm ürünlere göz at
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              </div>
+
+              {/* Çözümler Section */}
+              <div className="mb-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <p className="px-3 py-2 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
+                  Çözümler
+                </p>
+                {solutionCategories.map((category) => (
+                  <div key={category.title} className="mt-3">
+                    <p className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      {category.title}
+                    </p>
+                    {category.solutions.map((solution) => (
+                      <Link
+                        key={solution.name}
+                        href={solution.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
+                      >
+                        <solution.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{solution.name}</span>
+                        {"badge" in solution && solution.badge && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                            solution.badge === "Popüler"
+                              ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
+                              : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                          }`}>
+                            {solution.badge}
+                          </span>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+                <Link
+                  href="/solutions"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2.5 mt-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg"
+                >
+                  Tüm çözümleri keşfet
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              </div>
 
               {/* Kaynaklar */}
-              <div className="mb-4">
+              <div className="mb-4 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Kaynaklar</p>
                 {resources.map((item) => (
                   <Link
