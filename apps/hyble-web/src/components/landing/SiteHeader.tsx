@@ -10,6 +10,7 @@ import {
   Globe, Palette, Code, Rocket, FileCode, Database
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { CartIcon } from "@/components/cart";
 
 // Ürünler - Satılık hazır ürünler (PIM'den gelecek)
 const productCategories = [
@@ -503,6 +504,9 @@ export function SiteHeader() {
                 )}
               </button>
             )}
+
+            {/* Cart Icon */}
+            <CartIcon />
 
             {/* Auth Buttons - Desktop */}
             <div className="hidden md:flex items-center gap-3">

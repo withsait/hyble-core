@@ -7,8 +7,9 @@ import { Card } from "@hyble/ui";
 import {
   ArrowLeft, ShoppingCart, Package, Check, Star,
   ChevronRight, Zap, Shield, Clock, Loader2,
-  CheckCircle2, ArrowRight, Monitor, ExternalLink
+  CheckCircle2, ArrowRight, Monitor, ExternalLink, Plus
 } from "lucide-react";
+import { useCart } from "@/lib/cart-context";
 
 // API base URL
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.hyble.co";
@@ -59,11 +60,13 @@ interface Product {
 export default function ProductDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const { addItem } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
+  const [addedToCart, setAddedToCart] = useState(false);
 
   useEffect(() => {
     async function fetchProduct() {
@@ -293,13 +296,41 @@ export default function ProductDetailPage() {
 
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                <a
-                  href={`https://id.hyble.co/auth/register?product=${product.slug}${selectedVariant ? `&variant=${selectedVariant.id}` : ""}`}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
+                <button
+                  onClick={() => {
+                    const primaryImage = product.media.find((m) => m.isPrimary) || product.media[0];
+                    addItem({
+                      id: `${product.id}-${selectedVariant?.id || "base"}`,
+                      productId: product.id,
+                      variantId: selectedVariant?.id || null,
+                      slug: product.slug,
+                      name: product.nameTr,
+                      variantName: selectedVariant?.name || null,
+                      price: selectedVariant?.price || product.lowestPrice || 0,
+                      image: primaryImage?.url || null,
+                      billingPeriod: selectedVariant?.billingPeriod || null,
+                    });
+                    setAddedToCart(true);
+                    setTimeout(() => setAddedToCart(false), 2000);
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 font-semibold rounded-xl transition-all ${
+                    addedToCart
+                      ? "bg-green-600 text-white"
+                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                  }`}
                 >
-                  <ShoppingCart className="w-5 h-5" />
-                  Satın Al
-                </a>
+                  {addedToCart ? (
+                    <>
+                      <CheckCircle2 className="w-5 h-5" />
+                      Sepete Eklendi!
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-5 h-5" />
+                      Sepete Ekle
+                    </>
+                  )}
+                </button>
                 <Link
                   href="/contact"
                   className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl transition-colors"
