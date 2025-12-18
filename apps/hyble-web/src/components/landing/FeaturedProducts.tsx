@@ -1,20 +1,38 @@
-// @ts-nocheck
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
   Package,
   ArrowRight,
-  Sparkles,
   Star,
   Zap,
   Server,
   ShoppingBag,
   ChevronRight,
 } from "lucide-react";
-import { trpc } from "@/lib/trpc/client";
+
+interface Product {
+  id: string;
+  slug: string;
+  type: string;
+  nameTr: string;
+  nameEn: string;
+  shortDescTr: string | null;
+  shortDescEn: string | null;
+  basePrice: number | null;
+  lowestPrice: number | null;
+  tags: string[];
+  primaryImage: string | null;
+  variantCount: number;
+  category: {
+    id: string;
+    nameTr: string;
+    nameEn: string;
+    slug: string;
+  } | null;
+}
 
 const typeIcons: Record<string, typeof Package> = {
   DIGITAL: Package,
@@ -30,14 +48,32 @@ const typeLabels: Record<string, string> = {
   SERVICE: "Hizmet",
 };
 
-export function FeaturedProducts() {
-  const { data: productsData, isLoading } = trpc.pim.listProducts.useQuery({
-    status: "ACTIVE",
-    isFeatured: true,
-    limit: 6,
-  });
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.hyble.co";
 
-  const products = productsData?.products || [];
+export function FeaturedProducts() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const response = await fetch(`${API_URL}/api/public/products/featured`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+        const data = await response.json();
+        setProducts(data.products || []);
+      } catch (err) {
+        console.error("Error fetching featured products:", err);
+        setError("Ürünler yüklenemedi");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchProducts();
+  }, []);
 
   if (isLoading) {
     return (
@@ -60,8 +96,8 @@ export function FeaturedProducts() {
     );
   }
 
-  if (products.length === 0) {
-    return null; // Don't show section if no featured products
+  if (error || products.length === 0) {
+    return null; // Don't show section if no featured products or error
   }
 
   return (
@@ -100,7 +136,7 @@ export function FeaturedProducts() {
 
         {/* Products Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {products.map((product: any, index: number) => {
+          {products.map((product, index) => {
             const Icon = typeIcons[product.type] || Package;
             const lowestPrice = product.lowestPrice || product.basePrice;
 
