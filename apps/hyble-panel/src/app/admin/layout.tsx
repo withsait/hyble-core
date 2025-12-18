@@ -19,6 +19,10 @@ import {
   LogOut,
   Shield,
   ChevronRight,
+  ShoppingCart,
+  Star,
+  BarChart3,
+  FileText,
 } from "lucide-react";
 
 const navItems = [
@@ -26,9 +30,13 @@ const navItems = [
   { href: "/admin/users", label: "Kullanıcılar", icon: Users },
   { href: "/admin/billing", label: "Faturalama", icon: CreditCard },
   { href: "/admin/pim", label: "Ürünler (PIM)", icon: Package },
+  { href: "/admin/orders", label: "Siparişler", icon: ShoppingCart },
+  { href: "/admin/reviews", label: "Yorumlar", icon: Star },
+  { href: "/admin/analytics", label: "Analitik", icon: BarChart3 },
   { href: "/admin/cloud", label: "Cloud", icon: Cloud },
   { href: "/admin/support", label: "Destek", icon: Ticket },
   { href: "/admin/emails", label: "Email Logları", icon: Mail },
+  { href: "/admin/pages", label: "Sayfalar (CMS)", icon: FileText },
   { href: "/admin/status", label: "Durum Sayfası", icon: Globe },
   { href: "/admin/watch", label: "Monitoring", icon: Activity },
   { href: "/admin/hyla", label: "Hyla AI", icon: Bot },

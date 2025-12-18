@@ -445,3 +445,371 @@ export async function sendAnniversaryEmail(
 
   return data;
 }
+
+// ==================== E-COMMERCE EMAILS ====================
+
+interface OrderItem {
+  name: string;
+  quantity: number;
+  price: number;
+  variant?: string;
+}
+
+interface OrderDetails {
+  orderNumber: string;
+  items: OrderItem[];
+  subtotal: number;
+  discount?: number;
+  total: number;
+  currency: string;
+  paymentMethod: string;
+}
+
+export async function sendOrderConfirmationEmail(
+  email: string,
+  customerName: string,
+  order: OrderDetails,
+  brand: Brand = "hyble"
+) {
+  const config = BRAND_CONFIG[brand];
+  const orderUrl = `https://panel.hyble.co/orders`;
+  const currencySymbol = order.currency === "EUR" ? "€" : order.currency === "TRY" ? "₺" : "$";
+
+  const itemsHtml = order.items
+    .map(
+      (item) => `
+      <tr>
+        <td style="padding: 12px 0; border-bottom: 1px solid #E2E8F0;">
+          <p style="margin: 0; color: #0F172A; font-size: 14px; font-weight: 500;">${item.name}</p>
+          ${item.variant ? `<p style="margin: 4px 0 0; color: #64748B; font-size: 12px;">${item.variant}</p>` : ""}
+        </td>
+        <td style="padding: 12px 0; border-bottom: 1px solid #E2E8F0; text-align: center;">
+          <span style="color: #475569; font-size: 14px;">${item.quantity}</span>
+        </td>
+        <td style="padding: 12px 0; border-bottom: 1px solid #E2E8F0; text-align: right;">
+          <span style="color: #0F172A; font-size: 14px; font-weight: 500;">${currencySymbol}${(item.price * item.quantity).toFixed(2)}</span>
+        </td>
+      </tr>
+    `
+    )
+    .join("");
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 24px; font-weight: 600;">Siparişiniz Alındı!</h2>
+    <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
+      Merhaba ${customerName}, siparişiniz başarıyla oluşturuldu. Sipariş detaylarınız aşağıda yer almaktadır.
+    </p>
+
+    <div style="margin: 24px 0; padding: 16px; background: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;">
+      <p style="margin: 0; color: #64748B; font-size: 12px;">SİPARİŞ NUMARASI</p>
+      <p style="margin: 4px 0 0; color: #0F172A; font-size: 18px; font-weight: 600;">${order.orderNumber}</p>
+    </div>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 24px 0;">
+      <thead>
+        <tr>
+          <th style="padding: 12px 0; border-bottom: 2px solid #E2E8F0; text-align: left; color: #64748B; font-size: 12px; font-weight: 500;">ÜRÜN</th>
+          <th style="padding: 12px 0; border-bottom: 2px solid #E2E8F0; text-align: center; color: #64748B; font-size: 12px; font-weight: 500;">ADET</th>
+          <th style="padding: 12px 0; border-bottom: 2px solid #E2E8F0; text-align: right; color: #64748B; font-size: 12px; font-weight: 500;">FİYAT</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${itemsHtml}
+      </tbody>
+    </table>
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding: 8px 0; color: #64748B; font-size: 14px;">Ara Toplam</td>
+        <td style="padding: 8px 0; text-align: right; color: #0F172A; font-size: 14px;">${currencySymbol}${order.subtotal.toFixed(2)}</td>
+      </tr>
+      ${
+        order.discount
+          ? `
+      <tr>
+        <td style="padding: 8px 0; color: #10B981; font-size: 14px;">İndirim</td>
+        <td style="padding: 8px 0; text-align: right; color: #10B981; font-size: 14px;">-${currencySymbol}${order.discount.toFixed(2)}</td>
+      </tr>
+      `
+          : ""
+      }
+      <tr>
+        <td style="padding: 12px 0; border-top: 2px solid #E2E8F0; color: #0F172A; font-size: 16px; font-weight: 600;">Toplam</td>
+        <td style="padding: 12px 0; border-top: 2px solid #E2E8F0; text-align: right; color: ${config.color}; font-size: 20px; font-weight: 700;">${currencySymbol}${order.total.toFixed(2)}</td>
+      </tr>
+    </table>
+
+    <div style="margin: 24px 0; padding: 16px; background: #ECFDF5; border-radius: 8px; border: 1px solid #A7F3D0;">
+      <p style="margin: 0; color: #065F46; font-size: 14px;">
+        ✓ Ödeme başarıyla alındı (${order.paymentMethod === "wallet" ? "Hyble Cüzdan" : order.paymentMethod === "card" ? "Kredi Kartı" : order.paymentMethod})
+      </p>
+    </div>
+  `;
+
+  const html = getEmailTemplate(
+    "Sipariş Onayı",
+    content,
+    "Siparişlerimi Görüntüle",
+    orderUrl,
+    brand
+  );
+
+  const { data, error } = await getResend().emails.send({
+    from: config.fromEmail,
+    to: email,
+    subject: `✓ Siparişiniz Alındı - ${order.orderNumber} - ${config.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error("Failed to send order confirmation email:", error);
+    throw new Error("Failed to send order confirmation email");
+  }
+
+  return data;
+}
+
+export async function sendOrderShippedEmail(
+  email: string,
+  customerName: string,
+  orderNumber: string,
+  trackingUrl?: string,
+  brand: Brand = "hyble"
+) {
+  const config = BRAND_CONFIG[brand];
+  const orderUrl = `https://panel.hyble.co/orders`;
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 24px; font-weight: 600;">Siparişiniz Yola Çıktı! 🚚</h2>
+    <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
+      Merhaba ${customerName}, <strong>${orderNumber}</strong> numaralı siparişiniz hazırlandı ve kargoya verildi.
+    </p>
+
+    ${
+      trackingUrl
+        ? `
+    <div style="margin: 24px 0; padding: 16px; background: #FEF3C7; border-radius: 8px; border: 1px solid #FCD34D;">
+      <p style="margin: 0 0 8px; color: #92400E; font-size: 12px; font-weight: 500;">KARGO TAKİP</p>
+      <a href="${trackingUrl}" style="color: #B45309; font-size: 14px; word-break: break-all;">${trackingUrl}</a>
+    </div>
+    `
+        : ""
+    }
+
+    <p style="margin: 0; color: #64748B; font-size: 14px;">
+      Siparişiniz genellikle 1-3 iş günü içinde teslim edilir.
+    </p>
+  `;
+
+  const html = getEmailTemplate(
+    "Sipariş Kargoda",
+    content,
+    "Siparişimi Takip Et",
+    trackingUrl || orderUrl,
+    brand
+  );
+
+  const { data, error } = await getResend().emails.send({
+    from: config.fromEmail,
+    to: email,
+    subject: `📦 Siparişiniz Yola Çıktı - ${orderNumber} - ${config.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error("Failed to send order shipped email:", error);
+    throw new Error("Failed to send order shipped email");
+  }
+
+  return data;
+}
+
+export async function sendLicenseDeliveryEmail(
+  email: string,
+  customerName: string,
+  orderNumber: string,
+  products: { name: string; licenseKey?: string; downloadUrl?: string }[],
+  brand: Brand = "hyble"
+) {
+  const config = BRAND_CONFIG[brand];
+  const licensesUrl = `https://panel.hyble.co/licenses`;
+
+  const productsHtml = products
+    .map(
+      (product) => `
+      <div style="margin: 16px 0; padding: 16px; background: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;">
+        <p style="margin: 0 0 8px; color: #0F172A; font-size: 16px; font-weight: 600;">${product.name}</p>
+        ${
+          product.licenseKey
+            ? `
+        <p style="margin: 4px 0; color: #64748B; font-size: 12px;">LİSANS ANAHTARI</p>
+        <p style="margin: 0; padding: 8px 12px; background: #1E293B; border-radius: 4px; color: #10B981; font-family: monospace; font-size: 14px;">${product.licenseKey}</p>
+        `
+            : ""
+        }
+        ${
+          product.downloadUrl
+            ? `
+        <p style="margin: 12px 0 4px; color: #64748B; font-size: 12px;">İNDİRME LİNKİ</p>
+        <a href="${product.downloadUrl}" style="display: inline-block; padding: 8px 16px; background: ${config.color}; color: #FFFFFF; text-decoration: none; border-radius: 4px; font-size: 14px;">İndir</a>
+        `
+            : ""
+        }
+      </div>
+    `
+    )
+    .join("");
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 24px; font-weight: 600;">Lisanslarınız Hazır! 🔑</h2>
+    <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
+      Merhaba ${customerName}, <strong>${orderNumber}</strong> numaralı siparişinize ait lisans bilgileri aşağıda yer almaktadır.
+    </p>
+
+    ${productsHtml}
+
+    <div style="margin: 24px 0; padding: 16px; background: #DBEAFE; border-radius: 8px; border: 1px solid #93C5FD;">
+      <p style="margin: 0; color: #1E40AF; font-size: 14px;">
+        💡 Lisanslarınızı panelden istediğiniz zaman görüntüleyebilir ve yönetebilirsiniz.
+      </p>
+    </div>
+  `;
+
+  const html = getEmailTemplate(
+    "Lisans Teslimatı",
+    content,
+    "Lisanslarımı Görüntüle",
+    licensesUrl,
+    brand
+  );
+
+  const { data, error } = await getResend().emails.send({
+    from: config.fromEmail,
+    to: email,
+    subject: `🔑 Lisanslarınız Hazır - ${orderNumber} - ${config.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error("Failed to send license delivery email:", error);
+    throw new Error("Failed to send license delivery email");
+  }
+
+  return data;
+}
+
+export async function sendInvoiceEmail(
+  email: string,
+  customerName: string,
+  invoiceNumber: string,
+  invoiceUrl: string,
+  total: number,
+  currency: string,
+  brand: Brand = "hyble"
+) {
+  const config = BRAND_CONFIG[brand];
+  const currencySymbol = currency === "EUR" ? "€" : currency === "TRY" ? "₺" : "$";
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 24px; font-weight: 600;">Faturanız Hazır</h2>
+    <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
+      Merhaba ${customerName}, <strong>${invoiceNumber}</strong> numaralı faturanız oluşturuldu.
+    </p>
+
+    <div style="margin: 24px 0; padding: 20px; background: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0; text-align: center;">
+      <p style="margin: 0 0 8px; color: #64748B; font-size: 12px;">FATURA TUTARI</p>
+      <p style="margin: 0; color: #0F172A; font-size: 32px; font-weight: 700;">${currencySymbol}${total.toFixed(2)}</p>
+      <p style="margin: 8px 0 0; color: #64748B; font-size: 12px;">${invoiceNumber}</p>
+    </div>
+  `;
+
+  const html = getEmailTemplate(
+    "Fatura",
+    content,
+    "Faturayı İndir (PDF)",
+    invoiceUrl,
+    brand
+  );
+
+  const { data, error } = await getResend().emails.send({
+    from: config.fromEmail,
+    to: email,
+    subject: `📄 Faturanız - ${invoiceNumber} - ${config.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error("Failed to send invoice email:", error);
+    throw new Error("Failed to send invoice email");
+  }
+
+  return data;
+}
+
+export async function sendSupportTicketEmail(
+  email: string,
+  customerName: string,
+  ticketNumber: string,
+  subject: string,
+  status: "created" | "replied" | "resolved",
+  brand: Brand = "hyble"
+) {
+  const config = BRAND_CONFIG[brand];
+  const ticketUrl = `https://panel.hyble.co/support`;
+
+  const statusMessages = {
+    created: {
+      title: "Destek Talebiniz Alındı",
+      message: "Destek talebiniz başarıyla oluşturuldu. En kısa sürede size geri dönüş yapacağız.",
+      emoji: "📩",
+    },
+    replied: {
+      title: "Destek Talebinize Yanıt Verildi",
+      message: "Destek ekibimiz talebinize yanıt verdi. Lütfen kontrol edin.",
+      emoji: "💬",
+    },
+    resolved: {
+      title: "Destek Talebiniz Çözüldü",
+      message: "Destek talebiniz başarıyla çözüldü. Memnuniyetiniz bizim için önemli!",
+      emoji: "✅",
+    },
+  };
+
+  const statusInfo = statusMessages[status];
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 24px; font-weight: 600;">${statusInfo.title}</h2>
+    <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
+      Merhaba ${customerName}, ${statusInfo.message}
+    </p>
+
+    <div style="margin: 24px 0; padding: 16px; background: #F8FAFC; border-radius: 8px; border: 1px solid #E2E8F0;">
+      <p style="margin: 0 0 4px; color: #64748B; font-size: 12px;">TALEP NUMARASI</p>
+      <p style="margin: 0 0 12px; color: #0F172A; font-size: 16px; font-weight: 600;">${ticketNumber}</p>
+      <p style="margin: 0 0 4px; color: #64748B; font-size: 12px;">KONU</p>
+      <p style="margin: 0; color: #0F172A; font-size: 14px;">${subject}</p>
+    </div>
+  `;
+
+  const html = getEmailTemplate(
+    statusInfo.title,
+    content,
+    "Talebi Görüntüle",
+    ticketUrl,
+    brand
+  );
+
+  const { data, error } = await getResend().emails.send({
+    from: config.fromEmail,
+    to: email,
+    subject: `${statusInfo.emoji} ${statusInfo.title} - ${ticketNumber} - ${config.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error("Failed to send support ticket email:", error);
+    throw new Error("Failed to send support ticket email");
+  }
+
+  return data;
+}

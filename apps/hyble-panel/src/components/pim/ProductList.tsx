@@ -1,52 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Input } from "@hyble/ui";
-import { 
-  Plus, 
-  Search, 
-  Edit, 
-  Trash2, 
-  MoreHorizontal, 
-  Package, 
-  Layers, 
-  Box, 
-  Wrench 
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  Package,
+  Layers,
+  Box,
+  Wrench,
+  Loader2
 } from "lucide-react";
-
-// Mock data - will be replaced with tRPC query when pim router is implemented
-const mockProducts = [
-  {
-    id: "1",
-    nameTr: "Hyble Pro Hosting",
-    nameEn: "Hyble Pro Hosting",
-    slug: "hyble-pro-hosting",
-    type: "SUBSCRIPTION",
-    status: "ACTIVE",
-    basePrice: 9.99,
-    lowestPrice: 9.99,
-    currency: "EUR",
-    images: [],
-  },
-];
+import { trpc } from "@/lib/trpc/client";
 
 export function ProductList() {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"DRAFT" | "ACTIVE" | "ARCHIVED" | undefined>(undefined);
+  const [typeFilter, setTypeFilter] = useState<"DIGITAL" | "SUBSCRIPTION" | "BUNDLE" | "SERVICE" | undefined>(undefined);
 
-  // TODO: Replace with tRPC query when pim router is ready
-  // const { data, isLoading, refetch } = trpc.pim.listProducts.useQuery({ search, limit: 50 });
-  const isLoading = false;
+  const { data, isLoading, refetch } = trpc.pim.listProducts.useQuery({
+    search: search || undefined,
+    status: statusFilter,
+    type: typeFilter,
+    limit: 50,
+  });
 
-  const products = mockProducts.filter(p =>
-    p.nameTr.toLowerCase().includes(search.toLowerCase())
-  );
+  const deleteProduct = trpc.pim.deleteProduct.useMutation({
+    onSuccess: () => refetch(),
+  });
+
+  const products = data?.products || [];
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Bu ürünü silmek istediğinize emin misiniz?")) {
-      alert("Demo: Ürün silindi");
+      deleteProduct.mutate({ id });
     }
   };
 
@@ -91,16 +82,39 @@ export function ProductList() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="relative w-full sm:w-72">
-          <Input
-            placeholder="Ürün ara..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-8"
-          />
-          <Search className="absolute left-2 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative w-72">
+            <Input
+              placeholder="Ürün ara..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-8"
+            />
+            <Search className="absolute left-2 top-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+          </div>
+          <select
+            value={statusFilter || ""}
+            onChange={(e) => setStatusFilter(e.target.value as "DRAFT" | "ACTIVE" | "ARCHIVED" || undefined)}
+            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Tüm Durumlar</option>
+            <option value="DRAFT">Taslak</option>
+            <option value="ACTIVE">Aktif</option>
+            <option value="ARCHIVED">Arşivlenmiş</option>
+          </select>
+          <select
+            value={typeFilter || ""}
+            onChange={(e) => setTypeFilter(e.target.value as "DIGITAL" | "SUBSCRIPTION" | "BUNDLE" | "SERVICE" || undefined)}
+            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Tüm Tipler</option>
+            <option value="DIGITAL">Dijital</option>
+            <option value="SUBSCRIPTION">Abonelik</option>
+            <option value="BUNDLE">Paket</option>
+            <option value="SERVICE">Hizmet</option>
+          </select>
         </div>
-        <Button onClick={() => router.push("/dashboard/pim/products/new")}>
+        <Button onClick={() => router.push("/admin/pim/products/new")}>
           <Plus className="h-4 w-4 mr-2" />
           Yeni Ürün
         </Button>
@@ -121,8 +135,8 @@ export function ProductList() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
-                    Yükleniyor...
+                  <td colSpan={5} className="px-6 py-8 text-center">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                   </td>
                 </tr>
               ) : products.length === 0 ? (
@@ -166,19 +180,19 @@ export function ProductList() {
                           variant="ghost" 
                           size="icon" 
                           className="h-8 w-8"
-                          onClick={() => router.push(`/dashboard/pim/products/${product.id}`)}
+                          onClick={() => router.push(`/admin/pim/products/${product.id}`)}
                           title="Düzenle"
                         >
                           <Edit className="h-4 w-4" />
                           <span className="sr-only">Düzenle</span>
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-8 w-8 text-destructive hover:text-destructive/90 hover:bg-destructive/10"
                           onClick={() => handleDelete(product.id)}
                           title="Sil"
-                          disabled={false}
+                          disabled={deleteProduct.isPending}
                         >
                           <Trash2 className="h-4 w-4" />
                           <span className="sr-only">Sil</span>

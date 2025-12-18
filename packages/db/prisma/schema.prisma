@@ -170,6 +170,7 @@ model User {
   bansIssued            UserBan[]              @relation("BannedByUser")
   bansLifted            UserBan[]              @relation("UnbannedByUser")
   emailLogs             EmailLog[]
+  uploads               Upload[]
 
   @@index([email])
   @@index([status])
@@ -956,6 +957,10 @@ model Product {
   categoryId    String?
   category      Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
+  // Satıcı (3. parti geliştirici için)
+  sellerId      String?
+  seller        Seller?       @relation("SellerProducts", fields: [sellerId], references: [id], onDelete: SetNull)
+
   // Temel Bilgiler (i18n - Türkçe/İngilizce)
   nameTr        String
   nameEn        String
@@ -992,12 +997,18 @@ model Product {
   bundleItems   BundleItem[]  @relation("BundleProduct")
   includedIn    BundleItem[]  @relation("IncludedProduct")
 
+  // Marketplace features
+  reviews       ProductReview[]
+  rating        ProductRating?
+  licenses      ProductLicense[]
+
   // Audit
   createdBy     String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   @@index([categoryId])
+  @@index([sellerId])
   @@index([status])
   @@index([type])
   @@index([slug])
@@ -2166,4 +2177,1471 @@ model LicenseActivation {
   @@index([licenseId])
   @@index([machineId])
   @@index([isActive])
+}
+
+// ==================== MARKETPLACE FEATURES ====================
+
+// -------------------- PRODUCT REVIEWS & RATINGS --------------------
+
+enum ReviewStatus {
+  PENDING       // Onay bekliyor
+  APPROVED      // Onaylandı
+  REJECTED      // Reddedildi
+  FLAGGED       // İşaretlendi (spam/uygunsuz)
+}
+
+model ProductReview {
+  id            String        @id @default(cuid())
+
+  productId     String
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  userId        String
+
+  // Satın alma doğrulaması
+  orderId       String?       // Hangi siparişten sonra yazıldı
+  isVerifiedPurchase Boolean  @default(false)
+
+  // Değerlendirme
+  rating        Int           // 1-5 yıldız
+  title         String?       // Yorum başlığı
+  content       String        @db.Text // Yorum içeriği
+
+  // Pros/Cons listesi
+  pros          String[]      // Artılar
+  cons          String[]      // Eksiler
+
+  // Durum
+  status        ReviewStatus  @default(PENDING)
+
+  // Moderasyon
+  moderatedBy   String?
+  moderatedAt   DateTime?
+  moderationNote String?
+
+  // Faydalılık oyları
+  helpfulCount  Int           @default(0)
+  notHelpfulCount Int         @default(0)
+
+  // Satıcı yanıtı
+  sellerResponse String?      @db.Text
+  sellerResponseAt DateTime?
+
+  // Medya
+  images        String[]      // Yorum görselleri
+
+  // Meta
+  ipAddress     String?
+  userAgent     String?
+
+  // Düzenleme geçmişi
+  isEdited      Boolean       @default(false)
+  editedAt      DateTime?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  votes         ReviewVote[]
+  reports       ReviewReport[]
+
+  @@unique([productId, userId]) // Kullanıcı başına ürün için 1 yorum
+  @@index([productId])
+  @@index([userId])
+  @@index([status])
+  @@index([rating])
+  @@index([createdAt])
+}
+
+model ReviewVote {
+  id            String    @id @default(cuid())
+
+  reviewId      String
+  review        ProductReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  userId        String
+
+  isHelpful     Boolean   // true = helpful, false = not helpful
+
+  createdAt     DateTime  @default(now())
+
+  @@unique([reviewId, userId]) // Kullanıcı başına yorum için 1 oy
+  @@index([reviewId])
+  @@index([userId])
+}
+
+model ReviewReport {
+  id            String    @id @default(cuid())
+
+  reviewId      String
+  review        ProductReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  userId        String
+
+  reason        String    // spam, inappropriate, fake, etc.
+  description   String?   @db.Text
+
+  // Moderasyon
+  isResolved    Boolean   @default(false)
+  resolvedBy    String?
+  resolvedAt    DateTime?
+  resolution    String?   // kept, removed, edited
+
+  createdAt     DateTime  @default(now())
+
+  @@unique([reviewId, userId]) // Kullanıcı başına yorum için 1 rapor
+  @@index([reviewId])
+  @@index([isResolved])
+}
+
+// Ürün rating özeti (performans için cache)
+model ProductRating {
+  id            String    @id @default(cuid())
+
+  productId     String    @unique
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Ortalama ve toplam
+  averageRating Decimal   @default(0) @db.Decimal(3, 2) // 0.00 - 5.00
+  totalReviews  Int       @default(0)
+
+  // Dağılım
+  rating5Count  Int       @default(0)
+  rating4Count  Int       @default(0)
+  rating3Count  Int       @default(0)
+  rating2Count  Int       @default(0)
+  rating1Count  Int       @default(0)
+
+  // Doğrulanmış satın alma oranı
+  verifiedPurchaseCount Int @default(0)
+
+  updatedAt     DateTime  @updatedAt
+}
+
+// -------------------- LICENSE TYPES (KİŞİSEL/TİCARİ/UZATILMIŞ) --------------------
+
+enum LicenseTier {
+  PERSONAL      // Kişisel kullanım
+  COMMERCIAL    // Ticari kullanım (tek proje)
+  EXTENDED      // Uzatılmış lisans (sınırsız proje)
+  ENTERPRISE    // Kurumsal (özel anlaşma)
+}
+
+model ProductLicense {
+  id            String      @id @default(cuid())
+
+  productId     String
+  product       Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  tier          LicenseTier
+
+  // Fiyatlandırma
+  price         Decimal     @db.Decimal(10, 2)
+  currency      String      @default("EUR")
+
+  // Kısıtlamalar
+  maxProjects   Int?        // null = sınırsız
+  maxUsers      Int?        // null = sınırsız
+  maxDomains    Int?        // null = sınırsız
+
+  // İzinler
+  allowCommercial     Boolean @default(false)
+  allowModification   Boolean @default(true)
+  allowRedistribution Boolean @default(false)
+  allowSublicense     Boolean @default(false)
+  allowWhiteLabel     Boolean @default(false)
+
+  // Destek
+  supportMonths       Int     @default(0) // 0 = destek yok
+  updatesMonths       Int     @default(12) // 12 = 1 yıl güncelleme
+
+  // Açıklama
+  description         String? @db.Text
+  features            String[] // Lisansa özel özellikler
+
+  isActive            Boolean @default(true)
+  sortOrder           Int     @default(0)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([productId, tier])
+  @@index([productId])
+  @@index([tier])
+}
+
+// -------------------- SELLER/VENDOR PROFILES (SATICI PROFİLLERİ) --------------------
+
+enum SellerStatus {
+  PENDING       // Onay bekliyor
+  ACTIVE        // Aktif satıcı
+  SUSPENDED     // Askıya alınmış
+  BANNED        // Yasaklanmış
+}
+
+enum SellerTier {
+  STARTER       // Yeni satıcı
+  BRONZE        // 10+ satış
+  SILVER        // 50+ satış
+  GOLD          // 200+ satış
+  PLATINUM      // 500+ satış
+  DIAMOND       // 1000+ satış
+}
+
+model Seller {
+  id            String        @id @default(cuid())
+
+  userId        String        @unique
+
+  // Profil bilgileri
+  displayName   String
+  slug          String        @unique
+  bio           String?       @db.Text
+  avatar        String?
+  coverImage    String?
+
+  // İletişim
+  publicEmail   String?
+  website       String?
+
+  // Sosyal medya
+  socialLinks   Json?         // { twitter, github, linkedin, etc. }
+
+  // Durum
+  status        SellerStatus  @default(PENDING)
+  tier          SellerTier    @default(STARTER)
+
+  // Doğrulama
+  isVerified    Boolean       @default(false)
+  verifiedAt    DateTime?
+  verificationBadge String?   // "identity", "business", "top_seller"
+
+  // İstatistikler (cache)
+  totalProducts Int           @default(0)
+  totalSales    Int           @default(0)
+  totalRevenue  Decimal       @default(0) @db.Decimal(18, 2)
+  averageRating Decimal       @default(0) @db.Decimal(3, 2)
+
+  // Komisyon oranı (%)
+  commissionRate Decimal      @default(30) @db.Decimal(5, 2) // Platform komisyonu
+
+  // Ödeme bilgileri
+  payoutMethod  String?       // stripe, paypal, bank_transfer
+  payoutDetails Json?         // Şifreli ödeme bilgileri
+
+  // Tercihler
+  notifyOnSale  Boolean       @default(true)
+  notifyOnReview Boolean      @default(true)
+
+  // Sözleşme
+  agreedToTerms     Boolean   @default(false)
+  agreedToTermsAt   DateTime?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  products      Product[]     @relation("SellerProducts")
+  payouts       SellerPayout[]
+
+  @@index([userId])
+  @@index([slug])
+  @@index([status])
+  @@index([tier])
+}
+
+model SellerPayout {
+  id            String    @id @default(cuid())
+
+  sellerId      String
+  seller        Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  // Tutar
+  amount        Decimal   @db.Decimal(18, 2)
+  fee           Decimal   @default(0) @db.Decimal(18, 2) // Transfer ücreti
+  netAmount     Decimal   @db.Decimal(18, 2)
+  currency      String    @default("EUR")
+
+  // Durum
+  status        String    @default("pending") // pending, processing, completed, failed
+
+  // Ödeme detayları
+  payoutMethod  String    // stripe, paypal, bank_transfer
+  payoutRef     String?   // Harici referans numarası
+
+  // Dönem
+  periodStart   DateTime
+  periodEnd     DateTime
+
+  // İşlem tarihleri
+  requestedAt   DateTime  @default(now())
+  processedAt   DateTime?
+  completedAt   DateTime?
+
+  // Notlar
+  notes         String?
+  failureReason String?
+
+  @@index([sellerId])
+  @@index([status])
+  @@index([requestedAt])
+}
+
+// -------------------- AFFILIATE/REFERRAL SYSTEM (KOMİSYON SİSTEMİ) --------------------
+
+enum AffiliateStatus {
+  PENDING       // Onay bekliyor
+  ACTIVE        // Aktif
+  PAUSED        // Duraklatılmış
+  BANNED        // Yasaklanmış
+}
+
+model Affiliate {
+  id            String          @id @default(cuid())
+
+  userId        String          @unique
+
+  // Referans kodu
+  referralCode  String          @unique
+
+  // Durum
+  status        AffiliateStatus @default(PENDING)
+
+  // Komisyon oranı (%)
+  commissionRate Decimal        @default(10) @db.Decimal(5, 2)
+
+  // İstatistikler
+  totalClicks   Int             @default(0)
+  totalSignups  Int             @default(0)
+  totalSales    Int             @default(0)
+  totalEarnings Decimal         @default(0) @db.Decimal(18, 2)
+  pendingEarnings Decimal       @default(0) @db.Decimal(18, 2)
+
+  // Cookie süresi (gün)
+  cookieDays    Int             @default(30)
+
+  // Ödeme bilgileri
+  payoutMethod  String?
+  payoutDetails Json?
+  minPayoutAmount Decimal       @default(50) @db.Decimal(10, 2)
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  referrals     AffiliateReferral[]
+  commissions   AffiliateCommission[]
+  payouts       AffiliatePayout[]
+
+  @@index([userId])
+  @@index([referralCode])
+  @@index([status])
+}
+
+model AffiliateReferral {
+  id            String    @id @default(cuid())
+
+  affiliateId   String
+  affiliate     Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  // Yönlendirilen kullanıcı
+  referredUserId String?  // Kayıt olduysa
+  referredEmail  String?  // Henüz kayıt olmadıysa
+
+  // İzleme
+  clickedAt     DateTime  @default(now())
+  signedUpAt    DateTime?
+  firstPurchaseAt DateTime?
+
+  // Kaynak
+  source        String?   // utm_source
+  medium        String?   // utm_medium
+  campaign      String?   // utm_campaign
+  landingPage   String?
+
+  // Meta
+  ipAddress     String?
+  userAgent     String?
+  country       String?
+
+  // Cookie bilgisi
+  cookieId      String?
+  cookieExpiresAt DateTime?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([affiliateId])
+  @@index([referredUserId])
+  @@index([cookieId])
+}
+
+model AffiliateCommission {
+  id            String    @id @default(cuid())
+
+  affiliateId   String
+  affiliate     Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  // Sipariş bilgisi
+  orderId       String
+  orderAmount   Decimal   @db.Decimal(10, 2)
+
+  // Komisyon
+  commissionRate Decimal  @db.Decimal(5, 2)
+  commissionAmount Decimal @db.Decimal(10, 2)
+  currency      String    @default("EUR")
+
+  // Durum
+  status        String    @default("pending") // pending, approved, paid, cancelled
+
+  // Onay
+  approvedAt    DateTime?
+  approvedBy    String?
+
+  // Ödeme
+  payoutId      String?
+  paidAt        DateTime?
+
+  // Notlar
+  notes         String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([affiliateId])
+  @@index([orderId])
+  @@index([status])
+}
+
+model AffiliatePayout {
+  id            String    @id @default(cuid())
+
+  affiliateId   String
+  affiliate     Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  // Tutar
+  amount        Decimal   @db.Decimal(18, 2)
+  fee           Decimal   @default(0) @db.Decimal(18, 2)
+  netAmount     Decimal   @db.Decimal(18, 2)
+  currency      String    @default("EUR")
+
+  // Durum
+  status        String    @default("pending") // pending, processing, completed, failed
+
+  // Ödeme detayları
+  payoutMethod  String
+  payoutRef     String?
+
+  // İşlem tarihleri
+  requestedAt   DateTime  @default(now())
+  processedAt   DateTime?
+  completedAt   DateTime?
+
+  // Notlar
+  notes         String?
+  failureReason String?
+
+  @@index([affiliateId])
+  @@index([status])
+}
+
+// -------------------- HOSTING & DEPLOYMENT (TEK TIKLA DEPLOY) --------------------
+
+enum WebsiteStatus {
+  CREATING      // Oluşturuluyor
+  DEPLOYING     // Deploy ediliyor
+  ACTIVE        // Aktif
+  SUSPENDED     // Askıya alınmış
+  MAINTENANCE   // Bakımda
+  DELETED       // Silinmiş
+}
+
+enum WebsitePlan {
+  STARTER       // 1 site, 5GB, temel
+  BUSINESS      // 5 site, 50GB, premium
+  AGENCY        // Sınırsız site, white-label
+  ENTERPRISE    // Özel sunucu, SLA
+}
+
+model Website {
+  id            String        @id @default(cuid())
+
+  userId        String
+  organizationId String?
+
+  // Template/Product kaynak
+  productId     String?       // Hangi template'den oluşturuldu
+  orderId       String?       // Satın alma siparişi
+
+  // Temel bilgiler
+  name          String
+  slug          String        @unique
+  description   String?
+
+  // Domain yönetimi
+  subdomain     String        @unique // site.hyble.co
+  customDomain  String?       @unique // www.example.com
+
+  // Durum
+  status        WebsiteStatus @default(CREATING)
+  plan          WebsitePlan   @default(STARTER)
+
+  // SSL
+  sslEnabled    Boolean       @default(true)
+  sslCertId     String?
+  sslExpiresAt  DateTime?
+
+  // Deployment
+  containerId   String?       // Docker container ID
+  serverIp      String?       // Assigned server IP
+  serverPort    Int?
+
+  // Git entegrasyonu
+  gitRepo       String?
+  gitBranch     String        @default("main")
+  lastDeployAt  DateTime?
+  lastDeployCommit String?
+
+  // Kaynak kullanımı
+  diskUsage     BigInt        @default(0) // Byte cinsinden
+  bandwidthUsage BigInt       @default(0) // Aylık bandwidth (byte)
+
+  // Limitler
+  diskLimit     BigInt        @default(5368709120) // 5GB default
+  bandwidthLimit BigInt       @default(107374182400) // 100GB default
+
+  // Analytics
+  pageViews     Int           @default(0)
+  uniqueVisitors Int          @default(0)
+
+  // Ayarlar
+  settings      Json?         // Site-specific settings
+  envVars       Json?         // Environment variables (encrypted)
+
+  // Meta
+  framework     String?       // nextjs, react, vue, static
+  nodeVersion   String?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  domains       WebsiteDomain[]
+  deployments   WebsiteDeployment[]
+  backups       WebsiteBackup[]
+
+  @@index([userId])
+  @@index([organizationId])
+  @@index([status])
+  @@index([subdomain])
+  @@index([customDomain])
+}
+
+model WebsiteDomain {
+  id            String    @id @default(cuid())
+
+  websiteId     String
+  website       Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  domain        String    @unique
+
+  // DNS doğrulama
+  verificationToken String
+  verified      Boolean   @default(false)
+  verifiedAt    DateTime?
+
+  // DNS kayıtları
+  dnsRecords    Json?     // Required DNS records
+
+  // SSL
+  sslEnabled    Boolean   @default(false)
+  sslAutoRenew  Boolean   @default(true)
+  sslCertId     String?
+  sslExpiresAt  DateTime?
+
+  // Primary domain
+  isPrimary     Boolean   @default(false)
+
+  // Cloudflare entegrasyonu
+  cloudflareZoneId String?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([websiteId])
+  @@index([domain])
+}
+
+model WebsiteDeployment {
+  id            String    @id @default(cuid())
+
+  websiteId     String
+  website       Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  // Deployment bilgileri
+  deployNumber  Int       // Deployment numarası
+  commitHash    String?
+  commitMessage String?
+  branch        String    @default("main")
+
+  // Durum
+  status        String    @default("pending") // pending, building, deploying, success, failed
+
+  // Loglar
+  buildLogs     String?   @db.Text
+  deployLogs    String?   @db.Text
+  errorMessage  String?
+
+  // Süreler
+  buildDuration Int?      // Saniye cinsinden
+  deployDuration Int?
+
+  // Tetikleyici
+  triggeredBy   String?   // user_id, webhook, auto
+  triggerType   String    @default("manual") // manual, git_push, schedule
+
+  // Timestamps
+  startedAt     DateTime  @default(now())
+  buildStartAt  DateTime?
+  buildEndAt    DateTime?
+  deployStartAt DateTime?
+  deployEndAt   DateTime?
+  completedAt   DateTime?
+
+  // Rollback için
+  isRollback    Boolean   @default(false)
+  rollbackFrom  String?   // Deployment ID
+
+  createdAt     DateTime  @default(now())
+
+  @@index([websiteId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model WebsiteBackup {
+  id            String    @id @default(cuid())
+
+  websiteId     String
+  website       Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  // Backup bilgileri
+  name          String
+  type          String    @default("full") // full, incremental, database
+
+  // Storage
+  r2Key         String    @unique
+  size          BigInt    // Byte cinsinden
+
+  // Durum
+  status        String    @default("pending") // pending, creating, completed, failed, deleted
+
+  // Otomatik backup
+  isAutomatic   Boolean   @default(false)
+
+  // Retention
+  expiresAt     DateTime?
+
+  // Timestamps
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([websiteId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+// -------------------- WaaS SUBSCRIPTION PLANS --------------------
+
+model WaasPlan {
+  id            String    @id @default(cuid())
+
+  name          String
+  slug          String    @unique
+  description   String?   @db.Text
+
+  // Fiyatlandırma
+  priceMonthly  Decimal   @db.Decimal(10, 2)
+  priceYearly   Decimal   @db.Decimal(10, 2)
+  currency      String    @default("EUR")
+
+  // Limitler
+  maxWebsites   Int       // -1 = sınırsız
+  diskSpaceGb   Int
+  bandwidthGb   Int
+
+  // Özellikler
+  features      Json      // Feature list as JSON
+
+  // White-label
+  allowWhiteLabel Boolean @default(false)
+
+  // Öncelik desteği
+  supportPriority String  @default("normal") // normal, priority, dedicated
+
+  // Görünürlük
+  isPublic      Boolean   @default(true)
+  isFeatured    Boolean   @default(false)
+  sortOrder     Int       @default(0)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([isPublic])
+}
+
+// -------------------- SITE BUILDER (SÜRÜKLE-BIRAK EDİTÖR) --------------------
+
+model SitePage {
+  id            String    @id @default(cuid())
+
+  websiteId     String
+
+  // Sayfa bilgileri
+  name          String
+  slug          String
+
+  // İçerik (JSON olarak bloklar)
+  content       Json      // GrapesJS veya EditorJS formatında
+
+  // SEO
+  title         String?
+  metaDescription String?
+  ogImage       String?
+
+  // Durum
+  isPublished   Boolean   @default(false)
+  publishedAt   DateTime?
+
+  // Şablon
+  templateId    String?   // Hazır şablon kullanıldıysa
+
+  // Sıralama
+  sortOrder     Int       @default(0)
+
+  // Anasayfa mı?
+  isHomePage    Boolean   @default(false)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([websiteId, slug])
+  @@index([websiteId])
+}
+
+model SiteBlock {
+  id            String    @id @default(cuid())
+
+  // Block tipi
+  type          String    // hero, features, pricing, faq, contact, gallery, etc.
+
+  // İsim ve açıklama
+  name          String
+  description   String?
+
+  // Kategori
+  category      String    // sections, headers, footers, forms, etc.
+
+  // İçerik şablonu
+  content       Json      // Default content structure
+
+  // Önizleme
+  thumbnail     String?
+  previewUrl    String?
+
+  // Premium mi?
+  isPremium     Boolean   @default(false)
+
+  // Aktif mi?
+  isActive      Boolean   @default(true)
+
+  sortOrder     Int       @default(0)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([type])
+  @@index([category])
+  @@index([isPremium])
+}
+
+// -------------------- AI WEB OLUŞTURUCU --------------------
+
+model AiWebsiteGeneration {
+  id            String    @id @default(cuid())
+
+  userId        String
+  websiteId     String?   // Oluşturulan site
+
+  // Kullanıcı girdileri
+  industry      String    // Sektör (restaurant, portfolio, ecommerce, etc.)
+  businessName  String
+  description   String    @db.Text
+
+  // AI tarafından oluşturulanlar
+  suggestedColors Json?   // Renk paleti
+  suggestedFonts  Json?   // Font önerileri
+  suggestedContent Json?  // İçerik önerileri
+  suggestedImages Json?   // Görsel önerileri
+
+  // Durum
+  status        String    @default("pending") // pending, generating, completed, failed
+
+  // AI model bilgisi
+  modelUsed     String?
+  tokensUsed    Int?
+
+  // Timestamps
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([userId])
+  @@index([status])
+}
+
+// -------------------- FREELANCER/AJANS PAZARYERI --------------------
+
+enum FreelancerStatus {
+  PENDING       // Onay bekliyor
+  ACTIVE        // Aktif
+  SUSPENDED     // Askıya alınmış
+  BANNED        // Yasaklanmış
+}
+
+enum FreelancerTier {
+  STARTER       // Yeni
+  RISING        // Yükselen
+  TOP_RATED     // Üst düzey
+  EXPERT        // Uzman
+}
+
+model Freelancer {
+  id            String            @id @default(cuid())
+
+  userId        String            @unique
+
+  // Profil
+  displayName   String
+  slug          String            @unique
+  title         String            // "Senior Web Developer"
+  bio           String            @db.Text
+  avatar        String?
+  coverImage    String?
+
+  // İletişim
+  publicEmail   String?
+  website       String?
+  location      String?
+  timezone      String?
+
+  // Yetenekler
+  skills        String[]          // ["React", "Next.js", "Tailwind"]
+  languages     Json?             // [{ "lang": "en", "level": "native" }]
+
+  // Deneyim
+  yearsExperience Int             @default(0)
+  portfolioUrls   String[]
+
+  // Fiyatlandırma
+  hourlyRate    Decimal?          @db.Decimal(10, 2)
+  currency      String            @default("EUR")
+
+  // Durum
+  status        FreelancerStatus  @default(PENDING)
+  tier          FreelancerTier    @default(STARTER)
+
+  // Doğrulama
+  isVerified    Boolean           @default(false)
+  verifiedAt    DateTime?
+
+  // İstatistikler
+  totalProjects Int               @default(0)
+  completedProjects Int           @default(0)
+  totalEarnings Decimal           @default(0) @db.Decimal(18, 2)
+  averageRating Decimal           @default(0) @db.Decimal(3, 2)
+  responseTime  Int?              // Ortalama yanıt süresi (saat)
+
+  // Availability
+  isAvailable   Boolean           @default(true)
+  availableFrom DateTime?
+
+  // Sertifikalar
+  certificates  Json?
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  projects      FreelanceProject[]
+  proposals     FreelanceProposal[]
+  reviews       FreelanceReview[]
+
+  @@index([userId])
+  @@index([slug])
+  @@index([status])
+  @@index([tier])
+  @@index([isAvailable])
+}
+
+enum ProjectStatus {
+  DRAFT         // Taslak
+  OPEN          // Teklif kabul ediyor
+  IN_PROGRESS   // Devam ediyor
+  REVIEW        // İnceleme aşamasında
+  COMPLETED     // Tamamlandı
+  CANCELLED     // İptal edildi
+  DISPUTED      // Anlaşmazlık
+}
+
+model FreelanceProject {
+  id            String        @id @default(cuid())
+
+  // Proje sahibi
+  clientId      String        // Müşteri user ID
+
+  // Atanan freelancer
+  freelancerId  String?
+  freelancer    Freelancer?   @relation(fields: [freelancerId], references: [id])
+
+  // Proje bilgileri
+  title         String
+  description   String        @db.Text
+  requirements  String?       @db.Text
+
+  // Kategori
+  category      String        // web_design, development, etc.
+  skills        String[]      // Gerekli yetenekler
+
+  // Bütçe
+  budgetType    String        @default("fixed") // fixed, hourly
+  budgetMin     Decimal?      @db.Decimal(10, 2)
+  budgetMax     Decimal?      @db.Decimal(10, 2)
+  currency      String        @default("EUR")
+
+  // Süre
+  deadline      DateTime?
+  estimatedDays Int?
+
+  // Durum
+  status        ProjectStatus @default(DRAFT)
+
+  // Dosyalar
+  attachments   Json?
+
+  // Escrow
+  escrowAmount  Decimal?      @db.Decimal(10, 2)
+  escrowStatus  String?       // pending, funded, released, refunded
+
+  // Tamamlanma
+  startedAt     DateTime?
+  completedAt   DateTime?
+
+  // Görünürlük
+  isPublic      Boolean       @default(true)
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  proposals     FreelanceProposal[]
+  milestones    ProjectMilestone[]
+  messages      ProjectMessage[]
+  review        FreelanceReview?
+
+  @@index([clientId])
+  @@index([freelancerId])
+  @@index([status])
+  @@index([category])
+}
+
+model FreelanceProposal {
+  id            String    @id @default(cuid())
+
+  projectId     String
+  project       FreelanceProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  freelancerId  String
+  freelancer    Freelancer @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  // Teklif içeriği
+  coverLetter   String    @db.Text
+  proposedBudget Decimal  @db.Decimal(10, 2)
+  currency      String    @default("EUR")
+  estimatedDays Int
+
+  // Durum
+  status        String    @default("pending") // pending, accepted, rejected, withdrawn
+
+  // Yanıt
+  clientResponse String?
+  respondedAt   DateTime?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([projectId, freelancerId])
+  @@index([projectId])
+  @@index([freelancerId])
+  @@index([status])
+}
+
+model ProjectMilestone {
+  id            String    @id @default(cuid())
+
+  projectId     String
+  project       FreelanceProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // Milestone bilgileri
+  title         String
+  description   String?   @db.Text
+
+  // Ödeme
+  amount        Decimal   @db.Decimal(10, 2)
+  currency      String    @default("EUR")
+
+  // Sıra
+  sortOrder     Int       @default(0)
+
+  // Durum
+  status        String    @default("pending") // pending, in_progress, submitted, approved, paid
+
+  // Deadline
+  dueDate       DateTime?
+
+  // Tamamlanma
+  submittedAt   DateTime?
+  approvedAt    DateTime?
+  paidAt        DateTime?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+}
+
+model ProjectMessage {
+  id            String    @id @default(cuid())
+
+  projectId     String
+  project       FreelanceProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  senderId      String
+
+  content       String    @db.Text
+
+  // Dosya ekleri
+  attachments   Json?
+
+  // Okundu bilgisi
+  isRead        Boolean   @default(false)
+  readAt        DateTime?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([projectId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+model FreelanceReview {
+  id            String    @id @default(cuid())
+
+  projectId     String    @unique
+  project       FreelanceProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  freelancerId  String
+  freelancer    Freelancer @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  clientId      String    // Değerlendiren müşteri
+
+  // Puanlama
+  rating        Int       // 1-5
+
+  // Detaylı puanlama
+  qualityRating Int?      // İş kalitesi
+  communicationRating Int? // İletişim
+  timelinessRating Int?   // Zamanında teslim
+
+  // Yorum
+  title         String?
+  content       String    @db.Text
+
+  // Freelancer yanıtı
+  freelancerResponse String? @db.Text
+  freelancerRespondedAt DateTime?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([freelancerId])
+  @@index([clientId])
+  @@index([rating])
+}
+
+// -------------------- E-TİCARET ENTEGRASYONLARI --------------------
+
+enum PaymentGatewayType {
+  STRIPE
+  IYZICO
+  PAYTR
+  PAPARA
+}
+
+model PaymentGatewayConfig {
+  id            String              @id @default(cuid())
+
+  websiteId     String
+
+  gateway       PaymentGatewayType
+
+  // API anahtarları (şifreli)
+  apiKey        String?             // Encrypted
+  secretKey     String?             // Encrypted
+  merchantId    String?
+
+  // Test/Canlı modu
+  isTestMode    Boolean             @default(true)
+
+  // Aktif mi?
+  isActive      Boolean             @default(false)
+
+  // Ayarlar
+  settings      Json?
+
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@unique([websiteId, gateway])
+  @@index([websiteId])
+}
+
+enum ShippingProvider {
+  MNG
+  YURTICI
+  ARAS
+  PTT
+  UPS
+  DHL
+  FEDEX
+  CUSTOM
+}
+
+model ShippingConfig {
+  id            String           @id @default(cuid())
+
+  websiteId     String
+
+  provider      ShippingProvider
+
+  // API bilgileri (şifreli)
+  apiKey        String?
+  secretKey     String?
+  customerId    String?
+
+  // Aktif mi?
+  isActive      Boolean          @default(false)
+
+  // Fiyatlandırma
+  baseCost      Decimal?         @db.Decimal(10, 2)
+  freeShippingThreshold Decimal? @db.Decimal(10, 2)
+
+  // Ayarlar
+  settings      Json?
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([websiteId, provider])
+  @@index([websiteId])
+}
+
+// -------------------- WHITE-LABEL AJANS PANELİ --------------------
+
+model WhiteLabelConfig {
+  id            String    @id @default(cuid())
+
+  organizationId String   @unique
+
+  // Marka
+  brandName     String
+  logo          String?
+  favicon       String?
+
+  // Renkler
+  primaryColor  String    @default("#f59e0b")
+  secondaryColor String   @default("#f97316")
+
+  // Domain
+  customDomain  String?   @unique // builder.ajansin.com
+
+  // Email ayarları
+  fromEmail     String?
+  fromName      String?
+
+  // Footer
+  footerText    String?
+  copyrightText String?
+
+  // Sosyal medya
+  socialLinks   Json?
+
+  // Özelleştirme
+  customCss     String?   @db.Text
+  customJs      String?   @db.Text
+
+  // Aktif mi?
+  isActive      Boolean   @default(true)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([customDomain])
+}
+
+// -------------------- ANALİTİK VE SEO ARAÇLARI --------------------
+
+model WebsiteAnalytics {
+  id            String    @id @default(cuid())
+
+  websiteId     String
+
+  // Tarih (günlük aggregate)
+  date          DateTime  @db.Date
+
+  // Sayfa görüntüleme
+  pageViews     Int       @default(0)
+  uniqueVisitors Int      @default(0)
+
+  // Oturum bilgileri
+  sessions      Int       @default(0)
+  avgSessionDuration Int  @default(0) // Saniye
+  bounceRate    Decimal   @default(0) @db.Decimal(5, 2)
+
+  // Kaynak dağılımı
+  sourceData    Json?     // { direct: 100, organic: 50, referral: 30 }
+
+  // Cihaz dağılımı
+  deviceData    Json?     // { desktop: 60, mobile: 35, tablet: 5 }
+
+  // Ülke dağılımı
+  countryData   Json?     // { TR: 500, US: 100, DE: 50 }
+
+  // En çok ziyaret edilen sayfalar
+  topPages      Json?     // [{ path: "/", views: 500 }]
+
+  createdAt     DateTime  @default(now())
+
+  @@unique([websiteId, date])
+  @@index([websiteId])
+  @@index([date])
+}
+
+model SeoAudit {
+  id            String    @id @default(cuid())
+
+  websiteId     String
+  pageUrl       String
+
+  // Lighthouse skorları
+  performanceScore Int?
+  accessibilityScore Int?
+  bestPracticesScore Int?
+  seoScore      Int?
+
+  // Detaylı metrikler
+  fcp           Int?      // First Contentful Paint (ms)
+  lcp           Int?      // Largest Contentful Paint (ms)
+  cls           Decimal?  @db.Decimal(5, 3) // Cumulative Layout Shift
+  fid           Int?      // First Input Delay (ms)
+  ttfb          Int?      // Time to First Byte (ms)
+
+  // SEO kontrolleri
+  hasTitle      Boolean   @default(false)
+  hasMeta       Boolean   @default(false)
+  hasH1         Boolean   @default(false)
+  hasAltTags    Boolean   @default(false)
+  hasCanonical  Boolean   @default(false)
+  hasRobots     Boolean   @default(false)
+  hasSitemap    Boolean   @default(false)
+
+  // Sorunlar
+  issues        Json?     // [{ type: "error", message: "..." }]
+
+  // Öneriler
+  recommendations Json?   // [{ priority: "high", message: "..." }]
+
+  createdAt     DateTime  @default(now())
+
+  @@index([websiteId])
+  @@index([createdAt])
+}
+
+// -------------------- FORM BUILDER VE CRM --------------------
+
+model FormBuilder {
+  id            String    @id @default(cuid())
+
+  websiteId     String
+
+  // Form bilgileri
+  name          String
+  description   String?
+
+  // Form alanları (JSON)
+  fields        Json      // [{ type: "text", label: "Name", required: true }]
+
+  // Ayarlar
+  submitButtonText String @default("Gönder")
+  successMessage String?
+  redirectUrl   String?
+
+  // Spam koruması
+  enableCaptcha Boolean   @default(true)
+  captchaType   String    @default("turnstile") // turnstile, recaptcha
+
+  // Bildirimler
+  notifyEmail   String?
+  notifyWebhook String?
+
+  // Aktif mi?
+  isActive      Boolean   @default(true)
+
+  // İstatistikler
+  submissionCount Int     @default(0)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  submissions   FormSubmission[]
+
+  @@index([websiteId])
+}
+
+model FormSubmission {
+  id            String    @id @default(cuid())
+
+  formId        String
+  form          FormBuilder @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  // Form verileri
+  data          Json
+
+  // Meta
+  ipAddress     String?
+  userAgent     String?
+  referrer      String?
+
+  // Durum
+  isRead        Boolean   @default(false)
+  readAt        DateTime?
+
+  // Spam kontrolü
+  isSpam        Boolean   @default(false)
+  spamScore     Decimal?  @db.Decimal(3, 2)
+
+  createdAt     DateTime  @default(now())
+
+  @@index([formId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+// Basit CRM - Müşteri veritabanı
+model CrmContact {
+  id            String    @id @default(cuid())
+
+  websiteId     String
+
+  // Temel bilgiler
+  email         String
+  firstName     String?
+  lastName      String?
+  phone         String?
+  company       String?
+
+  // Etiketler
+  tags          String[]
+
+  // Kaynak
+  source        String?   // form, import, manual
+  sourceDetails String?
+
+  // Notlar
+  notes         String?   @db.Text
+
+  // E-posta pazarlama
+  isSubscribed  Boolean   @default(false)
+  subscribedAt  DateTime?
+  unsubscribedAt DateTime?
+
+  // Aktivite
+  lastActivityAt DateTime?
+
+  // Özel alanlar
+  customFields  Json?
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  activities    CrmActivity[]
+
+  @@unique([websiteId, email])
+  @@index([websiteId])
+  @@index([email])
+  @@index([tags])
+}
+
+model CrmActivity {
+  id            String    @id @default(cuid())
+
+  contactId     String
+  contact       CrmContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  // Aktivite tipi
+  type          String    // form_submit, email_open, email_click, page_view, note
+
+  // Açıklama
+  description   String
+
+  // Meta
+  metadata      Json?
+
+  createdAt     DateTime  @default(now())
+
+  @@index([contactId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ==================== FILE UPLOADS ====================
+
+model Upload {
+  id            String    @id @default(cuid())
+
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Dosya bilgileri
+  filename      String    // Orijinal dosya adı
+  key           String    @unique // S3/R2 key
+  contentType   String    // MIME type
+  size          BigInt    // Byte cinsinden
+
+  // Durum
+  status        String    @default("pending") // pending, completed, failed, deleted
+
+  // Meta
+  purpose       String?   // product-image, profile-avatar, etc.
+  isPublic      Boolean   @default(false)
+
+  // Timestamps
+  completedAt   DateTime?
+  expiresAt     DateTime? // Geçici yüklemeler için
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([purpose])
+  @@index([key])
 }

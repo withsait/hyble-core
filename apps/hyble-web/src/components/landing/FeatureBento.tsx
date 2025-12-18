@@ -9,88 +9,86 @@ import {
   Activity,
   CreditCard,
   Cloud,
-  Gamepad2,
   ArrowUpRight,
   Server,
   Globe,
 } from "lucide-react";
 
-// Ürün kategorileri - Vercel tarzı
+// Ürün kategorileri - Site builder ve şablon odaklı
 const productCategories = [
   {
-    title: "Kimlik & Güvenlik",
-    description: "Kullanıcı yönetimi ve güvenlik çözümleri",
+    title: "Web Sitesi Oluşturucu",
+    description: "Kod yazmadan profesyonel siteler",
+    products: [
+      {
+        icon: Globe,
+        name: "Site Builder",
+        description: "Sürükle-bırak editör ile web sitesi oluşturun",
+        href: "/websites/new",
+        features: ["Drag & Drop", "Mobil Uyumlu", "SEO"],
+        badge: "Popüler",
+      },
+      {
+        icon: Cloud,
+        name: "AI Web Creator",
+        description: "Yapay zeka ile 60 saniyede site oluşturun",
+        href: "/websites/new/ai",
+        features: ["GPT-4", "Otomatik", "Hızlı"],
+        badge: "Yeni",
+      },
+    ],
+  },
+  {
+    title: "Şablon Mağazası",
+    description: "Profesyonel hazır tasarımlar",
+    products: [
+      {
+        icon: Server,
+        name: "Web Şablonları",
+        description: "Landing page, kurumsal, portfolyo",
+        href: "/store?category=web",
+        features: ["200+", "Responsive", "Modern"],
+      },
+      {
+        icon: Activity,
+        name: "E-Ticaret Şablonları",
+        description: "Online mağaza için hazır tasarımlar",
+        href: "/store?category=ecommerce",
+        features: ["Sepet", "Ödeme", "Stok"],
+      },
+    ],
+  },
+  {
+    title: "Ekosistem Hizmetleri",
+    description: "Geliştiriciler için API'ler",
     products: [
       {
         icon: Shield,
         name: "Hyble ID",
         description: "OAuth 2.0, MFA, SSO ve tek tıkla giriş",
-        href: "/products/id",
+        href: "/solutions/id",
         features: ["OAuth 2.0", "MFA", "SSO"],
+      },
+      {
+        icon: CreditCard,
+        name: "Hyble Wallet",
+        description: "Sanal cüzdan ve ödeme yönetimi",
+        href: "/solutions/wallet",
+        features: ["Bakiye", "Transfer", "Fatura"],
       },
       {
         icon: Key,
         name: "Hyble License",
         description: "Yazılım lisanslama ve aktivasyon sistemi",
-        href: "/products/license",
+        href: "/solutions/license",
         features: ["HWID", "Aktivasyon", "API"],
       },
     ],
   },
   {
-    title: "Ödeme & Finans",
-    description: "Global ödeme altyapısı",
+    title: "Destek & Araçlar",
+    description: "Yardım ve ücretsiz araçlar",
     products: [
-      {
-        icon: CreditCard,
-        name: "Hyble Wallet",
-        description: "Sanal cüzdan ve ödeme yönetimi",
-        href: "/products/wallet",
-        features: ["Bakiye", "Transfer", "Fatura"],
-      },
-    ],
-  },
-  {
-    title: "Altyapı & Hosting",
-    description: "Güçlü sunucu çözümleri",
-    products: [
-      {
-        icon: Cloud,
-        name: "Hyble Cloud",
-        description: "VPS, dedicated ve web hosting",
-        href: "/products/cloud",
-        features: ["VPS", "Web", "Storage"],
-        badge: "Yakında",
-      },
-      {
-        icon: Gamepad2,
-        name: "Hyble Gaming",
-        description: "Minecraft, FiveM, Rust sunucuları",
-        href: "/products/gaming",
-        features: ["Minecraft", "FiveM", "Rust"],
-        badge: "Popüler",
-      },
-      {
-        icon: Server,
-        name: "Hyble CDN",
-        description: "Global içerik dağıtım ağı",
-        href: "/products/cdn",
-        features: ["Edge", "Cache", "DDoS"],
-        badge: "Yakında",
-      },
-    ],
-  },
-  {
-    title: "İzleme & Araçlar",
-    description: "Geliştirici araçları",
-    products: [
-      {
-        icon: Activity,
-        name: "Hyble Status",
-        description: "Uptime monitoring ve bildirimler",
-        href: "/products/status",
-        features: ["Uptime", "Alerts", "API"],
-      },
       {
         icon: Wrench,
         name: "Hyble Tools",
@@ -118,13 +116,13 @@ export function FeatureBento() {
           className="text-center mb-10"
         >
           <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
-            Tek Platformda{" "}
+            Web Sitenizi{" "}
             <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
-              Her Şey
+              Oluşturun
             </span>
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
-            Kimlik doğrulamadan hosting&apos;e, ödemeden izlemeye — tüm ihtiyaçlarınız tek çatı altında.
+            Site builder ile kendiniz oluşturun, hazır şablonlarla başlayın veya AI&apos;a bırakın.
           </p>
         </motion.div>
 
@@ -201,11 +199,11 @@ export function FeatureBento() {
           className="mt-8 text-center"
         >
           <Link
-            href="/products"
+            href="/store"
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
           >
             <Globe className="w-4 h-4" />
-            Tüm Ürünleri Keşfet
+            Şablon Mağazasına Git
           </Link>
         </motion.div>
       </div>

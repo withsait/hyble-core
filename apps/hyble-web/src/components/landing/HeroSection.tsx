@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowRight, CheckCircle2, Eye, Shield, Zap,
-  Sparkles, Headphones, Globe, ShoppingCart, Gamepad2, Settings
+  Sparkles, Headphones, Globe, ShoppingCart, Settings
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -15,44 +15,44 @@ const rotatingWords = [
   { text: "Güvende Tut", gradient: "from-amber-500 via-orange-500 to-red-500" },
 ];
 
-// Yeni wizard seçenekleri - Pazarlama odaklı, kullanıcı dostu
+// Yeni wizard seçenekleri - Site builder ve şablon odaklı
 const wizardOptions = [
   {
     icon: Globe,
-    title: "Web Sitesi Kurmak",
-    description: "5 dakikada yayında",
-    href: "/products/hosting",
+    title: "Web Sitesi Oluştur",
+    description: "Sürükle-bırak editör",
+    href: "/websites/new",
     highlight: "En Popüler",
     stats: "2.500+ site",
   },
   {
-    icon: ShoppingCart,
-    title: "Online Satış Başlatmak",
-    description: "Hemen satışa geç",
-    href: "/products/ecommerce",
-    stats: "€0 kurulum",
+    icon: Sparkles,
+    title: "AI ile Site Yap",
+    description: "60 saniyede hazır",
+    href: "/websites/new/ai",
+    highlight: "Yeni",
+    stats: "Yapay zeka",
   },
   {
-    icon: Gamepad2,
-    title: "Oyun Sunucusu Açmak",
-    description: "Minecraft, FiveM, Rust",
-    href: "/products/gaming",
-    highlight: "Yeni",
-    stats: "99.9% uptime",
+    icon: ShoppingCart,
+    title: "Şablon Satın Al",
+    description: "Profesyonel tasarımlar",
+    href: "/store",
+    stats: "200+ şablon",
   },
   {
     icon: Settings,
-    title: "Özel Proje Geliştirmek",
-    description: "Size özel çözümler",
-    href: "/contact",
-    stats: "7/24 destek",
+    title: "Ekosistem Hizmetleri",
+    description: "ID, Wallet, License",
+    href: "/solutions",
+    stats: "API hazır",
   },
 ];
 
-// Mini badge'ler - Genel kitleye hitap eden
+// Mini badge'ler - Site builder odaklı
 const badges = [
-  { icon: Shield, text: "Güvenli Altyapı" },
-  { icon: Zap, text: "Anında Kurulum" },
+  { icon: Zap, text: "Sürükle & Bırak" },
+  { icon: Shield, text: "Hosting Dahil" },
   { icon: Headphones, text: "7/24 Destek" },
 ];
 
@@ -104,7 +104,7 @@ export function HeroSection() {
             >
               <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                Hepsi bir arada dijital platform
+                Web sitesi yapımı ve şablon mağazası
               </span>
             </motion.div>
 
@@ -131,8 +131,8 @@ export function HeroSection() {
 
             {/* Description */}
             <p className="text-lg text-slate-600 dark:text-slate-400 max-w-lg mb-8 leading-relaxed">
-              Hızlı kurulum, kolay yönetim. Dakikalar içinde başlayın,
-              tek panel üzerinden tüm hizmetlerinizi yönetin. Hosting, ödeme, kimlik doğrulama — hepsi hazır.
+              Profesyonel web sitesi oluşturun, hazır şablonlarla başlayın veya AI ile dakikalar içinde sitenizi yapın.
+              Hosting dahil, tek panelden yönetin.
             </p>
 
             {/* Mini Badges */}

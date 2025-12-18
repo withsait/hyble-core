@@ -87,6 +87,266 @@ async function generateInvoiceNumber(): Promise<string> {
 }
 
 export const paymentRouter = createTRPCRouter({
+  // Sipariş oluştur (Checkout sayfasından)
+  createOrder: protectedProcedure
+    .input(
+      z.object({
+        paymentMethod: z.enum(["card", "wallet"]),
+        billingInfo: z.object({
+          firstName: z.string().min(1),
+          lastName: z.string().min(1),
+          email: z.string().email(),
+          phone: z.string().optional(),
+          company: z.string().optional(),
+          vatNumber: z.string().optional(),
+          address: z.string().min(1),
+          city: z.string().min(1),
+          postalCode: z.string().min(1),
+          country: z.string().min(1),
+        }),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Sepeti al
+      const cart = await prisma.cart.findFirst({
+        where: {
+          userId: ctx.user.id,
+          status: "ACTIVE",
+        },
+        include: {
+          items: true,
+          coupon: true,
+        },
+      });
+
+      if (!cart || cart.items.length === 0) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Sepetiniz boş",
+        });
+      }
+
+      // Sipariş numarası oluştur
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+
+      // Toplam hesapla
+      const subtotal = cart.items.reduce((sum, item) => {
+        const price = parseFloat(item.unitPrice.toString());
+        return sum + price * item.quantity;
+      }, 0);
+
+      const taxRate = 0; // KDV dahil fiyatlar
+      const taxAmount = 0;
+      const discountAmount = cart.coupon ? parseFloat(cart.discountAmount?.toString() || "0") : 0;
+      const total = subtotal - discountAmount;
+
+      // Sipariş oluştur
+      const order = await prisma.order.create({
+        data: {
+          orderNumber,
+          userId: ctx.user.id,
+          cartId: cart.id,
+          status: "PENDING",
+          paymentStatus: "PENDING",
+          paymentMethod: input.paymentMethod,
+          subtotal,
+          taxRate,
+          taxAmount,
+          discountAmount,
+          total,
+          currency: "EUR",
+          couponId: cart.couponId,
+          billingAddress: {
+            firstName: input.billingInfo.firstName,
+            lastName: input.billingInfo.lastName,
+            email: input.billingInfo.email,
+            phone: input.billingInfo.phone || "",
+            company: input.billingInfo.company || "",
+            vatNumber: input.billingInfo.vatNumber || "",
+            address: input.billingInfo.address,
+            city: input.billingInfo.city,
+            postalCode: input.billingInfo.postalCode,
+            country: input.billingInfo.country,
+          },
+          items: {
+            create: cart.items.map((item) => ({
+              productId: item.productId,
+              variantId: item.variantId,
+              productName: item.productName,
+              variantName: item.variantName,
+              productSlug: item.productSlug,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              totalPrice: parseFloat(item.unitPrice.toString()) * item.quantity,
+              currency: item.currency,
+            })),
+          },
+        },
+      });
+
+      // Ödeme yöntemine göre işlem
+      if (input.paymentMethod === "wallet") {
+        // Cüzdan ile ödeme
+        const wallet = await getOrCreateWallet(ctx.user.id, "EUR");
+        const walletBalance = parseFloat(wallet.balance.toString());
+
+        if (walletBalance < total) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Yetersiz cüzdan bakiyesi",
+          });
+        }
+
+        // Cüzdandan düş ve siparişi tamamla
+        const newBalance = wallet.balance.sub(new Prisma.Decimal(total));
+        const invoiceNumber = await generateInvoiceNumber();
+
+        await prisma.$transaction(async (tx) => {
+          // Cüzdan işlemi
+          await tx.transaction.create({
+            data: {
+              walletId: wallet.id,
+              type: "CHARGE",
+              status: "COMPLETED",
+              amount: total,
+              balanceBefore: wallet.balance,
+              balanceAfter: newBalance,
+              currency: "EUR",
+              description: `Sipariş ödemesi - ${orderNumber}`,
+              reference: order.id,
+              paymentMethod: "SYSTEM",
+            },
+          });
+
+          // Cüzdan güncelle
+          await tx.wallet.update({
+            where: { id: wallet.id },
+            data: { balance: newBalance },
+          });
+
+          // Fatura oluştur
+          const invoice = await tx.invoice.create({
+            data: {
+              invoiceNumber,
+              userId: ctx.user.id,
+              status: "PAID",
+              subtotal,
+              taxRate,
+              taxAmount,
+              total,
+              currency: "EUR",
+              paidAt: new Date(),
+              items: [],
+            },
+          });
+
+          // Sipariş güncelle
+          await tx.order.update({
+            where: { id: order.id },
+            data: {
+              status: "PROCESSING",
+              paymentStatus: "CAPTURED",
+              walletAmount: total,
+              invoiceId: invoice.id,
+              paidAt: new Date(),
+            },
+          });
+
+          // Sepeti dönüştürülmüş olarak işaretle
+          await tx.cart.update({
+            where: { id: cart.id },
+            data: {
+              status: "CONVERTED",
+              convertedAt: new Date(),
+            },
+          });
+
+          // Kupon kullanımı kaydet
+          if (cart.couponId) {
+            await tx.coupon.update({
+              where: { id: cart.couponId },
+              data: { usedCount: { increment: 1 } },
+            });
+
+            await tx.couponUsage.create({
+              data: {
+                couponId: cart.couponId,
+                userId: ctx.user.id,
+                orderId: order.id,
+                discountAmount,
+              },
+            });
+          }
+        });
+
+        return {
+          orderId: order.id,
+          orderNumber,
+          paymentMethod: "wallet",
+        };
+      } else {
+        // Kart ile ödeme - Stripe Payment Intent oluştur
+        const stripeCustomer = await getOrCreateStripeCustomer(
+          ctx.user.id,
+          ctx.user.email,
+          `${input.billingInfo.firstName} ${input.billingInfo.lastName}`
+        );
+
+        const paymentIntent = await getStripe().paymentIntents.create({
+          amount: Math.round(total * 100), // Cent cinsinden
+          currency: "eur",
+          customer: stripeCustomer.stripeCustomerId,
+          metadata: {
+            orderId: order.id,
+            userId: ctx.user.id,
+            orderNumber,
+          },
+          automatic_payment_methods: {
+            enabled: true,
+          },
+        });
+
+        // Sipariş güncelle
+        await prisma.order.update({
+          where: { id: order.id },
+          data: {
+            paymentRef: paymentIntent.id,
+          },
+        });
+
+        return {
+          orderId: order.id,
+          orderNumber,
+          paymentMethod: "card",
+          stripeClientSecret: paymentIntent.client_secret,
+        };
+      }
+    }),
+
+  // Sipariş detayı getir
+  getOrder: protectedProcedure
+    .input(z.object({ orderId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const order = await prisma.order.findFirst({
+        where: {
+          id: input.orderId,
+          userId: ctx.user.id,
+        },
+        include: {
+          items: true,
+        },
+      });
+
+      if (!order) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Sipariş bulunamadı",
+        });
+      }
+
+      return { order };
+    }),
+
   // Kayıtlı ödeme yöntemlerini listele
   listMethods: protectedProcedure.query(async ({ ctx }) => {
     const stripeCustomer = await prisma.stripeCustomer.findUnique({

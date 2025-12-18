@@ -7,9 +7,11 @@ import { Card } from "@hyble/ui";
 import {
   ArrowLeft, ShoppingCart, Package, Check, Star,
   ChevronRight, Zap, Shield, Clock, Loader2,
-  CheckCircle2, ArrowRight, Monitor, ExternalLink, Plus
+  CheckCircle2, ArrowRight, Monitor, ExternalLink, Plus,
+  MessageSquare, Store
 } from "lucide-react";
 import { useCart } from "@/lib/cart-context";
+import { ProductReviews, WriteReviewForm } from "@/components/reviews";
 
 // API base URL
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.hyble.co";
@@ -31,6 +33,17 @@ interface ProductMedia {
   alt: string | null;
   isPrimary: boolean;
   sortOrder: number;
+}
+
+interface Seller {
+  id: string;
+  displayName: string;
+  slug: string;
+  tier: string;
+  isVerified: boolean;
+  rating: number | null;
+  totalSales: number;
+  logo: string | null;
 }
 
 interface Product {
@@ -55,6 +68,9 @@ interface Product {
   media: ProductMedia[];
   variants: ProductVariant[];
   lowestPrice: number | null;
+  seller: Seller | null;
+  averageRating: number | null;
+  totalReviews: number;
 }
 
 export default function ProductDetailPage() {
@@ -237,6 +253,69 @@ export default function ProductDetailPage() {
                 {product.nameTr}
               </h1>
 
+              {/* Rating & Reviews Count */}
+              {product.totalReviews > 0 && (
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-5 h-5 ${
+                          star <= Math.round(product.averageRating || 0)
+                            ? "text-amber-400 fill-amber-400"
+                            : "text-slate-300 dark:text-slate-600"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-lg font-semibold text-slate-900 dark:text-white">
+                    {product.averageRating?.toFixed(1)}
+                  </span>
+                  <a
+                    href="#reviews"
+                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    ({product.totalReviews} yorum)
+                  </a>
+                </div>
+              )}
+
+              {/* Seller Info */}
+              {product.seller && (
+                <Link
+                  href={`/seller/${product.seller.slug}`}
+                  className="flex items-center gap-3 p-3 mb-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+                    {product.seller.logo ? (
+                      <img src={product.seller.logo} alt={product.seller.displayName} className="w-full h-full object-cover" />
+                    ) : (
+                      <Store className="w-5 h-5 text-slate-400" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-slate-900 dark:text-white">
+                        {product.seller.displayName}
+                      </span>
+                      {product.seller.isVerified && (
+                        <CheckCircle2 className="w-4 h-4 text-blue-500" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                      {product.seller.rating && (
+                        <span className="flex items-center gap-1">
+                          <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                          {product.seller.rating.toFixed(1)}
+                        </span>
+                      )}
+                      <span>{product.seller.totalSales} satış</span>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-slate-400" />
+                </Link>
+              )}
+
               <p className="text-lg text-slate-600 dark:text-slate-400 mb-6">
                 {product.descriptionTr || product.shortDescTr || product.descriptionEn || product.shortDescEn}
               </p>
@@ -393,6 +472,11 @@ export default function ProductDetailPage() {
           </div>
         </section>
       )}
+
+      {/* Reviews Section */}
+      <div id="reviews">
+        <ProductReviews productId={product.id} productSlug={product.slug} />
+      </div>
 
       {/* Related Products CTA */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-600 to-purple-700">

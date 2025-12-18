@@ -4,19 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Building2,
-  FolderKanban,
   Wallet,
   Receipt,
   HeadphonesIcon,
   Settings,
   LogOut,
+  Globe,
+  ShoppingBag,
+  Heart,
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Organizasyonlar", href: "/organizations", icon: Building2 },
-  { name: "Projeler", href: "/projects", icon: FolderKanban },
+  { name: "Web Sitelerim", href: "/websites", icon: Globe },
+  { name: "Siparişlerim", href: "/orders", icon: ShoppingBag },
+  { name: "Favorilerim", href: "/favorites", icon: Heart },
   { name: "Cüzdan", href: "/wallet", icon: Wallet },
   { name: "Faturalama", href: "/billing", icon: Receipt },
   { name: "Destek", href: "/support", icon: HeadphonesIcon },
