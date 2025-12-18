@@ -978,6 +978,9 @@ model Product {
   isFeatured    Boolean       @default(false)
   featuredOrder Int?
 
+  // Demo/Preview URL (canlı önizleme için)
+  demoUrl       String?
+
   // Relations
   variants      ProductVariant[]
   media         ProductMedia[]

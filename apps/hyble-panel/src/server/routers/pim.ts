@@ -36,6 +36,7 @@ const productCreateSchema = z.object({
   currency: z.string().default("EUR"),
   taxRate: z.number().min(0).max(100).default(20),
   isFeatured: z.boolean().default(false),
+  demoUrl: z.string().url().optional().or(z.literal("")),
 });
 
 const productUpdateSchema = productCreateSchema.partial().extend({

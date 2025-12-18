@@ -30,6 +30,7 @@ const productSchema = z.object({
   taxRate: z.string().optional(),
   tags: z.string().optional(),
   isFeatured: z.boolean().optional(),
+  demoUrl: z.string().url("Geçerli bir URL giriniz").optional().or(z.literal("")),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -101,6 +102,7 @@ export function ProductForm({ productId }: ProductFormProps) {
         taxRate: product.taxRate?.toString() || "20",
         tags: product.tags?.join(", ") || "",
         isFeatured: product.isFeatured || false,
+        demoUrl: product.demoUrl || "",
       });
     }
   }, [product, reset]);
@@ -139,6 +141,7 @@ export function ProductForm({ productId }: ProductFormProps) {
       taxRate: data.taxRate ? parseFloat(data.taxRate) : 20,
       tags: data.tags ? data.tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
       isFeatured: data.isFeatured || false,
+      demoUrl: data.demoUrl || undefined,
     };
 
     if (mode === "create") {
@@ -366,6 +369,23 @@ export function ProductForm({ productId }: ProductFormProps) {
                 placeholder="etiket1, etiket2, etiket3"
               />
               <p className="text-xs text-muted-foreground">Virgülle ayırarak yazın</p>
+            </div>
+          </div>
+
+          {/* Demo URL */}
+          <div className="rounded-lg border bg-card p-6 space-y-4">
+            <h2 className="font-semibold">Canlı Demo</h2>
+
+            <div className="space-y-2">
+              <Input
+                {...register("demoUrl")}
+                placeholder="https://demo.example.com"
+                type="url"
+              />
+              {errors.demoUrl && <p className="text-xs text-destructive">{errors.demoUrl.message}</p>}
+              <p className="text-xs text-muted-foreground">
+                Ürünün canlı demo URL'si (örn: https://template-demo.hyble.co)
+              </p>
             </div>
           </div>
         </div>

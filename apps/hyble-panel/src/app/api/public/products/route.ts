@@ -45,6 +45,7 @@ export async function GET(request: NextRequest) {
         basePrice: true,
         tags: true,
         isFeatured: true,
+        demoUrl: true,
         category: {
           select: {
             id: true,
@@ -110,6 +111,7 @@ export async function GET(request: NextRequest) {
         shortDescEn: product.shortDescEn,
         tags: product.tags,
         isFeatured: product.isFeatured,
+        demoUrl: product.demoUrl,
         category: product.category,
         primaryImage: product.media[0]?.url || null,
         lowestPrice,

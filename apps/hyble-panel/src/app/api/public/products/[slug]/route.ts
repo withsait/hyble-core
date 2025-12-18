@@ -29,6 +29,7 @@ export async function GET(
         basePrice: true,
         tags: true,
         isFeatured: true,
+        demoUrl: true,
         category: {
           select: {
             id: true,
@@ -84,6 +85,7 @@ export async function GET(
       descriptionEn: product.descriptionEn,
       tags: product.tags,
       isFeatured: product.isFeatured,
+      demoUrl: product.demoUrl,
       category: product.category,
       media: product.media,
       variants: product.variants.map((v) => ({

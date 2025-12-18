@@ -1,135 +1,102 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card } from "@hyble/ui";
 import {
   Layout, ShoppingCart, Rocket, Package, ChevronRight,
   Search, Star, Eye, Download, Code, Palette, Zap,
-  Shield, CheckCircle, ArrowRight, Filter, Grid3X3, List
+  Shield, ArrowRight, Filter, Grid3X3, List, Loader2,
+  Monitor
 } from "lucide-react";
 
-// Şablon kategorileri
-const templateCategories = [
-  {
-    slug: "website-templates",
-    name: "Web Sitesi Şablonları",
-    description: "Kurumsal ve kişisel web siteleri",
-    icon: Layout,
-    count: 12,
-  },
-  {
-    slug: "ecommerce",
-    name: "E-ticaret Şablonları",
-    description: "Online mağaza çözümleri",
-    icon: ShoppingCart,
-    count: 8,
-  },
-  {
-    slug: "landing-pages",
-    name: "Landing Page",
-    description: "Dönüşüm odaklı sayfalar",
-    icon: Rocket,
-    count: 15,
-  },
-  {
-    slug: "saas-templates",
-    name: "SaaS Şablonları",
-    description: "Yazılım ürünleri için",
-    icon: Code,
-    count: 6,
-  },
-];
+// API base URL
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.hyble.co";
 
-// Öne çıkan şablonlar
-const featuredTemplates = [
-  {
-    slug: "starter-business-website",
-    name: "Business Starter",
-    description: "Küçük işletmeler için profesyonel web sitesi şablonu. SEO optimize, responsive tasarım.",
-    category: "Web Sitesi",
-    price: 49,
-    originalPrice: 79,
-    rating: 4.8,
-    reviews: 124,
-    sales: 1200,
-    features: ["5 Sayfa", "SEO Optimize", "Responsive", "Dark Mode"],
-    badge: "En Çok Satan",
-  },
-  {
-    slug: "ecommerce-starter",
-    name: "E-commerce Pro",
-    description: "Modern e-ticaret şablonu. Stripe entegrasyonu, stok yönetimi, sipariş takibi.",
-    category: "E-ticaret",
-    price: 89,
-    originalPrice: 129,
-    rating: 4.9,
-    reviews: 89,
-    sales: 850,
-    features: ["Ödeme Entegrasyonu", "Stok Takibi", "Sipariş Yönetimi", "Dashboard"],
-    badge: "Popüler",
-  },
-  {
-    slug: "saas-landing",
-    name: "SaaS Landing Pro",
-    description: "SaaS ürünleri için modern landing page. Yüksek dönüşüm oranı optimize.",
-    category: "Landing Page",
-    price: 39,
-    originalPrice: 59,
-    rating: 4.7,
-    reviews: 156,
-    sales: 2100,
-    features: ["Pricing Table", "Feature Grid", "Testimonials", "FAQ"],
-    badge: "Yeni",
-  },
-  {
-    slug: "corporate-pro",
-    name: "Corporate Pro",
-    description: "Büyük firmalar için kurumsal web sitesi. Çoklu dil, blog sistemi dahil.",
-    category: "Web Sitesi",
-    price: 149,
-    originalPrice: 199,
-    rating: 4.9,
-    reviews: 67,
-    sales: 450,
-    features: ["15+ Sayfa", "Blog Sistemi", "Çoklu Dil", "CMS Ready"],
-  },
-  {
-    slug: "agency-starter",
-    name: "Agency Template",
-    description: "Dijital ajanslar için modern tasarım. Portfolio, case study sayfaları.",
-    category: "Web Sitesi",
-    price: 89,
-    originalPrice: 119,
-    rating: 4.6,
-    reviews: 45,
-    sales: 320,
-    features: ["Case Study", "Team Section", "Animasyonlar", "Contact Form"],
-  },
-  {
-    slug: "startup-landing",
-    name: "Startup Landing",
-    description: "Startuplar için tek sayfa landing. Hızlı, minimal ve etkileyici.",
-    category: "Landing Page",
-    price: 29,
-    rating: 4.5,
-    reviews: 234,
-    sales: 3500,
-    features: ["Tek Sayfa", "Animasyonlar", "Newsletter", "Social Proof"],
-  },
-];
+// Kategori ikonları
+const categoryIcons: Record<string, typeof Layout> = {
+  "website-templates": Layout,
+  "ecommerce": ShoppingCart,
+  "landing-pages": Rocket,
+  "saas-templates": Code,
+  "vps": Package,
+  "web-hosting": Package,
+  "game-servers": Package,
+};
 
-// Teknoloji filtreleri
-const techFilters = [
-  { name: "Next.js", count: 24 },
-  { name: "React", count: 18 },
-  { name: "Tailwind CSS", count: 32 },
-  { name: "TypeScript", count: 20 },
-];
+interface Product {
+  id: string;
+  slug: string;
+  type: string;
+  nameTr: string;
+  nameEn: string;
+  shortDescTr: string | null;
+  shortDescEn: string | null;
+  tags: string[];
+  isFeatured: boolean;
+  demoUrl: string | null;
+  category: {
+    id: string;
+    nameTr: string;
+    nameEn: string;
+    slug: string;
+  } | null;
+  primaryImage: string | null;
+  lowestPrice: number | null;
+  basePrice: number | null;
+  variantCount: number;
+}
+
+interface Category {
+  id: string;
+  nameTr: string;
+  nameEn: string;
+  slug: string;
+  icon: string | null;
+  productCount: number;
+}
 
 export default function StorePage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch products and categories
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_BASE}/api/public/products?limit=50`);
+        if (!res.ok) throw new Error("Failed to fetch products");
+        const data = await res.json();
+        setProducts(data.products || []);
+        setCategories(data.categories || []);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setError("Ürünler yüklenirken bir hata oluştu");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  // Filter products by search
+  const filteredProducts = products.filter((p) =>
+    searchQuery
+      ? p.nameTr.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()))
+      : true
+  );
+
+  // Featured products (isFeatured = true or first 6)
+  const featuredProducts = filteredProducts.filter((p) => p.isFeatured).length > 0
+    ? filteredProducts.filter((p) => p.isFeatured)
+    : filteredProducts.slice(0, 6);
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900">
@@ -167,39 +134,44 @@ export default function StorePage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Kategoriler</h2>
-            <Link
-              href="/store/categories"
-              className="text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1"
-            >
-              Tümü <ChevronRight className="w-4 h-4" />
-            </Link>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {templateCategories.map((category) => (
-              <Link
-                key={category.slug}
-                href={`/store/category/${category.slug}`}
-                className="group"
-              >
-                <Card className="p-4 h-full border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors">
-                      <category.icon className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-slate-900 dark:text-white text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                        {category.name}
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {category.count} şablon
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+            </div>
+          ) : categories.length === 0 ? (
+            <p className="text-center text-slate-500 py-4">Henüz kategori bulunmuyor</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {categories.map((category) => {
+                const IconComponent = categoryIcons[category.slug] || Package;
+                return (
+                  <Link
+                    key={category.id}
+                    href={`/store/category/${category.slug}`}
+                    className="group"
+                  >
+                    <Card className="p-4 h-full border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors">
+                          <IconComponent className="w-5 h-5 text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-slate-900 dark:text-white text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {category.nameTr}
+                          </h3>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {category.productCount} ürün
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </section>
 
@@ -208,14 +180,16 @@ export default function StorePage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Öne Çıkan Şablonlar</h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400">En popüler ve çok satan şablonlar</p>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                {searchQuery ? "Arama Sonuçları" : "Öne Çıkan Ürünler"}
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {searchQuery
+                  ? `"${searchQuery}" için ${filteredProducts.length} sonuç`
+                  : "En popüler ve çok satan ürünler"}
+              </p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-3 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800">
-                <Filter className="w-4 h-4" />
-                Filtrele
-              </button>
               <div className="flex items-center gap-1 border border-slate-200 dark:border-slate-700 rounded-lg p-1 bg-white dark:bg-slate-800">
                 <button
                   onClick={() => setViewMode("grid")}
@@ -233,131 +207,155 @@ export default function StorePage() {
             </div>
           </div>
 
-          <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
-            {featuredTemplates.map((template) => (
-              <Link
-                key={template.slug}
-                href={`/store/${template.slug}`}
-                className="group"
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-16">
+              <p className="text-red-500">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                <Card className="overflow-hidden h-full border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-lg transition-all">
-                  {/* Preview Image */}
-                  <div className="aspect-[16/10] bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-                    <Package className="w-16 h-16 text-slate-300 dark:text-slate-600" />
+                Tekrar Dene
+              </button>
+            </div>
+          ) : featuredProducts.length === 0 ? (
+            <div className="text-center py-16">
+              <Package className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-500">
+                {searchQuery ? "Arama kriterlerine uygun ürün bulunamadı" : "Henüz ürün bulunmuyor"}
+              </p>
+            </div>
+          ) : (
+            <div className={`grid gap-6 ${viewMode === "grid" ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" : "grid-cols-1"}`}>
+              {(searchQuery ? filteredProducts : featuredProducts).map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/store/${product.slug}`}
+                  className="group"
+                >
+                  <Card className="overflow-hidden h-full border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-lg transition-all">
+                    {/* Preview Image */}
+                    <div className="aspect-[16/10] bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center relative overflow-hidden">
+                      {product.primaryImage ? (
+                        <img
+                          src={product.primaryImage}
+                          alt={product.nameTr}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <>
+                          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+                          <Package className="w-16 h-16 text-slate-300 dark:text-slate-600" />
+                        </>
+                      )}
 
-                    {/* Badge */}
-                    {template.badge && (
-                      <span className={`absolute top-3 left-3 text-xs px-2 py-1 rounded-full font-medium ${
-                        template.badge === "En Çok Satan"
-                          ? "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400"
-                          : template.badge === "Popüler"
-                          ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-400"
-                          : "bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400"
-                      }`}>
-                        {template.badge}
-                      </span>
-                    )}
-
-                    {/* Hover Actions */}
-                    <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                      <span className="px-4 py-2 bg-white text-slate-900 rounded-lg font-medium text-sm flex items-center gap-2">
-                        <Eye className="w-4 h-4" />
-                        Önizle
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="p-5">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                        {template.category}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                        <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                          {template.rating}
+                      {/* Badge */}
+                      {product.isFeatured && (
+                        <span className="absolute top-3 left-3 text-xs px-2 py-1 rounded-full font-medium bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400">
+                          Öne Çıkan
                         </span>
-                        <span className="text-xs text-slate-400">({template.reviews})</span>
+                      )}
+
+                      {/* Hover Actions */}
+                      <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <span className="px-4 py-2 bg-white text-slate-900 rounded-lg font-medium text-sm flex items-center gap-2">
+                          <Eye className="w-4 h-4" />
+                          İncele
+                        </span>
+                        {product.demoUrl && (
+                          <Link
+                            href={`/demo/${product.slug}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium text-sm flex items-center gap-2 hover:bg-emerald-600 transition-colors"
+                          >
+                            <Monitor className="w-4 h-4" />
+                            Demo
+                          </Link>
+                        )}
                       </div>
                     </div>
 
-                    <h3 className="font-semibold text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                      {template.name}
-                    </h3>
-
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
-                      {template.description}
-                    </p>
-
-                    {/* Features */}
-                    <div className="flex flex-wrap gap-1.5 mb-4">
-                      {template.features.slice(0, 3).map((feature, i) => (
-                        <span
-                          key={i}
-                          className="text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400"
-                        >
-                          {feature}
+                    {/* Content */}
+                    <div className="p-5">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                          {product.category?.nameTr || "Genel"}
                         </span>
-                      ))}
-                      {template.features.length > 3 && (
-                        <span className="text-xs px-2 py-0.5 text-slate-400">
-                          +{template.features.length - 3}
+                        <span className="text-xs text-slate-400">
+                          {product.type === "SUBSCRIPTION" ? "Abonelik" :
+                           product.type === "DIGITAL" ? "Dijital" :
+                           product.type === "BUNDLE" ? "Paket" : "Hizmet"}
                         </span>
+                      </div>
+
+                      <h3 className="font-semibold text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {product.nameTr}
+                      </h3>
+
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 line-clamp-2">
+                        {product.shortDescTr || product.shortDescEn || ""}
+                      </p>
+
+                      {/* Tags */}
+                      {product.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {product.tags.slice(0, 3).map((tag, i) => (
+                            <span
+                              key={i}
+                              className="text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {product.tags.length > 3 && (
+                            <span className="text-xs px-2 py-0.5 text-slate-400">
+                              +{product.tags.length - 3}
+                            </span>
+                          )}
+                        </div>
                       )}
-                    </div>
 
-                    {/* Price & Stats */}
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xl font-bold text-slate-900 dark:text-white">
-                          €{template.price}
-                        </span>
-                        {template.originalPrice && (
-                          <span className="text-sm text-slate-400 line-through">
-                            €{template.originalPrice}
+                      {/* Price */}
+                      <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700">
+                        <div className="flex items-baseline gap-2">
+                          {product.lowestPrice !== null ? (
+                            <span className="text-xl font-bold text-slate-900 dark:text-white">
+                              €{product.lowestPrice.toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-slate-500">Fiyat için tıklayın</span>
+                          )}
+                          {product.type === "SUBSCRIPTION" && (
+                            <span className="text-sm text-slate-400">/ay</span>
+                          )}
+                        </div>
+                        {product.variantCount > 1 && (
+                          <span className="text-xs text-slate-500">
+                            {product.variantCount} seçenek
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-1 text-xs text-slate-500">
-                        <Download className="w-3.5 h-3.5" />
-                        {template.sales.toLocaleString()}
-                      </div>
                     </div>
-                  </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
 
-          <div className="text-center mt-8">
-            <Link
-              href="/store/all"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium rounded-lg hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
-            >
-              Tüm Şablonları Gör
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Tech Stack Filter */}
-      <section className="py-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Teknolojiye Göre</h2>
-          <div className="flex flex-wrap gap-3">
-            {techFilters.map((tech) => (
-              <button
-                key={tech.name}
-                className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          {!searchQuery && filteredProducts.length > featuredProducts.length && (
+            <div className="text-center mt-8">
+              <Link
+                href="/store?all=true"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-medium rounded-lg hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
               >
-                {tech.name}
-                <span className="ml-2 text-slate-400">({tech.count})</span>
-              </button>
-            ))}
-          </div>
+                Tüm Ürünleri Gör ({filteredProducts.length})
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 
@@ -365,7 +363,7 @@ export default function StorePage() {
       <section className="py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-100 dark:border-slate-800">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white text-center mb-8">
-            Neden Hyble Şablonları?
+            Neden Hyble?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[
