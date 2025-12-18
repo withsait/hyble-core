@@ -42,6 +42,7 @@ const productUpdateSchema = productCreateSchema.partial().extend({
   id: z.string(),
   status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]).optional(),
   featuredOrder: z.number().int().optional(),
+  meta: z.record(z.any()).optional(),
 });
 
 const variantCreateSchema = z.object({
