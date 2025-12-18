@@ -334,12 +334,15 @@ model UserSession {
 }
 
 model Wallet {
-  id        String   @id @default(cuid())
-  userId    String
-  balance   Decimal  @default(0) @db.Decimal(18, 2)
-  currency  String   @default("EUR")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  userId       String
+  balance      Decimal  @default(0) @db.Decimal(18, 2) // Toplam bakiye (main + bonus + promo)
+  mainBalance  Decimal  @default(0) @db.Decimal(18, 2) // Ana bakiye (para yükleme ile)
+  bonusBalance Decimal  @default(0) @db.Decimal(18, 2) // Bonus bakiye (kampanyalar)
+  promoBalance Decimal  @default(0) @db.Decimal(18, 2) // Promo bakiye (ilk kayıt bonusu vb.)
+  currency     String   @default("EUR")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
@@ -376,6 +379,13 @@ enum PaymentMethod {
   SYSTEM           // Sistem otomatik
 }
 
+// Bakiye türü - harcama önceliği için
+enum BalanceType {
+  MAIN             // Ana bakiye
+  BONUS            // Bonus bakiye
+  PROMO            // Promosyon bakiye
+}
+
 model Transaction {
   id              String            @id @default(cuid())
   walletId        String
@@ -388,6 +398,7 @@ model Transaction {
   description     String
   reference       String?           // Stripe payment intent ID veya fatura no
   paymentMethod   PaymentMethod?
+  balanceType     BalanceType?      // Hangi bakiye türünden düşüldü
   metadata        Json?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt

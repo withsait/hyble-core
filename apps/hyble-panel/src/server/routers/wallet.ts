@@ -24,11 +24,73 @@ async function getOrCreateWallet(userId: string, currency: string = "EUR") {
 
   if (!wallet) {
     wallet = await prisma.wallet.create({
-      data: { userId, currency, balance: 0 },
+      data: {
+        userId,
+        currency,
+        balance: 0,
+        mainBalance: 0,
+        bonusBalance: 0,
+        promoBalance: 0,
+      },
     });
   }
 
   return wallet;
+}
+
+// Helper: Bakiye harcama (Promo → Bonus → Main sırası)
+// Returns: { success, spent: { promo, bonus, main }, transactions: Transaction[] }
+type SpendResult = {
+  success: boolean;
+  spent: { promo: number; bonus: number; main: number };
+  remaining: number;
+  transactions: Array<{
+    amount: number;
+    balanceType: "PROMO" | "BONUS" | "MAIN";
+  }>;
+};
+
+async function calculateSpendBreakdown(
+  wallet: { promoBalance: Prisma.Decimal; bonusBalance: Prisma.Decimal; mainBalance: Prisma.Decimal; balance: Prisma.Decimal },
+  amount: number
+): Promise<SpendResult> {
+  let remaining = amount;
+  const spent = { promo: 0, bonus: 0, main: 0 };
+  const transactions: SpendResult["transactions"] = [];
+
+  // 1. Önce Promo bakiyeden düş
+  const promoBalance = parseFloat(wallet.promoBalance.toString());
+  if (promoBalance > 0 && remaining > 0) {
+    const promoSpend = Math.min(promoBalance, remaining);
+    spent.promo = promoSpend;
+    remaining -= promoSpend;
+    transactions.push({ amount: promoSpend, balanceType: "PROMO" });
+  }
+
+  // 2. Sonra Bonus bakiyeden düş
+  const bonusBalance = parseFloat(wallet.bonusBalance.toString());
+  if (bonusBalance > 0 && remaining > 0) {
+    const bonusSpend = Math.min(bonusBalance, remaining);
+    spent.bonus = bonusSpend;
+    remaining -= bonusSpend;
+    transactions.push({ amount: bonusSpend, balanceType: "BONUS" });
+  }
+
+  // 3. Son olarak Main bakiyeden düş
+  const mainBalance = parseFloat(wallet.mainBalance.toString());
+  if (mainBalance > 0 && remaining > 0) {
+    const mainSpend = Math.min(mainBalance, remaining);
+    spent.main = mainSpend;
+    remaining -= mainSpend;
+    transactions.push({ amount: mainSpend, balanceType: "MAIN" });
+  }
+
+  return {
+    success: remaining === 0,
+    spent,
+    remaining,
+    transactions,
+  };
 }
 
 // Helper function to get or create Stripe customer
@@ -59,14 +121,12 @@ export const walletRouter = createTRPCRouter({
   // Get wallet balance
   getBalance: protectedProcedure.query(async ({ ctx }) => {
     const wallet = await getOrCreateWallet(ctx.user.id);
-    const balance = parseFloat(wallet.balance.toString());
     return {
       balance: wallet.balance.toString(),
       currency: wallet.currency,
-      // Extended balance fields (for FAZ2)
-      mainBalance: balance,
-      bonusBalance: 0,
-      promoBalance: 0,
+      mainBalance: parseFloat(wallet.mainBalance.toString()),
+      bonusBalance: parseFloat(wallet.bonusBalance.toString()),
+      promoBalance: parseFloat(wallet.promoBalance.toString()),
     };
   }),
 
@@ -201,7 +261,9 @@ export const walletRouter = createTRPCRouter({
       const currency = session.currency?.toUpperCase() || "EUR";
       const wallet = await getOrCreateWallet(ctx.user.id, currency);
 
-      const newBalance = wallet.balance.add(new Prisma.Decimal(amount));
+      const amountDecimal = new Prisma.Decimal(amount);
+      const newMainBalance = wallet.mainBalance.add(amountDecimal);
+      const newTotalBalance = wallet.balance.add(amountDecimal);
 
       // Create transaction and update wallet in a transaction
       const [transaction] = await prisma.$transaction([
@@ -212,10 +274,11 @@ export const walletRouter = createTRPCRouter({
             status: "COMPLETED",
             amount: amount,
             balanceBefore: wallet.balance,
-            balanceAfter: newBalance,
+            balanceAfter: newTotalBalance,
             currency,
             description: `Cüzdan yükleme - ${amount} ${currency}`,
             reference: session.id,
+            balanceType: "MAIN",
             paymentMethod: "STRIPE",
             metadata: {
               stripeSessionId: session.id,
@@ -225,7 +288,10 @@ export const walletRouter = createTRPCRouter({
         }),
         prisma.wallet.update({
           where: { id: wallet.id },
-          data: { balance: newBalance },
+          data: {
+            balance: newTotalBalance,
+            mainBalance: newMainBalance,
+          },
         }),
       ]);
 
@@ -233,7 +299,7 @@ export const walletRouter = createTRPCRouter({
         success: true,
         message: "Ödeme başarıyla işlendi",
         transactionId: transaction.id,
-        newBalance: newBalance.toString(),
+        newBalance: newTotalBalance.toString(),
       };
     }),
 
@@ -410,6 +476,200 @@ export const walletRouter = createTRPCRouter({
         success: true,
         transactionId: transaction.id,
         newBalance: newBalance.toString(),
+      };
+    }),
+
+  // Admin: Add credit to specific balance type (MAIN, BONUS, PROMO)
+  adminAddTypedCredit: adminProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        amount: z.number().min(0.01),
+        currency: z.string().default("EUR"),
+        balanceType: z.enum(["MAIN", "BONUS", "PROMO"]),
+        description: z.string(),
+        expiresAt: z.date().optional(), // Bonus/Promo için son kullanma tarihi
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const wallet = await getOrCreateWallet(input.userId, input.currency);
+      const amountDecimal = new Prisma.Decimal(input.amount);
+
+      // Hangi bakiye güncelleneceğini belirle
+      const balanceField = {
+        MAIN: "mainBalance",
+        BONUS: "bonusBalance",
+        PROMO: "promoBalance",
+      }[input.balanceType] as "mainBalance" | "bonusBalance" | "promoBalance";
+
+      const currentTypedBalance = wallet[balanceField];
+      const newTypedBalance = currentTypedBalance.add(amountDecimal);
+      const newTotalBalance = wallet.balance.add(amountDecimal);
+
+      const transactionType = input.balanceType === "MAIN" ? "DEPOSIT" : "BONUS";
+
+      const [transaction] = await prisma.$transaction([
+        prisma.transaction.create({
+          data: {
+            walletId: wallet.id,
+            type: transactionType,
+            status: "COMPLETED",
+            amount: input.amount,
+            balanceBefore: wallet.balance,
+            balanceAfter: newTotalBalance,
+            currency: input.currency,
+            description: input.description,
+            balanceType: input.balanceType,
+            paymentMethod: "MANUAL",
+            metadata: {
+              adminId: ctx.user.id,
+              adminEmail: ctx.user.email,
+              balanceType: input.balanceType,
+              expiresAt: input.expiresAt?.toISOString(),
+            },
+          },
+        }),
+        prisma.wallet.update({
+          where: { id: wallet.id },
+          data: {
+            balance: newTotalBalance,
+            [balanceField]: newTypedBalance,
+          },
+        }),
+      ]);
+
+      return {
+        success: true,
+        transactionId: transaction.id,
+        newBalance: newTotalBalance.toString(),
+        balanceType: input.balanceType,
+        newTypedBalance: newTypedBalance.toString(),
+      };
+    }),
+
+  // Spend from wallet (Promo → Bonus → Main priority)
+  // This is used internally for payments
+  spend: protectedProcedure
+    .input(
+      z.object({
+        amount: z.number().min(0.01),
+        currency: z.string().default("EUR"),
+        description: z.string(),
+        reference: z.string().optional(), // Order ID, Invoice ID etc.
+        orderId: z.string().optional(),
+        invoiceId: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const wallet = await getOrCreateWallet(ctx.user.id, input.currency);
+      const totalBalance = parseFloat(wallet.balance.toString());
+
+      // Toplam bakiye yeterli mi?
+      if (totalBalance < input.amount) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Yetersiz bakiye. Mevcut: €${totalBalance.toFixed(2)}, Gerekli: €${input.amount.toFixed(2)}`,
+        });
+      }
+
+      // Harcama dağılımını hesapla
+      const breakdown = await calculateSpendBreakdown(wallet, input.amount);
+
+      if (!breakdown.success) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Bakiye hesaplama hatası",
+        });
+      }
+
+      // Yeni bakiyeleri hesapla
+      const newPromoBalance = wallet.promoBalance.sub(new Prisma.Decimal(breakdown.spent.promo));
+      const newBonusBalance = wallet.bonusBalance.sub(new Prisma.Decimal(breakdown.spent.bonus));
+      const newMainBalance = wallet.mainBalance.sub(new Prisma.Decimal(breakdown.spent.main));
+      const newTotalBalance = wallet.balance.sub(new Prisma.Decimal(input.amount));
+
+      // Transaction ve wallet güncelleme
+      const transactionOperations: Prisma.PrismaPromise<unknown>[] = [];
+
+      // Her bakiye türü için ayrı transaction kaydı oluştur
+      for (const tx of breakdown.transactions) {
+        transactionOperations.push(
+          prisma.transaction.create({
+            data: {
+              walletId: wallet.id,
+              type: "CHARGE",
+              status: "COMPLETED",
+              amount: tx.amount,
+              balanceBefore: wallet.balance, // Toplam bakiye
+              balanceAfter: newTotalBalance,
+              currency: input.currency,
+              description: `${input.description} (${tx.balanceType})`,
+              reference: input.reference,
+              balanceType: tx.balanceType,
+              paymentMethod: "WALLET",
+              metadata: {
+                orderId: input.orderId,
+                invoiceId: input.invoiceId,
+                breakdown: breakdown.spent,
+              },
+            },
+          })
+        );
+      }
+
+      // Wallet güncelle
+      transactionOperations.push(
+        prisma.wallet.update({
+          where: { id: wallet.id },
+          data: {
+            balance: newTotalBalance,
+            mainBalance: newMainBalance,
+            bonusBalance: newBonusBalance,
+            promoBalance: newPromoBalance,
+          },
+        })
+      );
+
+      await prisma.$transaction(transactionOperations);
+
+      return {
+        success: true,
+        spent: {
+          total: input.amount,
+          promo: breakdown.spent.promo,
+          bonus: breakdown.spent.bonus,
+          main: breakdown.spent.main,
+        },
+        newBalance: {
+          total: newTotalBalance.toString(),
+          main: newMainBalance.toString(),
+          bonus: newBonusBalance.toString(),
+          promo: newPromoBalance.toString(),
+        },
+      };
+    }),
+
+  // Check if wallet has enough balance
+  canSpend: protectedProcedure
+    .input(
+      z.object({
+        amount: z.number().min(0.01),
+        currency: z.string().default("EUR"),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const wallet = await getOrCreateWallet(ctx.user.id, input.currency);
+      const totalBalance = parseFloat(wallet.balance.toString());
+      const canSpend = totalBalance >= input.amount;
+
+      const breakdown = await calculateSpendBreakdown(wallet, input.amount);
+
+      return {
+        canSpend,
+        availableBalance: totalBalance,
+        requiredAmount: input.amount,
+        shortfall: canSpend ? 0 : input.amount - totalBalance,
+        breakdown: breakdown.success ? breakdown.spent : null,
       };
     }),
 });

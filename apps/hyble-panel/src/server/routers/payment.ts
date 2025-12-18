@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import Stripe from "stripe";
 import { createTRPCRouter, protectedProcedure } from "../trpc/trpc";
 import { prisma, Prisma } from "@hyble/db";
+import { createPayTRToken, getPayTRIframeUrl } from "@/lib/paytr";
 
 // Lazy initialization to avoid build-time errors
 let stripe: Stripe | null = null;
@@ -48,7 +49,14 @@ async function getOrCreateWallet(userId: string, currency: string = "EUR") {
 
   if (!wallet) {
     wallet = await prisma.wallet.create({
-      data: { userId, currency, balance: 0 },
+      data: {
+        userId,
+        currency,
+        balance: 0,
+        mainBalance: 0,
+        bonusBalance: 0,
+        promoBalance: 0,
+      },
     });
   }
 
@@ -778,4 +786,228 @@ export const paymentRouter = createTRPCRouter({
       clientSecret: setupIntent.client_secret,
     };
   }),
+
+  // ==================== PAYTR METHODS ====================
+
+  // PayTR ile cüzdan yükleme için token oluştur
+  createPayTRDeposit: protectedProcedure
+    .input(
+      z.object({
+        amount: z.number().min(10).max(50000), // Min 10 TL, Max 50,000 TL
+        currency: z.literal("TRY").default("TRY"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Get user info
+      const user = await prisma.user.findUnique({
+        where: { id: ctx.user.id },
+        select: { name: true, email: true },
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Kullanıcı bulunamadı",
+        });
+      }
+
+      // Generate unique merchant order ID
+      const merchantOid = `DEP-${ctx.user.id.slice(-8)}-${Date.now()}`;
+
+      // Amount in kuruş (1 TL = 100 kuruş)
+      const amountKurus = Math.round(input.amount * 100);
+
+      // Get or create wallet
+      const wallet = await getOrCreateWallet(ctx.user.id, input.currency);
+
+      // Create pending transaction
+      await prisma.transaction.create({
+        data: {
+          walletId: wallet.id,
+          type: "DEPOSIT",
+          status: "PENDING",
+          amount: input.amount,
+          balanceBefore: wallet.balance,
+          balanceAfter: wallet.balance, // Will be updated on callback
+          currency: input.currency,
+          description: `Cüzdan yükleme (PayTR) - ${input.amount} TL`,
+          reference: merchantOid,
+          balanceType: "MAIN",
+          paymentMethod: "PAYTR",
+          metadata: {
+            amountKurus,
+            initiatedAt: new Date().toISOString(),
+          },
+        },
+      });
+
+      // Create PayTR token
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://hyble.co";
+      const tokenResponse = await createPayTRToken({
+        userId: ctx.user.id,
+        userEmail: user.email,
+        userName: user.name || "Hyble User",
+        userPhone: "05000000000", // Default phone (can be updated later with user profile)
+        userAddress: "Turkey",
+        userIp: "127.0.0.1", // Will be replaced with actual IP in production
+        merchantOid,
+        amount: amountKurus,
+        currency: "TL",
+        basketItems: [
+          {
+            name: "Cüzdan Yükleme",
+            price: amountKurus.toString(),
+            quantity: 1,
+          },
+        ],
+        noInstallment: true,
+        successUrl: `${baseUrl}/wallet?paytr=success&oid=${merchantOid}`,
+        failUrl: `${baseUrl}/wallet?paytr=fail&oid=${merchantOid}`,
+        lang: "tr",
+      });
+
+      if (tokenResponse.status !== "success" || !tokenResponse.token) {
+        // Mark transaction as failed
+        await prisma.transaction.updateMany({
+          where: { reference: merchantOid },
+          data: {
+            status: "FAILED",
+            metadata: {
+              error: tokenResponse.reason,
+              failedAt: new Date().toISOString(),
+            },
+          },
+        });
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `PayTR token oluşturulamadı: ${tokenResponse.reason}`,
+        });
+      }
+
+      return {
+        token: tokenResponse.token,
+        iframeUrl: getPayTRIframeUrl(tokenResponse.token),
+        merchantOid,
+        amount: input.amount,
+        currency: input.currency,
+      };
+    }),
+
+  // PayTR ödeme durumunu kontrol et
+  checkPayTRStatus: protectedProcedure
+    .input(z.object({ merchantOid: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const transaction = await prisma.transaction.findFirst({
+        where: {
+          reference: input.merchantOid,
+          wallet: {
+            userId: ctx.user.id,
+          },
+        },
+      });
+
+      if (!transaction) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "İşlem bulunamadı",
+        });
+      }
+
+      return {
+        status: transaction.status,
+        amount: transaction.amount.toString(),
+        currency: transaction.currency,
+        createdAt: transaction.createdAt,
+      };
+    }),
+
+  // PayTR ile sipariş ödemesi
+  createPayTRCheckout: protectedProcedure
+    .input(z.object({ orderId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // Get order
+      const order = await prisma.order.findFirst({
+        where: {
+          id: input.orderId,
+          userId: ctx.user.id,
+          paymentStatus: "PENDING",
+        },
+        include: {
+          items: true,
+        },
+      });
+
+      if (!order) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Sipariş bulunamadı veya ödeme beklenmiyor",
+        });
+      }
+
+      // Get user info
+      const user = await prisma.user.findUnique({
+        where: { id: ctx.user.id },
+        select: { name: true, email: true },
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Kullanıcı bulunamadı",
+        });
+      }
+
+      // Amount in kuruş
+      const amountKurus = Math.round(parseFloat(order.total.toString()) * 100);
+
+      // Basket items
+      const basketItems = order.items.map((item) => ({
+        name: item.productName,
+        price: Math.round(parseFloat(item.totalPrice.toString()) * 100).toString(),
+        quantity: item.quantity,
+      }));
+
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://hyble.co";
+      const tokenResponse = await createPayTRToken({
+        userId: ctx.user.id,
+        userEmail: user.email,
+        userName: user.name || "Hyble User",
+        userPhone: "05000000000", // Default phone
+        userAddress: "Turkey",
+        userIp: "127.0.0.1",
+        merchantOid: order.orderNumber,
+        amount: amountKurus,
+        currency: "TL",
+        basketItems,
+        noInstallment: false,
+        maxInstallment: 12,
+        successUrl: `${baseUrl}/checkout/success?oid=${order.orderNumber}`,
+        failUrl: `${baseUrl}/checkout/fail?oid=${order.orderNumber}`,
+        lang: "tr",
+      });
+
+      if (tokenResponse.status !== "success" || !tokenResponse.token) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `PayTR token oluşturulamadı: ${tokenResponse.reason}`,
+        });
+      }
+
+      // Update order with PayTR reference
+      await prisma.order.update({
+        where: { id: order.id },
+        data: {
+          paymentRef: `paytr:${tokenResponse.token}`,
+        },
+      });
+
+      return {
+        token: tokenResponse.token,
+        iframeUrl: getPayTRIframeUrl(tokenResponse.token),
+        orderNumber: order.orderNumber,
+        amount: parseFloat(order.total.toString()),
+        currency: order.currency,
+      };
+    }),
 });

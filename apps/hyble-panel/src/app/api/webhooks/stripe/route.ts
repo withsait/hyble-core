@@ -26,7 +26,14 @@ async function getOrCreateWallet(userId: string, currency: string = "EUR") {
 
   if (!wallet) {
     wallet = await prisma.wallet.create({
-      data: { userId, currency, balance: 0 },
+      data: {
+        userId,
+        currency,
+        balance: 0,
+        mainBalance: 0,
+        bonusBalance: 0,
+        promoBalance: 0,
+      },
     });
   }
 
@@ -120,9 +127,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const currency = session.currency?.toUpperCase() || "EUR";
 
   const wallet = await getOrCreateWallet(userId, currency);
-  const newBalance = wallet.balance.add(new Prisma.Decimal(amount));
+  const amountDecimal = new Prisma.Decimal(amount);
+  const newMainBalance = wallet.mainBalance.add(amountDecimal);
+  const newTotalBalance = wallet.balance.add(amountDecimal);
 
   // Create transaction and update wallet atomically
+  // Deposits always go to mainBalance
   await prisma.$transaction([
     prisma.transaction.create({
       data: {
@@ -131,10 +141,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         status: "COMPLETED",
         amount: amount,
         balanceBefore: wallet.balance,
-        balanceAfter: newBalance,
+        balanceAfter: newTotalBalance,
         currency,
         description: `Cüzdan yükleme - ${amount} ${currency}`,
         reference: session.id,
+        balanceType: "MAIN",
         paymentMethod: "STRIPE",
         metadata: {
           stripeSessionId: session.id,
@@ -145,11 +156,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }),
     prisma.wallet.update({
       where: { id: wallet.id },
-      data: { balance: newBalance },
+      data: {
+        balance: newTotalBalance,
+        mainBalance: newMainBalance,
+      },
     }),
   ]);
 
-  console.log(`Deposit of ${amount} ${currency} added to wallet for user ${userId}`);
+  console.log(`Deposit of ${amount} ${currency} added to mainBalance for user ${userId}`);
 }
 
 async function handleChargeRefunded(charge: Stripe.Charge) {
@@ -185,8 +199,12 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
   }
 
   const refundAmount = (charge.amount_refunded || 0) / 100;
+  const refundDecimal = new Prisma.Decimal(refundAmount);
   const wallet = originalTx.wallet;
-  const newBalance = wallet.balance.sub(new Prisma.Decimal(refundAmount));
+
+  // İade mainBalance'a yapılır (orijinal deposit mainBalance'a gittiği için)
+  const newMainBalance = wallet.mainBalance.add(refundDecimal);
+  const newTotalBalance = wallet.balance.add(refundDecimal);
 
   await prisma.$transaction([
     prisma.transaction.create({
@@ -196,10 +214,11 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
         status: "COMPLETED",
         amount: refundAmount,
         balanceBefore: wallet.balance,
-        balanceAfter: newBalance,
+        balanceAfter: newTotalBalance,
         currency: originalTx.currency,
         description: `İade - ${refundAmount} ${originalTx.currency}`,
         reference: charge.id,
+        balanceType: "MAIN",
         paymentMethod: "STRIPE",
         metadata: {
           stripeChargeId: charge.id,
@@ -210,9 +229,12 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     }),
     prisma.wallet.update({
       where: { id: wallet.id },
-      data: { balance: newBalance },
+      data: {
+        balance: newTotalBalance,
+        mainBalance: newMainBalance,
+      },
     }),
   ]);
 
-  console.log(`Refund of ${refundAmount} processed for wallet ${wallet.id}`);
+  console.log(`Refund of ${refundAmount} added to mainBalance for wallet ${wallet.id}`);
 }
