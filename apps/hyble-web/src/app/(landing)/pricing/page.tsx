@@ -2,22 +2,64 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@hyble/ui";
 import {
-  Check, HelpCircle, Server, Globe, Gamepad2, Layout,
-  CreditCard, Key, Activity, ArrowRight, Shield,
-  Cpu, HardDrive, Users, Zap, RefreshCw, Headphones
+  Check, Server, Globe, Layout, Database,
+  CreditCard, Key, Activity, Shield, Cloud,
+  Cpu, HardDrive, Zap, RefreshCw, Headphones,
+  Building2, Layers, ArrowRight
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Fiyatlandırma | Hyble",
-  description: "Hyble hosting, şablonlar ve ekosistem hizmetlerinin fiyatlandırması. Şeffaf ve uygun fiyatlarla profesyonel altyapı.",
+  description: "Hyble Cloud hosting, şablonlar ve ekosistem hizmetlerinin fiyatlandırması. Şeffaf ve uygun fiyatlarla profesyonel altyapı.",
 };
 
-// VPS Planları - Özelleştirilebilir yapıya yönlendirme
-const vpsHighlights = [
-  { spec: "1-16 vCPU", desc: "İşlemci" },
-  { spec: "1-32 GB", desc: "RAM" },
-  { spec: "20-640 GB", desc: "NVMe SSD" },
-  { spec: "4 Lokasyon", desc: "Almanya, Finlandiya, ABD, Singapur" },
+// Cloud VPS Planları
+const cloudVpsPlans = [
+  {
+    name: "Cloud Starter",
+    price: 4.99,
+    specs: [
+      { label: "vCPU", value: "1 Core" },
+      { label: "RAM", value: "2 GB" },
+      { label: "Depolama", value: "40 GB NVMe" },
+      { label: "Trafik", value: "2 TB" },
+    ],
+    features: ["IPv4 + IPv6", "DDoS Koruması", "Günlük Yedekleme"],
+  },
+  {
+    name: "Cloud Pro",
+    price: 9.99,
+    popular: true,
+    specs: [
+      { label: "vCPU", value: "2 Core" },
+      { label: "RAM", value: "4 GB" },
+      { label: "Depolama", value: "80 GB NVMe" },
+      { label: "Trafik", value: "4 TB" },
+    ],
+    features: ["IPv4 + IPv6", "DDoS Koruması", "Günlük Yedekleme", "Snapshot"],
+  },
+  {
+    name: "Cloud Business",
+    price: 19.99,
+    specs: [
+      { label: "vCPU", value: "4 Core" },
+      { label: "RAM", value: "8 GB" },
+      { label: "Depolama", value: "160 GB NVMe" },
+      { label: "Trafik", value: "8 TB" },
+    ],
+    features: ["IPv4 + IPv6", "DDoS Koruması", "Günlük Yedekleme", "Snapshot", "Öncelikli Destek"],
+  },
+  {
+    name: "Cloud Enterprise",
+    price: 39.99,
+    specs: [
+      { label: "vCPU", value: "8 Core" },
+      { label: "RAM", value: "16 GB" },
+      { label: "Depolama", value: "320 GB NVMe" },
+      { label: "Trafik", value: "16 TB" },
+    ],
+    features: ["IPv4 + IPv6", "DDoS Koruması", "Günlük Yedekleme", "Snapshot", "7/24 Öncelikli Destek", "SLA Garantisi"],
+  },
 ];
 
 // Web Hosting Planları
@@ -40,45 +82,55 @@ const webHostingPlans = [
   },
 ];
 
-// Oyun Sunucuları
-const gameHighlights = [
-  { game: "Minecraft", price: "€2.99" },
-  { game: "FiveM", price: "€9.99" },
-  { game: "Rust", price: "€14.99" },
-  { game: "CS2", price: "€4.99" },
-  { game: "ARK", price: "€12.99" },
-  { game: "Valheim", price: "€6.99" },
+// Managed Database
+const databasePlans = [
+  { name: "PostgreSQL", from: "€9.99", desc: "ACID uyumlu, güçlü sorgulama" },
+  { name: "MySQL", from: "€7.99", desc: "Yaygın kullanım, kolay yönetim" },
+  { name: "Redis", from: "€4.99", desc: "In-memory cache & sessions" },
+  { name: "MongoDB", from: "€11.99", desc: "NoSQL, esnek şema" },
 ];
 
-// Ekosistem Hizmetleri - Minimal
+// Ekosistem Hizmetleri
 const ecosystemServices = [
   {
     name: "Hyble ID",
-    desc: "Kimlik yönetimi",
+    desc: "Merkezi kimlik doğrulama ve kullanıcı yönetimi",
     icon: Shield,
-    free: "1K kullanıcı",
-    pro: "€29/ay - 10K kullanıcı",
+    tiers: [
+      { name: "Free", price: "€0", features: ["1.000 MAU", "OAuth 2.0", "Temel SSO"] },
+      { name: "Pro", price: "€29/ay", features: ["10.000 MAU", "SAML", "MFA", "Özel Domain"] },
+      { name: "Enterprise", price: "Özel", features: ["Sınırsız MAU", "SLA", "Dedicated Support"] },
+    ],
   },
   {
     name: "Hyble Wallet",
-    desc: "Ödeme sistemi",
+    desc: "Entegre ödeme ve cüzdan altyapısı",
     icon: CreditCard,
-    free: "3% komisyon",
-    pro: "€49/ay - 1.5% komisyon",
+    tiers: [
+      { name: "Free", price: "3%", features: ["Temel ödemeler", "EUR desteği", "Dashboard"] },
+      { name: "Pro", price: "€49/ay + 1.5%", features: ["Düşük komisyon", "Multi-currency", "API erişimi"] },
+      { name: "Enterprise", price: "Özel", features: ["Özel komisyon", "White-label", "SLA"] },
+    ],
   },
   {
     name: "Hyble License",
-    desc: "Lisanslama",
+    desc: "Yazılım lisans yönetimi ve aktivasyon",
     icon: Key,
-    free: "100 lisans",
-    pro: "€19/ay - 1K lisans",
+    tiers: [
+      { name: "Free", price: "€0", features: ["100 lisans", "Temel validasyon", "Dashboard"] },
+      { name: "Pro", price: "€19/ay", features: ["1.000 lisans", "Offline aktivasyon", "Analytics"] },
+      { name: "Enterprise", price: "Özel", features: ["Sınırsız lisans", "Hardware binding", "API"] },
+    ],
   },
   {
     name: "Hyble Status",
-    desc: "Monitoring",
+    desc: "Uptime monitoring ve durum sayfası",
     icon: Activity,
-    free: "5 monitör",
-    pro: "€9/ay - 50 monitör",
+    tiers: [
+      { name: "Free", price: "€0", features: ["5 monitör", "5 dakika aralık", "E-posta bildirimi"] },
+      { name: "Pro", price: "€9/ay", features: ["50 monitör", "1 dakika aralık", "SMS + Slack"] },
+      { name: "Enterprise", price: "Özel", features: ["Sınırsız", "30 sn aralık", "Özel entegrasyon"] },
+    ],
   },
 ];
 
@@ -98,7 +150,7 @@ const faqs = [
   },
   {
     q: "Para iade garantisi var mı?",
-    a: "Hosting hizmetlerinde 30 gün içinde koşulsuz para iade garantisi.",
+    a: "Cloud ve hosting hizmetlerinde 30 gün içinde koşulsuz para iade garantisi.",
   },
   {
     q: "Yıllık ödeme indirimi var mı?",
@@ -106,115 +158,166 @@ const faqs = [
   },
   {
     q: "Ücretsiz deneme var mı?",
-    a: "VPS'te 7 gün deneme, ekosistem hizmetlerinde ücretsiz tier mevcut.",
+    a: "Cloud VPS'te 7 gün deneme, ekosistem hizmetlerinde ücretsiz tier mevcut.",
+  },
+  {
+    q: "Özel konfigürasyon yapabilir miyim?",
+    a: "Evet, Cloud VPS'lerde CPU, RAM ve disk özel olarak yapılandırılabilir.",
+  },
+  {
+    q: "Oyun sunucusu arıyorum?",
+    a: "Oyun sunucuları için game.hyble.co adresini ziyaret edebilirsiniz.",
   },
 ];
 
 export default function PricingPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900">
-      {/* Hero - Minimal */}
-      <section className="pt-12 pb-8 px-4 sm:px-6 lg:px-8">
+      {/* Hero */}
+      <section className="pt-16 pb-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-full text-sm text-slate-600 dark:text-slate-400 mb-6">
+            <Cloud className="w-4 h-4" />
+            Cloud & Ecosystem Pricing
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">
             Şeffaf Fiyatlandırma
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Gizli ücret yok. Kullandığınız kadar ödeyin.
+          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8">
+            Gizli ücret yok. İhtiyacınıza göre ölçeklendirin. Tüm ekosistem hizmetlerinde ücretsiz tier.
           </p>
 
           {/* Quick Stats */}
-          <div className="flex flex-wrap justify-center gap-6 mt-8">
+          <div className="flex flex-wrap justify-center gap-8">
             {[
-              { value: "€1.99", label: "Hosting" },
-              { value: "€2.99", label: "Oyun Sunucusu" },
-              { value: "€0", label: "Ekosistem" },
-              { value: "30 gün", label: "İade Garantisi" },
+              { value: "€1.99", label: "Web Hosting", sub: "/aydan" },
+              { value: "€4.99", label: "Cloud VPS", sub: "/aydan" },
+              { value: "€0", label: "Ekosistem", sub: "Free tier" },
+              { value: "30 gün", label: "İade Garantisi", sub: "Koşulsuz" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <div className="text-2xl font-bold text-slate-900 dark:text-white">{stat.value}</div>
-                <div className="text-xs text-slate-500">{stat.label}</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400">{stat.label}</div>
+                <div className="text-xs text-slate-400">{stat.sub}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* VPS - Configurator CTA */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8" id="vps">
+      {/* Cloud VPS */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/50" id="cloud">
         <div className="max-w-7xl mx-auto">
-          <Card className="p-6 md:p-8 border border-slate-200 dark:border-slate-700">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                <Server className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+              </div>
               <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <Server className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-slate-900 dark:text-white">VPS Sunucular</h2>
-                    <p className="text-sm text-slate-500">€4.99'dan başlayan fiyatlarla</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  {vpsHighlights.map((item) => (
-                    <div key={item.desc}>
-                      <p className="text-lg font-semibold text-slate-900 dark:text-white">{item.spec}</p>
-                      <p className="text-xs text-slate-500">{item.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Link
-                  href="/store"
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-center"
-                >
-                  Yapılandır
-                </Link>
-                <p className="text-xs text-slate-500 text-center">Özel konfigürasyon</p>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Cloud VPS</h2>
+                <p className="text-sm text-slate-500">Yüksek performanslı sanal sunucular</p>
               </div>
             </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Web Hosting */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/50" id="hosting">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-              <Globe className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Web Hosting</h2>
-              <p className="text-sm text-slate-500">Paylaşımlı hosting paketleri</p>
-            </div>
+            <Link
+              href="/cloud"
+              className="hidden md:flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            >
+              Tüm seçenekler <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {webHostingPlans.map((plan) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {cloudVpsPlans.map((plan) => (
               <Card
                 key={plan.name}
-                className={`p-5 border ${plan.popular ? "border-blue-500 dark:border-blue-400" : "border-slate-200 dark:border-slate-700"}`}
+                className={`p-6 border ${plan.popular ? "border-blue-500 dark:border-blue-400 ring-1 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
               >
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-slate-900 dark:text-white">{plan.name}</h3>
                   {plan.popular && (
-                    <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded">
+                    <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
                       Popüler
                     </span>
                   )}
                 </div>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-2xl font-bold text-slate-900 dark:text-white">€{plan.price}</span>
+                <div className="flex items-baseline gap-1 mb-6">
+                  <span className="text-3xl font-bold text-slate-900 dark:text-white">€{plan.price}</span>
                   <span className="text-sm text-slate-500">/ay</span>
                 </div>
-                <ul className="space-y-2">
+
+                <div className="space-y-3 mb-6">
+                  {plan.specs.map((spec) => (
+                    <div key={spec.label} className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">{spec.label}</span>
+                      <span className="font-medium text-slate-700 dark:text-slate-300">{spec.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                  <ul className="space-y-2">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                        <Check className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="text-sm text-slate-500 mb-4">
+              Daha fazla kaynak mı gerekiyor? Özel konfigürasyon için iletişime geçin.
+            </p>
+            <Link
+              href="/contact"
+              className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            >
+              <Building2 className="w-4 h-4" />
+              Enterprise çözümler
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Web Hosting */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8" id="hosting">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+              <Globe className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Web Hosting</h2>
+              <p className="text-sm text-slate-500">Paylaşımlı hosting paketleri</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {webHostingPlans.map((plan) => (
+              <Card
+                key={plan.name}
+                className={`p-6 border ${plan.popular ? "border-blue-500 dark:border-blue-400 ring-1 ring-blue-500/20" : "border-slate-200 dark:border-slate-700"}`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-slate-900 dark:text-white">{plan.name}</h3>
+                  {plan.popular && (
+                    <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
+                      Popüler
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-baseline gap-1 mb-6">
+                  <span className="text-3xl font-bold text-slate-900 dark:text-white">€{plan.price}</span>
+                  <span className="text-sm text-slate-500">/ay</span>
+                </div>
+                <ul className="space-y-3">
                   {plan.specs.map((spec) => (
                     <li key={spec} className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                      <Check className="w-4 h-4 text-slate-400" />
+                      <Check className="w-4 h-4 text-slate-400 flex-shrink-0" />
                       {spec}
                     </li>
                   ))}
@@ -225,178 +328,207 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* Game Servers - Configurator CTA */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8" id="games">
+      {/* Managed Database */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/50" id="database">
         <div className="max-w-7xl mx-auto">
-          <Card className="p-6 md:p-8 border border-slate-200 dark:border-slate-700">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-              <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <Gamepad2 className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Oyun Sunucuları</h2>
-                    <p className="text-sm text-slate-500">€2.99'dan başlayan fiyatlarla</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-3 mt-4">
-                  {gameHighlights.map((item) => (
-                    <div key={item.game} className="px-3 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                      <p className="text-sm font-medium text-slate-900 dark:text-white">{item.game}</p>
-                      <p className="text-xs text-slate-500">{item.price}/ay</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <Link
-                  href="/store"
-                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors text-center"
-                >
-                  Yapılandır
-                </Link>
-                <p className="text-xs text-slate-500 text-center">Oyun + RAM + Slot seç</p>
-              </div>
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+              <Database className="w-6 h-6 text-slate-600 dark:text-slate-400" />
             </div>
-          </Card>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Managed Database</h2>
+              <p className="text-sm text-slate-500">Yönetilen veritabanı hizmetleri</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {databasePlans.map((db) => (
+              <Card key={db.name} className="p-6 border border-slate-200 dark:border-slate-700">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-1">{db.name}</h3>
+                <p className="text-xs text-slate-500 mb-4">{db.desc}</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl font-bold text-slate-900 dark:text-white">{db.from}</span>
+                  <span className="text-sm text-slate-500">/aydan</span>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Ecosystem Services */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/50" id="ecosystem">
+      <section className="py-16 px-4 sm:px-6 lg:px-8" id="ecosystem">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">Ekosistem Hizmetleri</h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400">Ücretsiz tier ile başlayın</p>
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-full text-sm text-slate-600 dark:text-slate-400 mb-4">
+              <Layers className="w-4 h-4" />
+              Ekosistem Hizmetleri
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Özel Çözümler</h2>
+            <p className="text-slate-600 dark:text-slate-400">
+              Her hizmette ücretsiz tier ile başlayın, ihtiyaçlarınıza göre ölçeklendirin
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="space-y-8">
             {ecosystemServices.map((service) => (
-              <Card key={service.name} className="p-4 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <service.icon className="w-4 h-4 text-slate-500" />
+              <Card key={service.name} className="p-6 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                    <service.icon className="w-6 h-6 text-slate-600 dark:text-slate-400" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-slate-900 dark:text-white text-sm">{service.name}</h3>
-                    <p className="text-xs text-slate-500">{service.desc}</p>
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{service.name}</h3>
+                    <p className="text-sm text-slate-500">{service.desc}</p>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500">Free</span>
-                    <span className="text-slate-700 dark:text-slate-300">{service.free}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-500">Pro</span>
-                    <span className="text-slate-700 dark:text-slate-300">{service.pro}</span>
-                  </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {service.tiers.map((tier, i) => (
+                    <div
+                      key={tier.name}
+                      className={`p-4 rounded-lg ${
+                        i === 1
+                          ? "bg-slate-100 dark:bg-slate-800 ring-1 ring-slate-200 dark:ring-slate-700"
+                          : "bg-slate-50 dark:bg-slate-800/50"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-medium text-slate-900 dark:text-white">{tier.name}</span>
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{tier.price}</span>
+                      </div>
+                      <ul className="space-y-1.5">
+                        {tier.features.map((feature) => (
+                          <li key={feature} className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+                            <Check className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
               </Card>
             ))}
           </div>
 
-          <div className="text-center mt-6">
+          <div className="text-center mt-8">
             <Link
               href="/solutions"
-              className="text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400"
+              className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             >
-              Detaylı bilgi →
+              Tüm çözümleri incele <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
       </section>
 
       {/* Templates */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8" id="templates">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/50" id="templates">
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-              <Layout className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                <Layout className="w-6 h-6 text-slate-600 dark:text-slate-400" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Hazır Şablonlar</h2>
+                <p className="text-sm text-slate-500">Tek seferlik ödeme, ömür boyu kullanım</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Hazır Şablonlar</h2>
-              <p className="text-sm text-slate-500">Tek seferlik ödeme</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {templateCategories.map((cat) => (
-              <Card key={cat.name} className="p-4 border border-slate-200 dark:border-slate-700">
-                <h3 className="font-medium text-slate-900 dark:text-white text-sm mb-1">{cat.name}</h3>
-                <p className="text-lg font-semibold text-slate-900 dark:text-white">{cat.range}</p>
-                <p className="text-xs text-slate-500">{cat.count} şablon</p>
-              </Card>
-            ))}
-          </div>
-
-          <div className="text-center mt-6">
             <Link
               href="/store"
-              className="text-sm text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400"
+              className="hidden md:flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             >
-              Mağazaya git →
+              Mağazaya git <ArrowRight className="w-4 h-4" />
             </Link>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {templateCategories.map((cat) => (
+              <Card key={cat.name} className="p-6 border border-slate-200 dark:border-slate-700 text-center">
+                <h3 className="font-semibold text-slate-900 dark:text-white mb-2">{cat.name}</h3>
+                <p className="text-2xl font-bold text-slate-900 dark:text-white mb-1">{cat.range}</p>
+                <p className="text-sm text-slate-500">{cat.count} şablon</p>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Features Strip */}
-      <section className="py-8 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/50">
+      <section className="py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { icon: Zap, text: "Anında aktivasyon" },
-              { icon: Shield, text: "DDoS koruması" },
-              { icon: RefreshCw, text: "Günlük yedekleme" },
-              { icon: Headphones, text: "7/24 destek" },
+              { icon: Zap, text: "Anında Aktivasyon", sub: "Otomatik kurulum" },
+              { icon: Shield, text: "DDoS Koruması", sub: "Tüm planlarda dahil" },
+              { icon: RefreshCw, text: "Günlük Yedekleme", sub: "7 gün saklama" },
+              { icon: Headphones, text: "7/24 Destek", sub: "Türkçe destek" },
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-2 justify-center">
-                <item.icon className="w-4 h-4 text-slate-400" />
-                <span className="text-sm text-slate-600 dark:text-slate-400">{item.text}</span>
+              <div key={i} className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
+                  <item.icon className="w-5 h-5 text-slate-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">{item.text}</p>
+                  <p className="text-xs text-slate-500">{item.sub}</p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FAQ - Compact */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-white text-center mb-6">SSS</h2>
+      {/* FAQ */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/50">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white text-center mb-8">
+            Sıkça Sorulan Sorular
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {faqs.map((faq, i) => (
-              <div key={i} className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg">
-                <h3 className="font-medium text-slate-900 dark:text-white text-sm mb-1">{faq.q}</h3>
-                <p className="text-xs text-slate-500">{faq.a}</p>
-              </div>
+              <Card key={i} className="p-5 border border-slate-200 dark:border-slate-700">
+                <h3 className="font-medium text-slate-900 dark:text-white mb-2">{faq.q}</h3>
+                <p className="text-sm text-slate-500">{faq.a}</p>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA - Minimal */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-900 dark:bg-slate-950">
+      {/* CTA */}
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900 dark:bg-slate-950">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl font-bold text-white mb-3">Kurumsal ihtiyaçlarınız mı var?</h2>
-          <p className="text-slate-400 mb-6">Özel fiyatlandırma ve SLA için iletişime geçin.</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            Kurumsal ihtiyaçlarınız mı var?
+          </h2>
+          <p className="text-slate-400 mb-8 max-w-xl mx-auto">
+            Özel fiyatlandırma, SLA garantisi ve dedicated kaynaklar için satış ekibimizle görüşün.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="https://id.hyble.co/auth/register"
-              className="px-6 py-2.5 bg-white text-slate-900 font-medium rounded-lg hover:bg-slate-100 transition-colors"
+              className="px-8 py-3 bg-white text-slate-900 font-medium rounded-lg hover:bg-slate-100 transition-colors"
             >
               Ücretsiz Başla
             </a>
             <Link
               href="/contact"
-              className="px-6 py-2.5 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-700 transition-colors"
+              className="px-8 py-3 bg-slate-800 text-white font-medium rounded-lg hover:bg-slate-700 transition-colors border border-slate-700"
             >
               Satışla Görüşün
             </Link>
           </div>
+
+          {/* Game Server Note */}
+          <p className="mt-8 text-sm text-slate-500">
+            Oyun sunucusu mu arıyorsunuz?{" "}
+            <a href="https://game.hyble.co" className="text-slate-400 hover:text-white underline">
+              game.hyble.co
+            </a>
+            {" "}adresini ziyaret edin.
+          </p>
         </div>
       </section>
     </div>

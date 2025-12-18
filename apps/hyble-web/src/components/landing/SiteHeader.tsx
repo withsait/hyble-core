@@ -34,47 +34,47 @@ const productCategories = [
         description: "Dönüşüm odaklı sayfalar",
         href: "/store/category/landing-pages",
       },
+      {
+        icon: Code,
+        name: "SaaS Şablonları",
+        description: "Hazır SaaS çözümleri",
+        href: "/store/category/saas-templates",
+      },
     ],
   },
   {
-    title: "Hosting Paketleri",
+    title: "Cloud Hosting",
     products: [
       {
-        icon: Cloud,
-        name: "VPS Sunucular",
+        icon: Server,
+        name: "Cloud VPS",
         description: "Yüksek performans VPS",
-        href: "/store/category/vps",
+        href: "/cloud",
       },
       {
         icon: Globe,
         name: "Web Hosting",
         description: "Paylaşımlı hosting",
-        href: "/store/category/web-hosting",
+        href: "/cloud#hosting",
       },
       {
-        icon: Gamepad2,
-        name: "Oyun Sunucuları",
-        description: "Minecraft, FiveM ve daha fazlası",
-        href: "/store/category/game-servers",
-        badge: "Popüler",
+        icon: Database,
+        name: "Managed Database",
+        description: "PostgreSQL, MySQL, Redis",
+        href: "/cloud#database",
       },
     ],
   },
   {
-    title: "Güvenlik & Araçlar",
+    title: "Oyun Sunucuları",
     products: [
       {
-        icon: Shield,
-        name: "SSL Sertifikaları",
-        description: "DV, OV, EV sertifikalar",
-        href: "/store/category/ssl",
-      },
-      {
-        icon: Database,
-        name: "Veritabanı",
-        description: "Managed databases",
-        href: "/store/category/database",
-        badge: "Yakında",
+        icon: Gamepad2,
+        name: "Game Servers",
+        description: "Minecraft, FiveM ve daha fazlası",
+        href: "https://game.hyble.co",
+        badge: "game.hyble.co",
+        external: true,
       },
     ],
   },
@@ -117,15 +117,15 @@ const solutionCategories = [
         icon: Cloud,
         name: "Hyble Cloud",
         description: "VPS ve web hosting",
-        href: "/solutions/cloud",
-        badge: "Yakında",
+        href: "/cloud",
       },
       {
         icon: Gamepad2,
         name: "Hyble Gaming",
         description: "Game server hosting",
-        href: "/solutions/gaming",
-        badge: "Popüler",
+        href: "https://game.hyble.co",
+        badge: "game.hyble.co",
+        external: true,
       },
       {
         icon: Server,
@@ -243,37 +243,48 @@ export function SiteHeader() {
                           {category.title}
                         </p>
                         <div className="space-y-1">
-                          {category.products.map((product) => (
-                            <Link
-                              key={product.name}
-                              href={product.href}
-                              onClick={() => setActiveDropdown(null)}
-                              className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
-                            >
-                              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-300 dark:group-hover:border-blue-500/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 transition-all">
-                                <product.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                    {product.name}
-                                  </span>
-                                  {"badge" in product && product.badge && (
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                                      product.badge === "Popüler"
-                                        ? "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
-                                        : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                                    }`}>
-                                      {product.badge}
-                                    </span>
-                                  )}
+                          {category.products.map((product) => {
+                            const isExternal = "external" in product && product.external;
+                            const LinkComponent = isExternal ? "a" : Link;
+                            const linkProps = isExternal
+                              ? { href: product.href, target: "_blank", rel: "noopener noreferrer" }
+                              : { href: product.href };
+
+                            return (
+                              <LinkComponent
+                                key={product.name}
+                                {...linkProps}
+                                onClick={() => setActiveDropdown(null)}
+                                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-300 dark:group-hover:border-blue-500/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 transition-all">
+                                  <product.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
                                 </div>
-                                <p className="text-xs text-slate-500 dark:text-slate-500">
-                                  {product.description}
-                                </p>
-                              </div>
-                            </Link>
-                          ))}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                      {product.name}
+                                    </span>
+                                    {"badge" in product && product.badge && (
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                                        product.badge === "Popüler"
+                                          ? "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
+                                          : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                                      }`}>
+                                        {product.badge}
+                                      </span>
+                                    )}
+                                    {isExternal && (
+                                      <ArrowUpRight className="w-3 h-3 text-slate-400" />
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-slate-500 dark:text-slate-500">
+                                    {product.description}
+                                  </p>
+                                </div>
+                              </LinkComponent>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -325,37 +336,48 @@ export function SiteHeader() {
                           {category.title}
                         </p>
                         <div className="space-y-1">
-                          {category.solutions.map((solution) => (
-                            <Link
-                              key={solution.name}
-                              href={solution.href}
-                              onClick={() => setActiveDropdown(null)}
-                              className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
-                            >
-                              <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-300 dark:group-hover:border-blue-500/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 transition-all">
-                                <solution.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                    {solution.name}
-                                  </span>
-                                  {"badge" in solution && solution.badge && (
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                                      solution.badge === "Popüler"
-                                        ? "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
-                                        : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                                    }`}>
-                                      {solution.badge}
-                                    </span>
-                                  )}
+                          {category.solutions.map((solution) => {
+                            const isExternal = "external" in solution && solution.external;
+                            const LinkComponent = isExternal ? "a" : Link;
+                            const linkProps = isExternal
+                              ? { href: solution.href, target: "_blank", rel: "noopener noreferrer" }
+                              : { href: solution.href };
+
+                            return (
+                              <LinkComponent
+                                key={solution.name}
+                                {...linkProps}
+                                onClick={() => setActiveDropdown(null)}
+                                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-300 dark:group-hover:border-blue-500/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 transition-all">
+                                  <solution.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
                                 </div>
-                                <p className="text-xs text-slate-500 dark:text-slate-500">
-                                  {solution.description}
-                                </p>
-                              </div>
-                            </Link>
-                          ))}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                      {solution.name}
+                                    </span>
+                                    {"badge" in solution && solution.badge && (
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                                        solution.badge === "Popüler"
+                                          ? "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
+                                          : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                                      }`}>
+                                        {solution.badge}
+                                      </span>
+                                    )}
+                                    {isExternal && (
+                                      <ArrowUpRight className="w-3 h-3 text-slate-400" />
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-slate-500 dark:text-slate-500">
+                                    {solution.description}
+                                  </p>
+                                </div>
+                              </LinkComponent>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -526,26 +548,35 @@ export function SiteHeader() {
                     <p className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                       {category.title}
                     </p>
-                    {category.products.map((product) => (
-                      <Link
-                        key={product.name}
-                        href={product.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
-                      >
-                        <product.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{product.name}</span>
-                        {"badge" in product && product.badge && (
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                            product.badge === "Popüler"
-                              ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
-                              : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                          }`}>
-                            {product.badge}
-                          </span>
-                        )}
-                      </Link>
-                    ))}
+                    {category.products.map((product) => {
+                      const isExternal = "external" in product && product.external;
+                      const LinkComponent = isExternal ? "a" : Link;
+                      const linkProps = isExternal
+                        ? { href: product.href, target: "_blank", rel: "noopener noreferrer" }
+                        : { href: product.href };
+
+                      return (
+                        <LinkComponent
+                          key={product.name}
+                          {...linkProps}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
+                        >
+                          <product.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{product.name}</span>
+                          {"badge" in product && product.badge && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                              product.badge === "Popüler"
+                                ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
+                                : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                            }`}>
+                              {product.badge}
+                            </span>
+                          )}
+                          {isExternal && <ArrowUpRight className="w-4 h-4 text-slate-400" />}
+                        </LinkComponent>
+                      );
+                    })}
                   </div>
                 ))}
                 <Link
@@ -568,26 +599,35 @@ export function SiteHeader() {
                     <p className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                       {category.title}
                     </p>
-                    {category.solutions.map((solution) => (
-                      <Link
-                        key={solution.name}
-                        href={solution.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
-                      >
-                        <solution.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{solution.name}</span>
-                        {"badge" in solution && solution.badge && (
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                            solution.badge === "Popüler"
-                              ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
-                              : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                          }`}>
-                            {solution.badge}
-                          </span>
-                        )}
-                      </Link>
-                    ))}
+                    {category.solutions.map((solution) => {
+                      const isExternal = "external" in solution && solution.external;
+                      const LinkComponent = isExternal ? "a" : Link;
+                      const linkProps = isExternal
+                        ? { href: solution.href, target: "_blank", rel: "noopener noreferrer" }
+                        : { href: solution.href };
+
+                      return (
+                        <LinkComponent
+                          key={solution.name}
+                          {...linkProps}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
+                        >
+                          <solution.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{solution.name}</span>
+                          {"badge" in solution && solution.badge && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                              solution.badge === "Popüler"
+                                ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
+                                : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                            }`}>
+                              {solution.badge}
+                            </span>
+                          )}
+                          {isExternal && <ArrowUpRight className="w-4 h-4 text-slate-400" />}
+                        </LinkComponent>
+                      );
+                    })}
                   </div>
                 ))}
                 <Link
