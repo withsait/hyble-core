@@ -9,9 +9,10 @@ import {
   Search, Star, Eye, Code, Palette, Zap,
   Shield, ArrowRight, Filter, Grid3X3, List, Loader2,
   Monitor, X, SlidersHorizontal, ChevronDown,
-  ArrowUpDown, Check, GitCompare
+  ArrowUpDown, Check, GitCompare, Heart
 } from "lucide-react";
 import { useCompare, MAX_COMPARE_ITEMS, CompareProduct } from "@/lib/compare-context";
+import { useWishlist, WishlistProduct } from "@/lib/wishlist-context";
 
 // API base URL
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://api.hyble.co";
@@ -91,6 +92,7 @@ const typeLabels: Record<string, string> = {
 function StoreContent() {
   const searchParams = useSearchParams();
   const { addItem: addToCompare, removeItem: removeFromCompare, isInCompare, itemCount: compareCount } = useCompare();
+  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist();
 
   // State
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -575,43 +577,78 @@ function StoreContent() {
                             </span>
                           )}
 
-                          {/* Compare Button */}
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              const compareProduct: CompareProduct = {
-                                id: product.id,
-                                slug: product.slug,
-                                nameTr: product.nameTr,
-                                nameEn: product.nameEn,
-                                shortDescTr: product.shortDescTr,
-                                shortDescEn: product.shortDescEn,
-                                type: product.type,
-                                category: product.category,
-                                primaryImage: product.primaryImage,
-                                lowestPrice: product.lowestPrice,
-                                basePrice: product.basePrice,
-                                tags: product.tags,
-                                isFeatured: product.isFeatured,
-                                demoUrl: product.demoUrl,
-                                variantCount: product.variantCount,
-                              };
-                              if (isInCompare(product.id)) {
-                                removeFromCompare(product.id);
-                              } else if (compareCount < MAX_COMPARE_ITEMS) {
-                                addToCompare(compareProduct);
-                              }
-                            }}
-                            className={`absolute top-3 right-3 p-2 rounded-lg transition-all z-10 ${
-                              isInCompare(product.id)
-                                ? "bg-blue-600 text-white"
-                                : "bg-white/90 text-slate-600 hover:bg-blue-600 hover:text-white"
-                            } ${compareCount >= MAX_COMPARE_ITEMS && !isInCompare(product.id) ? "opacity-50 cursor-not-allowed" : ""}`}
-                            title={isInCompare(product.id) ? "Karşılaştırmadan Çıkar" : "Karşılaştırmaya Ekle"}
-                          >
-                            <GitCompare className="w-4 h-4" />
-                          </button>
+                          {/* Action Buttons */}
+                          <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
+                            {/* Wishlist Button */}
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const wishlistProduct: WishlistProduct = {
+                                  id: product.id,
+                                  slug: product.slug,
+                                  nameTr: product.nameTr,
+                                  nameEn: product.nameEn,
+                                  shortDescTr: product.shortDescTr,
+                                  type: product.type,
+                                  category: product.category ? { nameTr: product.category.nameTr, slug: product.category.slug } : null,
+                                  primaryImage: product.primaryImage,
+                                  lowestPrice: product.lowestPrice,
+                                };
+                                if (isInWishlist(product.id)) {
+                                  removeFromWishlist(product.id);
+                                } else {
+                                  addToWishlist(wishlistProduct);
+                                }
+                              }}
+                              className={`p-2 rounded-lg transition-all ${
+                                isInWishlist(product.id)
+                                  ? "bg-red-500 text-white"
+                                  : "bg-white/90 text-slate-600 hover:bg-red-500 hover:text-white"
+                              }`}
+                              title={isInWishlist(product.id) ? "Favorilerden Çıkar" : "Favorilere Ekle"}
+                            >
+                              <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
+                            </button>
+
+                            {/* Compare Button */}
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const compareProduct: CompareProduct = {
+                                  id: product.id,
+                                  slug: product.slug,
+                                  nameTr: product.nameTr,
+                                  nameEn: product.nameEn,
+                                  shortDescTr: product.shortDescTr,
+                                  shortDescEn: product.shortDescEn,
+                                  type: product.type,
+                                  category: product.category,
+                                  primaryImage: product.primaryImage,
+                                  lowestPrice: product.lowestPrice,
+                                  basePrice: product.basePrice,
+                                  tags: product.tags,
+                                  isFeatured: product.isFeatured,
+                                  demoUrl: product.demoUrl,
+                                  variantCount: product.variantCount,
+                                };
+                                if (isInCompare(product.id)) {
+                                  removeFromCompare(product.id);
+                                } else if (compareCount < MAX_COMPARE_ITEMS) {
+                                  addToCompare(compareProduct);
+                                }
+                              }}
+                              className={`p-2 rounded-lg transition-all ${
+                                isInCompare(product.id)
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-white/90 text-slate-600 hover:bg-blue-600 hover:text-white"
+                              } ${compareCount >= MAX_COMPARE_ITEMS && !isInCompare(product.id) ? "opacity-50 cursor-not-allowed" : ""}`}
+                              title={isInCompare(product.id) ? "Karşılaştırmadan Çıkar" : "Karşılaştırmaya Ekle"}
+                            >
+                              <GitCompare className="w-4 h-4" />
+                            </button>
+                          </div>
 
                           {/* Hover Actions */}
                           <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">

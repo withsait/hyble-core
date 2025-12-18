@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { CartIcon } from "@/components/cart";
+import { WishlistIcon } from "@/components/wishlist";
 
 // Ürünler - Satılık hazır ürünler (PIM'den gelecek)
 const productCategories = [
@@ -504,6 +505,9 @@ export function SiteHeader() {
                 )}
               </button>
             )}
+
+            {/* Wishlist Icon */}
+            <WishlistIcon />
 
             {/* Cart Icon */}
             <CartIcon />
