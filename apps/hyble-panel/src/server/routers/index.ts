@@ -41,6 +41,9 @@ import { leadRouter } from "./lead";
 import { referralRouter } from "./referral";
 import { npsRouter } from "./nps";
 
+// Template Store
+import { templateRouter } from "./template";
+
 /**
  * Main tRPC router for hyble-panel
  * All routers are combined here
@@ -99,6 +102,9 @@ export const appRouter = createTRPCRouter({
   lead: leadRouter,
   referral: referralRouter,
   nps: npsRouter,
+
+  // Template Store
+  template: templateRouter,
 });
 
 // Export type for client usage
@@ -156,4 +162,7 @@ export {
   leadRouter,
   referralRouter,
   npsRouter,
+
+  // Template Store
+  templateRouter,
 };
