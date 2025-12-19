@@ -3796,3 +3796,182 @@ model NpsSurvey {
   @@index([score])
   @@index([createdAt])
 }
+
+// ==================== TEMPLATE STORE ====================
+
+enum TemplateCategory {
+  WEBSITE           // Kurumsal, portfolyo
+  ECOMMERCE         // Online mağaza
+  LANDING_PAGE      // Tek sayfa, kampanya
+  SAAS              // Dashboard, panel
+  BLOG              // Blog, haber
+  PORTFOLIO         // Kişisel portfolyo
+  RESTAURANT        // Restoran, kafe
+  AGENCY            // Ajans, stüdyo
+}
+
+enum TemplateStatus {
+  DRAFT             // Taslak
+  ACTIVE            // Satışta
+  ARCHIVED          // Arşivde
+}
+
+enum TemplateFramework {
+  NEXTJS            // Next.js
+  REACT             // React
+  HTML              // Static HTML
+  WORDPRESS         // WordPress tema
+}
+
+model Template {
+  id              String           @id @default(cuid())
+  slug            String           @unique
+  status          TemplateStatus   @default(DRAFT)
+
+  // Temel Bilgiler
+  nameTr          String
+  nameEn          String
+  descriptionTr   String           @db.Text
+  descriptionEn   String           @db.Text
+  shortDescTr     String?          // Liste görünümü için
+  shortDescEn     String?
+
+  // Kategori & Etiketler
+  category        TemplateCategory
+  tags            String[]         // ["modern", "minimal", "dark"]
+  industry        String[]         // ["teknoloji", "sağlık", "eğitim"]
+
+  // Fiyatlandırma
+  price           Decimal          @db.Decimal(10, 2)
+  comparePrice    Decimal?         @db.Decimal(10, 2)  // İndirim öncesi fiyat
+  currency        String           @default("EUR")
+
+  // Framework & Teknik
+  framework       TemplateFramework
+  version         String           @default("1.0.0")
+  features        String[]         // ["responsive", "dark-mode", "seo-ready"]
+  techStack       String[]         // ["tailwind", "framer-motion", "prisma"]
+
+  // Görseller
+  thumbnail       String           // Ana görsel
+  images          String[]         // Galeri görselleri
+  previewUrl      String?          // Canlı demo linki
+
+  // Dosyalar
+  downloadUrl     String?          // Kaynak dosya (protected)
+  documentationUrl String?         // Kurulum dokümanı
+
+  // İstatistikler
+  salesCount      Int              @default(0)
+  viewCount       Int              @default(0)
+  rating          Decimal          @default(0) @db.Decimal(2, 1)
+  reviewCount     Int              @default(0)
+
+  // Öne Çıkarma
+  isFeatured      Boolean          @default(false)
+  featuredOrder   Int?
+  isNew           Boolean          @default(true)
+
+  // Cloud Entegrasyonu
+  cloudCompatible Boolean          @default(true)
+  deployTime      Int              @default(60)      // Saniye cinsinden tahmini kurulum
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  // Relations
+  purchases       TemplatePurchase[]
+  reviews         TemplateReview[]
+  deployments     TemplateDeployment[]
+
+  @@index([category])
+  @@index([status])
+  @@index([isFeatured])
+  @@index([salesCount])
+  @@index([slug])
+}
+
+model TemplatePurchase {
+  id              String   @id @default(cuid())
+  templateId      String
+  userId          String
+
+  // Ödeme
+  amount          Decimal  @db.Decimal(10, 2)
+  currency        String   @default("EUR")
+  transactionId   String?
+
+  // Lisans
+  licenseKey      String   @unique @default(cuid())
+  licenseType     String   @default("standard")  // standard, extended
+
+  // Durum
+  downloadCount   Int      @default(0)
+  maxDownloads    Int      @default(5)
+  expiresAt       DateTime?
+
+  createdAt       DateTime @default(now())
+
+  template        Template @relation(fields: [templateId], references: [id])
+  deployments     TemplateDeployment[]
+
+  @@unique([templateId, userId])
+  @@index([userId])
+  @@index([templateId])
+}
+
+model TemplateReview {
+  id          String   @id @default(cuid())
+  templateId  String
+  userId      String
+
+  rating      Int      // 1-5
+  title       String?
+  content     String?  @db.Text
+
+  isVerified  Boolean  @default(false)  // Satın almış mı
+  isApproved  Boolean  @default(false)  // Admin onayı
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  template    Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, userId])
+  @@index([templateId])
+  @@index([rating])
+}
+
+model TemplateDeployment {
+  id              String   @id @default(cuid())
+  templateId      String
+  purchaseId      String
+  userId          String
+
+  // Deployment Bilgileri
+  projectName     String
+  subdomain       String   @unique  // projectname.hyble.co
+  customDomain    String?
+
+  // Cloud Kaynakları
+  serverId        String?           // Hyble Cloud VPS ID
+  databaseId      String?           // Managed DB ID
+
+  // Durum
+  status          String   @default("pending")  // pending, deploying, active, failed, suspended
+  deployedAt      DateTime?
+  lastDeployAt    DateTime?
+
+  // Wizard Config
+  config          Json?             // Kullanıcı ayarları (logo, renkler, vs.)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  template        Template         @relation(fields: [templateId], references: [id])
+  purchase        TemplatePurchase @relation(fields: [purchaseId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+  @@index([subdomain])
+}
