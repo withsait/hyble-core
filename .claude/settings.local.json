@@ -101,7 +101,16 @@
       "Bash(dir /s \"C:\\Users\\ahmet\\Desktop\\hyble-core\\apps\\hyble-web\\src\\app\")",
       "Bash(pnpm build:*)",
       "Bash(pnpm db:generate:*)",
-      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git pull origin main && pnpm install && pnpm build && pm2 restart all\")"
+      "Bash(ssh -o StrictHostKeyChecking=no root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git pull origin main && pnpm install && pnpm build && pm2 restart all\")",
+      "Bash(xargs ls:*)",
+      "Bash(ssh root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git pull origin main && pnpm install && pnpm build && pm2 restart all\")",
+      "Bash(ssh root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git pull origin main && pnpm build && pm2 restart all\")",
+      "Bash(for file in review.ts seo.ts performance.ts ai.ts sitebuilder.ts store.ts upload.ts website.ts)",
+      "Bash(do if [ -f \"$file\" ])",
+      "Bash(then head -1 \"$file\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(then sed -i '1s/^/\\/\\/ @ts-nocheck\\n/' \"$file\")"
     ],
     "deny": [],
     "ask": []

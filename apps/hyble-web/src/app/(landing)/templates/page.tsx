@@ -525,7 +525,7 @@ function TemplatesContent() {
                   {/* Hover Actions */}
                   <div className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                     <Link
-                      href={`/templates/${template.slug}`}
+                      href={`/store/${template.slug}`}
                       className="px-4 py-2 bg-white text-slate-900 rounded-lg font-medium text-sm flex items-center gap-2 hover:bg-slate-100"
                     >
                       <Eye className="w-4 h-4" />
@@ -595,7 +595,7 @@ function TemplatesContent() {
                         {template.downloads.toLocaleString()} indirme
                       </span>
                       <Link
-                        href={`/templates/${template.slug}`}
+                        href={`/store/${template.slug}`}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
                       >
                         Kullan
@@ -677,10 +677,10 @@ function TemplatesContent() {
               AI ile Olustur
             </Link>
             <Link
-              href="/freelancers"
+              href="/store"
               className="px-8 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-400 transition-colors"
             >
-              Freelancer'a Yaptir
+              Tum Sablonlari Gor
             </Link>
           </div>
         </div>

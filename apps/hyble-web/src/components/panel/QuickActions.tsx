@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export function QuickActions() {
   const actions = [
-    { name: "Yeni Proje", href: "/projects/new", icon: Plus, color: "bg-blue-600" },
+    { name: "Yeni Web Sitesi", href: "/websites/new", icon: Plus, color: "bg-blue-600" },
     { name: "Para Yükle", href: "/wallet/deposit", icon: CreditCard, color: "bg-emerald-600" },
     { name: "Destek Talebi", href: "/support/new", icon: LifeBuoy, color: "bg-purple-600" },
   ];

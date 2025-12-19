@@ -5,7 +5,6 @@
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import {
-  FolderKanban,
   Wallet,
   CreditCard,
   HeadphonesIcon,
@@ -13,15 +12,12 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Building2,
-  Server,
   Globe,
-  RefreshCw,
   ChevronRight,
   Loader2,
   Gift,
   Clock,
   CheckCircle,
-  AlertCircle,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -51,11 +47,11 @@ export default function DashboardPage() {
           </p>
         </div>
         <Link
-          href="/projects/new"
+          href="/websites/new"
           className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
         >
           <Plus className="h-5 w-5" />
-          Yeni Proje
+          Yeni Web Sitesi
         </Link>
       </div>
 
@@ -91,11 +87,11 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Projects Card */}
+        {/* Websites Card */}
         <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Aktif Projeler</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Web Sitelerim</p>
               <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">3</p>
               <p className="text-sm text-green-600 mt-1 flex items-center gap-1">
                 <ArrowUpRight className="h-3 w-3" />
@@ -103,14 +99,14 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-              <FolderKanban className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+              <Globe className="h-6 w-6 text-purple-600 dark:text-purple-400" />
             </div>
           </div>
           <Link
-            href="/projects"
+            href="/websites"
             className="mt-4 inline-flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
-            Projeleri Gör
+            Web Sitelerini Gör
             <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
@@ -296,13 +292,13 @@ export default function DashboardPage() {
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Link
-            href="/projects/new"
+            href="/websites/new"
             className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
           >
             <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <FolderKanban className="h-5 w-5 text-blue-600" />
+              <Globe className="h-5 w-5 text-blue-600" />
             </div>
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Yeni Proje</span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Yeni Web Sitesi</span>
           </Link>
           <Link
             href="/wallet"

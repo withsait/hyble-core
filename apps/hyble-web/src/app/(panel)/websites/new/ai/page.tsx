@@ -265,7 +265,7 @@ export default function AIWebCreatorPage() {
             </div>
             {generationComplete && (
               <button
-                onClick={() => router.push("/websites/new-site/editor")}
+                onClick={() => router.push("/websites")}
                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center gap-2"
               >
                 <CheckCircle className="w-5 h-5" />
@@ -762,7 +762,7 @@ export default function AIWebCreatorPage() {
                         Önizle
                       </button>
                       <button
-                        onClick={() => router.push("/websites/new-site/editor")}
+                        onClick={() => router.push("/websites")}
                         className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg flex items-center justify-center gap-2"
                       >
                         <PenTool className="w-4 h-4" />

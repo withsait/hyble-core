@@ -23,7 +23,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/organizations") ||
     pathname.startsWith("/wallet") ||
     pathname.startsWith("/settings") ||
-    pathname.startsWith("/projects") ||
+    pathname.startsWith("/websites") ||
     pathname.startsWith("/invoices") ||
     pathname.startsWith("/support")
   ) {
@@ -50,7 +50,7 @@ export const config = {
     "/organizations/:path*",
     "/wallet/:path*",
     "/settings/:path*",
-    "/projects/:path*",
+    "/websites/:path*",
     "/invoices/:path*",
     "/support/:path*",
     "/((?!_next/static|_next/image|favicon.ico).*)",
