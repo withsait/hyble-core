@@ -171,6 +171,10 @@ model User {
   bansLifted            UserBan[]              @relation("UnbannedByUser")
   emailLogs             EmailLog[]
   uploads               Upload[]
+  referralCode          ReferralCode?
+  payoutRequests        PayoutRequest[]
+  usageAlerts           UsageAlert[]
+  npsSurveys            NpsSurvey[]
 
   @@index([email])
   @@index([status])
@@ -3644,4 +3648,151 @@ model Upload {
   @@index([status])
   @@index([purpose])
   @@index([key])
+}
+
+// ==================== LEAD MANAGEMENT ====================
+
+model Lead {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  source      String    // exit_intent, newsletter, waitlist, demo_request
+  lastSource  String?
+  couponCode  String?
+  couponUsed  Boolean   @default(false)
+  convertedAt DateTime?
+  userId      String?   // Kayıt olursa bağla
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  emailSequences EmailSequence[]
+
+  @@index([email])
+  @@index([source])
+  @@index([createdAt])
+}
+
+model EmailSequence {
+  id           String    @id @default(cuid())
+  leadId       String
+  sequenceName String    // onboarding_7day, abandoned_cart, etc.
+  currentStep  Int       @default(0)
+  completed    Boolean   @default(false)
+  nextSendAt   DateTime?
+  pausedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([nextSendAt])
+  @@index([sequenceName])
+}
+
+model ABTestEvent {
+  id        String   @id @default(cuid())
+  testId    String
+  variant   String
+  converted Boolean  @default(false)
+  sessionId String?
+  createdAt DateTime @default(now())
+
+  @@index([testId])
+  @@index([testId, variant])
+}
+
+// ==================== REFERRAL PROGRAM ====================
+
+model ReferralCode {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  code        String   @unique // AHMET20, custom code
+  commission  Int      @default(20) // %20 komisyon
+  discount    Int      @default(20) // %20 indirim
+  totalEarned Decimal  @default(0) @db.Decimal(18, 2)
+  totalPaid   Decimal  @default(0) @db.Decimal(18, 2)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referrals Referral[]
+
+  @@index([code])
+  @@index([userId])
+}
+
+model Referral {
+  id              String    @id @default(cuid())
+  referralCodeId  String
+  referredUserId  String    @unique // Davet edilen
+  status          String    @default("pending") // pending, converted, paid
+  conversionValue Decimal?  @db.Decimal(18, 2) // İlk ödeme tutarı
+  commission      Decimal?  @db.Decimal(18, 2) // Kazanılan komisyon
+  paidAt          DateTime?
+  createdAt       DateTime  @default(now())
+  convertedAt     DateTime?
+
+  referralCode ReferralCode @relation(fields: [referralCodeId], references: [id], onDelete: Cascade)
+
+  @@index([referralCodeId])
+  @@index([referredUserId])
+  @@index([status])
+}
+
+model PayoutRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  amount    Decimal  @db.Decimal(18, 2)
+  status    String   @default("pending") // pending, approved, rejected, paid
+  method    String?  // bank_transfer, paypal, crypto
+  details   Json?    // Ödeme detayları
+  processedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ==================== USAGE ALERTS ====================
+
+model UsageAlert {
+  id              String   @id @default(cuid())
+  subscriptionId  String
+  userId          String
+  resource        String   // api_calls, storage, bandwidth
+  threshold       Int      // 50, 80, 90, 100
+  currentUsage    BigInt
+  limit           BigInt
+  billingPeriod   String   // 2024-01
+  acknowledged    Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@index([userId])
+  @@index([billingPeriod])
+}
+
+// ==================== NPS SURVEY ====================
+
+model NpsSurvey {
+  id        String   @id @default(cuid())
+  userId    String
+  score     Int      // 0-10, -1 for skipped
+  feedback  String?
+  skipped   Boolean  @default(false)
+  trigger   String?  // post_purchase, after_30_days, after_support
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([score])
+  @@index([createdAt])
 }

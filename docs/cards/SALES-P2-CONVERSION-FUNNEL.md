@@ -554,9 +554,9 @@ export default function OnboardingPage() {
 ## Kontrol Listesi
 
 - [x] Exit intent popup komponenti oluşturuldu
-- [ ] Lead capture API endpoint eklendi
-- [ ] Prisma schema güncellendi (Lead, EmailSequence, ABTestEvent)
-- [ ] Welcome coupon email template oluşturuldu
+- [x] Lead capture API endpoint eklendi
+- [x] Prisma schema güncellendi (Lead, EmailSequence, ABTestEvent)
+- [x] Welcome coupon email template oluşturuldu
 - [ ] Onboarding wizard sayfası oluşturuldu
 - [x] Landing page'e ExitIntentPopup eklendi
 - [ ] Email drip campaign cron job hazırlandı

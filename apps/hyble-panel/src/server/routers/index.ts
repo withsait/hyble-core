@@ -36,6 +36,11 @@ import { analyticsRouter } from "./analytics";
 // File Upload
 import { uploadRouter } from "./upload";
 
+// Sales & Growth
+import { leadRouter } from "./lead";
+import { referralRouter } from "./referral";
+import { npsRouter } from "./nps";
+
 /**
  * Main tRPC router for hyble-panel
  * All routers are combined here
@@ -89,6 +94,11 @@ export const appRouter = createTRPCRouter({
 
   // File Upload
   upload: uploadRouter,
+
+  // Sales & Growth
+  lead: leadRouter,
+  referral: referralRouter,
+  nps: npsRouter,
 });
 
 // Export type for client usage
@@ -141,4 +151,9 @@ export {
 
   // File Upload
   uploadRouter,
+
+  // Sales & Growth
+  leadRouter,
+  referralRouter,
+  npsRouter,
 };

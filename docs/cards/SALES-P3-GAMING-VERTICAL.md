@@ -529,9 +529,9 @@ export function CrossSellBanner() {
 
 ## Kontrol Listesi
 
-- [ ] DNS records eklendi (gaming.hyble.co, game.hyble.co redirect)
-- [ ] Nginx config güncellendi
-- [ ] SSL sertifikası gaming.hyble.co için oluşturuldu
+- [ ] DNS records eklendi (gaming.hyble.co, game.hyble.co redirect) - Cloudflare'da manuel yapılmalı
+- [x] Nginx config güncellendi
+- [ ] SSL sertifikası gaming.hyble.co için oluşturuldu - certbot ile sunucuda yapılmalı
 - [x] HybleGaming Hero section oluşturuldu
 - [x] Game selector komponenti oluşturuldu
 - [x] Header Hyble.co linki eklendi

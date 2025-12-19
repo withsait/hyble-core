@@ -746,6 +746,128 @@ export async function sendInvoiceEmail(
   return data;
 }
 
+// ==================== LEAD & MARKETING EMAILS ====================
+
+export async function sendWelcomeCouponEmail(
+  email: string,
+  couponCode: string,
+  discount: string,
+  brand: Brand = "hyble"
+) {
+  const config = BRAND_CONFIG[brand];
+  const storeUrl = "https://hyble.co/store";
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 24px; font-weight: 600;">Hoş Geldin! 🎉</h2>
+    <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
+      Hyble ailesine katıldığın için teşekkürler! Söz verdiğimiz gibi,
+      ilk alışverişinde kullanabileceğin <strong>${discount}</strong> indirim kodun:
+    </p>
+
+    <div style="margin: 24px 0; padding: 24px; background: #FFF7ED; border-radius: 12px; text-align: center;">
+      <p style="margin: 0 0 8px; color: #9A3412; font-size: 12px; font-weight: 500;">İNDİRİM KODUN</p>
+      <p style="margin: 0; color: #F59E0B; font-size: 32px; font-weight: 800; letter-spacing: 4px;">${couponCode}</p>
+    </div>
+
+    <p style="margin: 0 0 24px; color: #475569; font-size: 14px; line-height: 1.6;">
+      Bu kod ilk 30 gün içinde tüm ürünlerde geçerlidir. Hemen alışverişe başla!
+    </p>
+  `;
+
+  const html = getEmailTemplate(
+    "Hoş Geldin İndirimi",
+    content,
+    "Şablonlara Göz At",
+    storeUrl,
+    brand
+  );
+
+  const { data, error } = await getResend().emails.send({
+    from: config.fromEmail,
+    to: email,
+    subject: `🎁 ${discount} İndirim Kodun İçeride! - ${config.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error("Failed to send welcome coupon email:", error);
+    throw new Error("Failed to send welcome coupon email");
+  }
+
+  return data;
+}
+
+export async function sendUsageAlertEmail(
+  email: string,
+  name: string,
+  resource: string,
+  percentage: number,
+  currentUsage: string,
+  limit: string,
+  brand: Brand = "hyble"
+) {
+  const config = BRAND_CONFIG[brand];
+  const upgradeUrl = "https://panel.hyble.co/subscription/upgrade";
+
+  const alertColor = percentage >= 100 ? "#DC2626" : percentage >= 90 ? "#F59E0B" : "#3B82F6";
+  const alertBg = percentage >= 100 ? "#FEE2E2" : percentage >= 90 ? "#FEF3C7" : "#DBEAFE";
+
+  const content = `
+    <h2 style="margin: 0 0 20px; color: #0F172A; font-size: 24px; font-weight: 600;">
+      ${percentage >= 100 ? "⚠️ Limit Aşıldı!" : "📊 Kullanım Uyarısı"}
+    </h2>
+    <p style="margin: 0 0 24px; color: #475569; font-size: 16px; line-height: 1.6;">
+      Merhaba ${name}, <strong>${resource}</strong> kullanımınız <strong>%${percentage}</strong> seviyesine ulaştı.
+    </p>
+
+    <div style="margin: 24px 0; padding: 20px; background: ${alertBg}; border-radius: 12px; border: 1px solid ${alertColor}20;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+        <span style="color: #64748B; font-size: 14px;">Kullanılan</span>
+        <span style="color: #0F172A; font-size: 14px; font-weight: 600;">${currentUsage}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+        <span style="color: #64748B; font-size: 14px;">Limit</span>
+        <span style="color: #0F172A; font-size: 14px; font-weight: 600;">${limit}</span>
+      </div>
+      <div style="height: 8px; background: #E2E8F0; border-radius: 4px; overflow: hidden;">
+        <div style="width: ${Math.min(percentage, 100)}%; height: 100%; background: ${alertColor}; border-radius: 4px;"></div>
+      </div>
+    </div>
+
+    ${percentage >= 100 ? `
+    <p style="margin: 0 0 24px; color: #DC2626; font-size: 14px; font-weight: 500;">
+      ⚠️ Limitinize ulaştınız. Hizmet kesintisi yaşamamak için planınızı yükseltin.
+    </p>
+    ` : `
+    <p style="margin: 0 0 24px; color: #475569; font-size: 14px;">
+      Kesintisiz hizmet için planınızı yükseltmeyi düşünebilirsiniz.
+    </p>
+    `}
+  `;
+
+  const html = getEmailTemplate(
+    "Kullanım Uyarısı",
+    content,
+    "Planı Yükselt",
+    upgradeUrl,
+    brand
+  );
+
+  const { data, error } = await getResend().emails.send({
+    from: config.fromEmail,
+    to: email,
+    subject: `${percentage >= 100 ? "⚠️" : "📊"} ${resource} Kullanımınız %${percentage} - ${config.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error("Failed to send usage alert email:", error);
+    throw new Error("Failed to send usage alert email");
+  }
+
+  return data;
+}
+
 export async function sendSupportTicketEmail(
   email: string,
   customerName: string,
