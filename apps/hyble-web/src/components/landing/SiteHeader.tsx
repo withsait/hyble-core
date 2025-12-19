@@ -2,200 +2,45 @@
 
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import {
-  Sun, Moon, Menu, X, ChevronDown,
-  Shield, Wallet, Cloud, Key, Activity, Wrench,
-  BookOpen, Headphones, FileText, Users, Gamepad2,
-  Server, CreditCard, ArrowUpRight, Layout, ShoppingCart,
-  Globe, Palette, Code, Rocket, FileCode, Database
-} from "lucide-react";
+import { Sun, Moon, Menu, X, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
 import { CartIcon } from "@/components/cart";
 import { WishlistIcon } from "@/components/wishlist";
 
-// Ürünler - Satılık hazır ürünler (PIM'den gelecek)
-const productCategories = [
-  {
-    title: "Hazır Şablonlar",
-    products: [
-      {
-        icon: Layout,
-        name: "Web Siteleri",
-        description: "Kurumsal & kişisel siteler",
-        href: "/store/category/website-templates",
-      },
-      {
-        icon: ShoppingCart,
-        name: "E-ticaret",
-        description: "Online mağaza şablonları",
-        href: "/store/category/ecommerce",
-      },
-      {
-        icon: Rocket,
-        name: "Landing Page",
-        description: "Dönüşüm odaklı sayfalar",
-        href: "/store/category/landing-pages",
-      },
-      {
-        icon: Code,
-        name: "SaaS Şablonları",
-        description: "Hazır SaaS çözümleri",
-        href: "/store/category/saas-templates",
-      },
-    ],
-  },
-  {
-    title: "Cloud Hosting",
-    products: [
-      {
-        icon: Server,
-        name: "Cloud VPS",
-        description: "Yüksek performans VPS",
-        href: "/cloud/pricing#vps",
-      },
-      {
-        icon: Globe,
-        name: "Web Hosting",
-        description: "Paylaşımlı hosting",
-        href: "/cloud/pricing#hosting",
-      },
-      {
-        icon: Database,
-        name: "Managed Database",
-        description: "PostgreSQL, MySQL, Redis",
-        href: "/cloud/pricing#database",
-      },
-    ],
-  },
-  {
-    title: "Oyun Sunucuları",
-    products: [
-      {
-        icon: Gamepad2,
-        name: "Game Servers",
-        description: "Minecraft, FiveM ve daha fazlası",
-        href: "https://game.hyble.co",
-        badge: "game.hyble.co",
-        external: true,
-      },
-    ],
-  },
+// Basit navigation items - max 5 item
+const navItems = [
+  { label: "Ürünler", href: "/products", hasDropdown: true },
+  { label: "Fiyatlandırma", href: "/pricing" },
+  { label: "Şablonlar", href: "/store" },
+  { label: "Destek", href: "/support" },
 ];
 
-// Çözümler - Hyble ekosistem servisleri
-const solutionCategories = [
-  {
-    title: "Kimlik & Güvenlik",
-    solutions: [
-      {
-        icon: Shield,
-        name: "Hyble ID",
-        description: "OAuth 2.0, MFA, SSO",
-        href: "/solutions/id",
-      },
-      {
-        icon: Key,
-        name: "Hyble License",
-        description: "Yazılım lisanslama",
-        href: "/solutions/license",
-      },
-    ],
-  },
-  {
-    title: "Ödeme & Finans",
-    solutions: [
-      {
-        icon: CreditCard,
-        name: "Hyble Wallet",
-        description: "Ödeme ve cüzdan",
-        href: "/solutions/wallet",
-      },
-    ],
-  },
-  {
-    title: "Altyapı & Hosting",
-    solutions: [
-      {
-        icon: Cloud,
-        name: "Hyble Cloud",
-        description: "VPS ve web hosting",
-        href: "/cloud/pricing",
-      },
-      {
-        icon: Gamepad2,
-        name: "Hyble Gaming",
-        description: "Game server hosting",
-        href: "https://game.hyble.co",
-        badge: "game.hyble.co",
-        external: true,
-      },
-      {
-        icon: Server,
-        name: "Hyble CDN",
-        description: "İçerik dağıtım",
-        href: "/solutions/cdn",
-        badge: "Yakında",
-      },
-    ],
-  },
-  {
-    title: "İzleme & Araçlar",
-    solutions: [
-      {
-        icon: Activity,
-        name: "Hyble Status",
-        description: "Uptime monitoring",
-        href: "/solutions/status",
-      },
-      {
-        icon: Wrench,
-        name: "Hyble Tools",
-        description: "Geliştirici araçları",
-        href: "/solutions/tools",
-      },
-    ],
-  },
+// Ürünler dropdown - basit liste
+const productItems = [
+  { name: "Web Siteleri", description: "Kurumsal & kişisel siteler", href: "/store/category/website-templates" },
+  { name: "E-ticaret", description: "Online mağaza şablonları", href: "/store/category/ecommerce" },
+  { name: "Cloud Hosting", description: "VPS ve web hosting", href: "/cloud/pricing" },
+  { name: "Game Servers", description: "Minecraft, FiveM ve daha fazlası", href: "https://game.hyble.co", external: true },
 ];
-
-// Kaynaklar
-const resources = [
-  { icon: BookOpen, name: "Dokümantasyon", description: "API ve rehberler", href: "https://docs.hyble.co" },
-  { icon: Headphones, name: "Destek", description: "7/24 yardım merkezi", href: "/support" },
-  { icon: FileText, name: "Blog", description: "Haberler ve ipuçları", href: "/blog" },
-  { icon: Users, name: "Topluluk", description: "Discord sunucusu", href: "https://discord.gg/hyble" },
-];
-
-// Araçlar
-const tools = [
-  { icon: Wrench, name: "Geliştirici Araçları", description: "Ücretsiz araçlar", href: "/tools" },
-];
-
-const navLinks = [
-  { href: "/pricing", label: "Fiyatlandırma" },
-  { href: "/about", label: "Hakkımızda" },
-  { href: "/contact", label: "İletişim" },
-];
-
-type DropdownType = "products" | "solutions" | "resources" | null;
 
 export function SiteHeader() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState<DropdownType>(null);
+  const [productsOpen, setProductsOpen] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
   let hoverTimeout: NodeJS.Timeout | null = null;
 
-  const handleMouseEnter = (dropdown: DropdownType) => {
+  const handleMouseEnter = () => {
     if (hoverTimeout) clearTimeout(hoverTimeout);
-    setActiveDropdown(dropdown);
+    setProductsOpen(true);
   };
 
   const handleMouseLeave = () => {
     hoverTimeout = setTimeout(() => {
-      setActiveDropdown(null);
+      setProductsOpen(false);
     }, 100);
   };
 
@@ -211,287 +56,83 @@ export function SiteHeader() {
             <span className="text-slate-900 dark:text-white font-semibold text-xl">Hyble</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center">
-            {/* Ürünler Dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={() => handleMouseEnter("products")}
-              onMouseLeave={handleMouseLeave}
-            >
-              <button
-                className={`flex items-center gap-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
-                  activeDropdown === "products" ? "text-blue-600 dark:text-blue-400" : ""
-                }`}
-              >
-                Ürünler
-                <ChevronDown className={`w-4 h-4 transition-transform duration-150 ${activeDropdown === "products" ? "rotate-180" : ""}`} />
-              </button>
+          {/* Desktop Navigation - Simplified */}
+          <nav className="hidden lg:flex items-center gap-1">
+            {navItems.map((item) => (
+              item.hasDropdown ? (
+                <div
+                  key={item.href}
+                  className="relative"
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  <button
+                    className={`flex items-center gap-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
+                      productsOpen ? "text-blue-600 dark:text-blue-400" : ""
+                    }`}
+                  >
+                    {item.label}
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-150 ${productsOpen ? "rotate-180" : ""}`} />
+                  </button>
 
-              {/* Products Dropdown - Kategorili */}
-              <div
-                className={`absolute top-full left-0 pt-2 transition-all duration-150 ${
-                  activeDropdown === "products" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"
-                }`}
-              >
-                <div className="w-[560px] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
-                  <div className="grid grid-cols-2 gap-0">
-                    {productCategories.map((category, catIndex) => (
-                      <div
-                        key={category.title}
-                        className={`p-4 ${catIndex % 2 === 1 ? "border-l border-slate-200 dark:border-slate-700/50" : ""} ${catIndex >= 2 ? "border-t border-slate-200 dark:border-slate-700/50" : ""}`}
-                      >
-                        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
-                          {category.title}
-                        </p>
-                        <div className="space-y-1">
-                          {category.products.map((product) => {
-                            const isExternal = "external" in product && product.external;
-                            const LinkComponent = isExternal ? "a" : Link;
-                            const linkProps = isExternal
-                              ? { href: product.href, target: "_blank", rel: "noopener noreferrer" }
-                              : { href: product.href };
-
-                            return (
-                              <LinkComponent
-                                key={product.name}
-                                {...linkProps}
-                                onClick={() => setActiveDropdown(null)}
-                                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
-                              >
-                                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-300 dark:group-hover:border-blue-500/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 transition-all">
-                                  <product.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                      {product.name}
-                                    </span>
-                                    {"badge" in product && product.badge && (
-                                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                                        product.badge === "Popüler"
-                                          ? "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
-                                          : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                                      }`}>
-                                        {product.badge}
-                                      </span>
-                                    )}
-                                    {isExternal && (
-                                      <ArrowUpRight className="w-3 h-3 text-slate-400" />
-                                    )}
-                                  </div>
-                                  <p className="text-xs text-slate-500 dark:text-slate-500">
-                                    {product.description}
-                                  </p>
-                                </div>
-                              </LinkComponent>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Footer */}
-                  <div className="border-t border-slate-200 dark:border-slate-700/50 p-3 bg-slate-50 dark:bg-slate-800/50">
-                    <Link
-                      href="/store"
-                      onClick={() => setActiveDropdown(null)}
-                      className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    >
-                      <span>Tüm ürünlere göz at</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Çözümler Dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={() => handleMouseEnter("solutions")}
-              onMouseLeave={handleMouseLeave}
-            >
-              <button
-                className={`flex items-center gap-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
-                  activeDropdown === "solutions" ? "text-blue-600 dark:text-blue-400" : ""
-                }`}
-              >
-                Çözümler
-                <ChevronDown className={`w-4 h-4 transition-transform duration-150 ${activeDropdown === "solutions" ? "rotate-180" : ""}`} />
-              </button>
-
-              {/* Solutions Dropdown - Kategorili */}
-              <div
-                className={`absolute top-full left-0 pt-2 transition-all duration-150 ${
-                  activeDropdown === "solutions" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"
-                }`}
-              >
-                <div className="w-[560px] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
-                  <div className="grid grid-cols-2 gap-0">
-                    {solutionCategories.map((category, catIndex) => (
-                      <div
-                        key={category.title}
-                        className={`p-4 ${catIndex % 2 === 1 ? "border-l border-slate-200 dark:border-slate-700/50" : ""} ${catIndex >= 2 ? "border-t border-slate-200 dark:border-slate-700/50" : ""}`}
-                      >
-                        <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
-                          {category.title}
-                        </p>
-                        <div className="space-y-1">
-                          {category.solutions.map((solution) => {
-                            const isExternal = "external" in solution && solution.external;
-                            const LinkComponent = isExternal ? "a" : Link;
-                            const linkProps = isExternal
-                              ? { href: solution.href, target: "_blank", rel: "noopener noreferrer" }
-                              : { href: solution.href };
-
-                            return (
-                              <LinkComponent
-                                key={solution.name}
-                                {...linkProps}
-                                onClick={() => setActiveDropdown(null)}
-                                className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
-                              >
-                                <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-300 dark:group-hover:border-blue-500/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 transition-all">
-                                  <solution.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                                      {solution.name}
-                                    </span>
-                                    {"badge" in solution && solution.badge && (
-                                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                                        solution.badge === "Popüler"
-                                          ? "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
-                                          : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                                      }`}>
-                                        {solution.badge}
-                                      </span>
-                                    )}
-                                    {isExternal && (
-                                      <ArrowUpRight className="w-3 h-3 text-slate-400" />
-                                    )}
-                                  </div>
-                                  <p className="text-xs text-slate-500 dark:text-slate-500">
-                                    {solution.description}
-                                  </p>
-                                </div>
-                              </LinkComponent>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  {/* Footer */}
-                  <div className="border-t border-slate-200 dark:border-slate-700/50 p-3 bg-slate-50 dark:bg-slate-800/50">
-                    <Link
-                      href="/solutions"
-                      onClick={() => setActiveDropdown(null)}
-                      className="flex items-center justify-center gap-2 text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                    >
-                      <span>Tüm çözümleri keşfet</span>
-                      <ArrowUpRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Kaynaklar Dropdown */}
-            <div
-              className="relative"
-              onMouseEnter={() => handleMouseEnter("resources")}
-              onMouseLeave={handleMouseLeave}
-            >
-              <button
-                className={`flex items-center gap-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
-                  activeDropdown === "resources" ? "text-blue-600 dark:text-blue-400" : ""
-                }`}
-              >
-                Kaynaklar
-                <ChevronDown className={`w-4 h-4 transition-transform duration-150 ${activeDropdown === "resources" ? "rotate-180" : ""}`} />
-              </button>
-
-              {/* Resources Dropdown - Ürünler gibi stillendirilmiş */}
-              <div
-                className={`absolute top-full left-0 pt-2 transition-all duration-150 ${
-                  activeDropdown === "resources" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"
-                }`}
-              >
-                <div className="w-[320px] bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700/50 overflow-hidden">
-                  {/* Kaynaklar */}
-                  <div className="p-4">
-                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
-                      Kaynaklar
-                    </p>
-                    <div className="space-y-1">
-                      {resources.map((item) => (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          onClick={() => setActiveDropdown(null)}
-                          className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
-                        >
-                          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-300 dark:group-hover:border-blue-500/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 transition-all">
-                            <item.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors block">
-                              {item.name}
+                  {/* Simple Dropdown */}
+                  <div
+                    className={`absolute top-full left-0 pt-2 transition-all duration-150 ${
+                      productsOpen ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-1"
+                    }`}
+                  >
+                    <div className="w-64 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden py-2">
+                      {productItems.map((product) => (
+                        product.external ? (
+                          <a
+                            key={product.name}
+                            href={product.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setProductsOpen(false)}
+                            className="flex flex-col px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <span className="text-sm font-medium text-slate-800 dark:text-white">
+                              {product.name}
                             </span>
-                            <span className="text-xs text-slate-500 dark:text-slate-500">{item.description}</span>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                  {/* Araçlar */}
-                  <div className="border-t border-slate-200 dark:border-slate-700/50 p-4">
-                    <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
-                      Araçlar
-                    </p>
-                    <div className="space-y-1">
-                      {tools.map((tool) => (
-                        <Link
-                          key={tool.name}
-                          href={tool.href}
-                          onClick={() => setActiveDropdown(null)}
-                          className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors group"
-                        >
-                          <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-300 dark:group-hover:border-blue-500/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-500/10 transition-all">
-                            <tool.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors block">
-                              {tool.name}
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              {product.description}
                             </span>
-                            <span className="text-xs text-slate-500 dark:text-slate-500">{tool.description}</span>
-                          </div>
-                        </Link>
+                          </a>
+                        ) : (
+                          <Link
+                            key={product.name}
+                            href={product.href}
+                            onClick={() => setProductsOpen(false)}
+                            className="flex flex-col px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                          >
+                            <span className="text-sm font-medium text-slate-800 dark:text-white">
+                              {product.name}
+                            </span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              {product.description}
+                            </span>
+                          </Link>
+                        )
                       ))}
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Diğer linkler */}
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              >
-                {link.label}
-              </Link>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                >
+                  {item.label}
+                </Link>
+              )
             ))}
           </nav>
 
           {/* Right Section */}
           <div className="flex items-center gap-3">
-            {/* Tema Toggle */}
+            {/* Theme Toggle */}
             {mounted && (
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -522,7 +163,7 @@ export function SiteHeader() {
               </a>
               <a
                 href="https://id.hyble.co/auth/register"
-                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-md shadow-blue-600/20"
+                className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors shadow-md shadow-amber-500/20"
               >
                 Başla
               </a>
@@ -546,135 +187,45 @@ export function SiteHeader() {
         {mobileMenuOpen && (
           <div className="lg:hidden py-4 border-t border-slate-200 dark:border-slate-800">
             <nav className="flex flex-col gap-1">
-              {/* Ürünler Section */}
-              <div className="mb-2">
-                <p className="px-3 py-2 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
+              {/* Nav Items */}
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
+                >
+                  {item.label}
+                </Link>
+              ))}
+
+              {/* Product Items in Mobile */}
+              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                   Ürünler
                 </p>
-                {productCategories.map((category) => (
-                  <div key={category.title} className="mt-3">
-                    <p className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      {category.title}
-                    </p>
-                    {category.products.map((product) => {
-                      const isExternal = "external" in product && product.external;
-                      const LinkComponent = isExternal ? "a" : Link;
-                      const linkProps = isExternal
-                        ? { href: product.href, target: "_blank", rel: "noopener noreferrer" }
-                        : { href: product.href };
-
-                      return (
-                        <LinkComponent
-                          key={product.name}
-                          {...linkProps}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
-                        >
-                          <product.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{product.name}</span>
-                          {"badge" in product && product.badge && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                              product.badge === "Popüler"
-                                ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
-                                : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                            }`}>
-                              {product.badge}
-                            </span>
-                          )}
-                          {isExternal && <ArrowUpRight className="w-4 h-4 text-slate-400" />}
-                        </LinkComponent>
-                      );
-                    })}
-                  </div>
-                ))}
-                <Link
-                  href="/store"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2.5 mt-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg"
-                >
-                  Tüm ürünlere göz at
-                  <ArrowUpRight className="w-4 h-4" />
-                </Link>
-              </div>
-
-              {/* Çözümler Section */}
-              <div className="mb-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <p className="px-3 py-2 text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800">
-                  Çözümler
-                </p>
-                {solutionCategories.map((category) => (
-                  <div key={category.title} className="mt-3">
-                    <p className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      {category.title}
-                    </p>
-                    {category.solutions.map((solution) => {
-                      const isExternal = "external" in solution && solution.external;
-                      const LinkComponent = isExternal ? "a" : Link;
-                      const linkProps = isExternal
-                        ? { href: solution.href, target: "_blank", rel: "noopener noreferrer" }
-                        : { href: solution.href };
-
-                      return (
-                        <LinkComponent
-                          key={solution.name}
-                          {...linkProps}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
-                        >
-                          <solution.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{solution.name}</span>
-                          {"badge" in solution && solution.badge && (
-                            <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                              solution.badge === "Popüler"
-                                ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
-                                : "bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
-                            }`}>
-                              {solution.badge}
-                            </span>
-                          )}
-                          {isExternal && <ArrowUpRight className="w-4 h-4 text-slate-400" />}
-                        </LinkComponent>
-                      );
-                    })}
-                  </div>
-                ))}
-                <Link
-                  href="/solutions"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2.5 mt-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 rounded-lg"
-                >
-                  Tüm çözümleri keşfet
-                  <ArrowUpRight className="w-4 h-4" />
-                </Link>
-              </div>
-
-              {/* Kaynaklar */}
-              <div className="mb-4 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Kaynaklar</p>
-                {resources.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
-                  >
-                    <item.icon className="w-5 h-5 text-blue-500 dark:text-blue-400" />
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{item.name}</span>
-                  </Link>
-                ))}
-              </div>
-
-              {/* Nav Links */}
-              <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
-                  >
-                    {link.label}
-                  </Link>
+                {productItems.map((product) => (
+                  product.external ? (
+                    <a
+                      key={product.name}
+                      href={product.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
+                    >
+                      {product.name}
+                    </a>
+                  ) : (
+                    <Link
+                      key={product.name}
+                      href={product.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors rounded-lg"
+                    >
+                      {product.name}
+                    </Link>
+                  )
                 ))}
               </div>
 
@@ -688,7 +239,7 @@ export function SiteHeader() {
                 </a>
                 <a
                   href="https://id.hyble.co/auth/register"
-                  className="py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold text-center transition-colors"
+                  className="py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold text-center transition-colors"
                 >
                   Ücretsiz Başla
                 </a>
