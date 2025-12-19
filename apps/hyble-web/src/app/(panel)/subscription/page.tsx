@@ -407,7 +407,7 @@ export default function SubscriptionPage() {
             {currentSubscription.addons.map((addonId) => {
               const addon = addons.find((a) => a.id === addonId);
               if (!addon) return null;
-              const colorClasses = getColorClasses(addon.color);
+              const colorClasses = getColorClasses(addon.color) || { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-600", border: "border-blue-500" };
               return (
                 <Card key={addon.id} className="p-4">
                   <div className="flex items-center justify-between">
@@ -539,7 +539,7 @@ export default function SubscriptionPage() {
         {plans.map((plan) => {
           const isCurrentPlan = plan.id === currentSubscription.plan;
           const price = billingCycle === "yearly" ? plan.yearlyPrice : plan.price;
-          const colorClasses = getColorClasses(plan.color);
+          const colorClasses = getColorClasses(plan.color) || { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-600", border: "border-blue-500" };
 
           return (
             <Card
@@ -695,7 +695,7 @@ export default function SubscriptionPage() {
             {currentSubscription.addons.map((addonId) => {
               const addon = addons.find((a) => a.id === addonId);
               if (!addon) return null;
-              const colorClasses = getColorClasses(addon.color);
+              const colorClasses = getColorClasses(addon.color) || { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-600", border: "border-blue-500" };
               return (
                 <Card key={addon.id} className={`p-6 border-2 ${colorClasses.border}`}>
                   <div className="flex items-start justify-between mb-4">
@@ -740,7 +740,7 @@ export default function SubscriptionPage() {
         <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Mevcut Eklentiler</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {addons.filter(a => !currentSubscription.addons.includes(a.id)).map((addon) => {
-            const colorClasses = getColorClasses(addon.color);
+            const colorClasses = getColorClasses(addon.color) || { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-600", border: "border-blue-500" };
 
             return (
               <Card
@@ -820,7 +820,7 @@ export default function SubscriptionPage() {
         ].map((item, idx) => {
           const percentage = item.total ? (item.used / item.total) * 100 : 0;
           const isUnlimited = !item.total;
-          const colorClasses = getColorClasses(item.color);
+          const colorClasses = getColorClasses(item.color) || { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-600", border: "border-blue-500" };
 
           return (
             <Card key={idx} className="p-6">
