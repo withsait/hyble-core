@@ -5,7 +5,7 @@ import {
   protectedProcedure,
   adminProcedure,
 } from "../trpc/trpc";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../trpc/context";
 
 export const npsRouter = createTRPCRouter({
   // NPS survey gösterilmeli mi kontrol et

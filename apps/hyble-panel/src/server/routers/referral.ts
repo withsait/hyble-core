@@ -6,7 +6,7 @@ import {
   protectedProcedure,
   adminProcedure,
 } from "../trpc/trpc";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../trpc/context";
 import { TRPCError } from "@trpc/server";
 
 async function generateUniqueCode(name: string): Promise<string> {

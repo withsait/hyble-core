@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure, adminProcedure } from "../trpc/trpc";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "../trpc/context";
 import { TRPCError } from "@trpc/server";
 
 export const leadRouter = createTRPCRouter({
