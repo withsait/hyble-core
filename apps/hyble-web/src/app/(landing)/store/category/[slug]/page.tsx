@@ -8,7 +8,7 @@ import {
   Shield, Database, ArrowUpDown, Grid3X3, List, Star
 } from "lucide-react";
 
-// Kategori verileri - Şablon odaklı (Oyun sunucuları game.hyble.co'da)
+// Kategori verileri - Şablon odaklı (Oyun sunucuları gaming.hyble.co'da)
 const categoriesData: Record<string, {
   slug: string;
   name: string;

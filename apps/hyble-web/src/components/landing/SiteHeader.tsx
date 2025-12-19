@@ -20,7 +20,7 @@ const productItems = [
   { name: "Web Siteleri", description: "Kurumsal & kişisel siteler", href: "/store/category/website-templates" },
   { name: "E-ticaret", description: "Online mağaza şablonları", href: "/store/category/ecommerce" },
   { name: "Cloud Hosting", description: "VPS ve web hosting", href: "/cloud/pricing" },
-  { name: "Game Servers", description: "Minecraft, FiveM ve daha fazlası", href: "https://game.hyble.co", external: true },
+  { name: "Game Servers", description: "Minecraft, FiveM ve daha fazlası", href: "https://gaming.hyble.co", external: true },
 ];
 
 export function SiteHeader() {

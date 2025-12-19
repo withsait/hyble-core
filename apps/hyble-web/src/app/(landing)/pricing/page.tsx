@@ -38,7 +38,7 @@ const pricingCategories = [
     description: "Minecraft, FiveM ve diğer oyun sunucuları",
     price: "€2.99",
     sub: "/aydan",
-    href: "https://game.hyble.co",
+    href: "https://gaming.hyble.co",
     color: "emerald",
     features: ["Minecraft", "FiveM", "Rust", "CS2"],
     external: true,

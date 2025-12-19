@@ -254,8 +254,8 @@ export default function CloudPage() {
 
           <p className="mt-8 text-sm text-slate-500">
             Oyun sunucusu mu arıyorsunuz?{" "}
-            <a href="https://game.hyble.co" className="text-slate-400 hover:text-white underline">
-              game.hyble.co
+            <a href="https://gaming.hyble.co" className="text-slate-400 hover:text-white underline">
+              gaming.hyble.co
             </a>
           </p>
         </div>
