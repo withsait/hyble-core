@@ -529,10 +529,10 @@ function FreelancersContent() {
                               {freelancer.name}
                             </h3>
                             {freelancer.isVerified && (
-                              <Shield className="w-4 h-4 text-blue-500 flex-shrink-0" title="Dogrulanmis" />
+                              <Shield className="w-4 h-4 text-blue-500 flex-shrink-0" />
                             )}
                             {freelancer.isTopRated && (
-                              <Award className="w-4 h-4 text-amber-500 flex-shrink-0" title="Top Rated" />
+                              <Award className="w-4 h-4 text-amber-500 flex-shrink-0" />
                             )}
                           </div>
                           <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
