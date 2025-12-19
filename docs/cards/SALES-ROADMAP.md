@@ -1,10 +1,11 @@
-# SALES-ROADMAP: Satış & Müşteri Odaklı Geliştirme Master Plan
+# SALES-ROADMAP: Satış & Müşteri Odaklı Geliştirme Master Plan (v2)
 
 ## 🎯 Hedef
-Hyble'ın conversion rate'ini artır, müşteri güvenini oluştur, retention'ı güçlendir.
+Hyble'ı "web sitesi yapım aracı"ndan "dijital altyapı platformu"na dönüştür. Tüm vertikalleri (Web, Cloud, API, Gaming, Kurumsal) net şekilde konumlandır.
 
 ## 📊 Metrikler (Takip Edilecek)
 - Homepage → Register conversion rate
+- Template purchase → Deploy conversion rate
 - Free trial → Paid conversion rate
 - Customer Acquisition Cost (CAC)
 - Customer Lifetime Value (LTV)
@@ -14,17 +15,18 @@ Hyble'ın conversion rate'ini artır, müşteri güvenini oluştur, retention'ı
 
 ---
 
-## 🗓️ Roadmap Özeti
+## 🗓️ Güncel Roadmap
 
-| Faz | Card | Süre | Öncelik | Bağımlılık |
-|-----|------|------|---------|------------|
-| **P0** | SALES-P0-URGENT-FIXES | 4-6 saat | 🔴 ACİL | - |
-| **P1** | SALES-P1-HOMEPAGE-SIMPLIFICATION | 12-16 saat | 🟠 Yüksek | P0 |
-| **P2** | SALES-P2-CONVERSION-FUNNEL | 16-20 saat | 🟡 Orta | P1 |
-| **P3** | SALES-P3-GAMING-VERTICAL | 20-24 saat | 🟡 Orta | P0 |
-| **P4** | SALES-P4-RETENTION-GROWTH | 24-32 saat | 🟢 Normal | P2 |
+| Faz | Card | Süre | Öncelik | Durum |
+|-----|------|------|---------|-------|
+| **P0** | SALES-P0-URGENT-FIXES | 4-6 saat | ✅ Tamamlandı | Done |
+| **P1** | SALES-P1-HOMEPAGE-SIMPLIFICATION | 12-16 saat | ✅ Tamamlandı | Done |
+| **P5** | SALES-P5-PLATFORM-REBRAND-STORE | 32-40 saat | 🔴 **SONRAKİ** | Pending |
+| **P2** | SALES-P2-CONVERSION-FUNNEL | 16-20 saat | 🟡 Beklemede | Pending |
+| **P3** | SALES-P3-GAMING-VERTICAL | 20-24 saat | 🟡 Beklemede | Pending |
+| **P4** | SALES-P4-RETENTION-GROWTH | 24-32 saat | 🟢 Backlog | Pending |
 
-**Toplam Tahmini Süre:** 76-98 saat (~2-3 hafta full-time)
+**Not:** P5 öncelikli hale geldi çünkü ana değer önerisi ve template store kritik.
 
 ---
 
@@ -32,126 +34,113 @@ Hyble'ın conversion rate'ini artır, müşteri güvenini oluştur, retention'ı
 
 ```
 docs/cards/
-├── SALES-P0-URGENT-FIXES.md        # Fake metrikler, CTA, gaming redirect
-├── SALES-P1-HOMEPAGE-SIMPLIFICATION.md  # AudienceSelector, SocialProof
-├── SALES-P2-CONVERSION-FUNNEL.md   # Exit popup, lead capture, onboarding
-├── SALES-P3-GAMING-VERTICAL.md     # gaming.hyble.co, brand switcher
-├── SALES-P4-RETENTION-GROWTH.md    # Referral, usage alerts, NPS
-└── SALES-ROADMAP.md                # Bu dosya (master plan)
+├── SALES-ROADMAP.md                        # Bu dosya (master plan)
+├── SALES-P0-URGENT-FIXES.md                # ✅ Tamamlandı
+├── SALES-P1-HOMEPAGE-SIMPLIFICATION.md     # ✅ Tamamlandı
+├── SALES-P5-PLATFORM-REBRAND-STORE-PART1.md # 🔴 Sonraki - Homepage + Store
+├── SALES-P5-PLATFORM-REBRAND-STORE-PART2.md # 🔴 Sonraki - Wizard + API
+├── SALES-P2-CONVERSION-FUNNEL.md           # Beklemede
+├── SALES-P3-GAMING-VERTICAL.md             # Beklemede
+└── SALES-P4-RETENTION-GROWTH.md            # Backlog
 ```
 
 ---
 
-## ✅ Başlangıç Sırası
+## 🔥 SONRAKİ: SALES-P5 Platform Rebrand & Template Store
 
-### Hafta 1
-1. **SALES-P0-URGENT-FIXES** (4-6 saat)
-   - Fake metrikleri kaldır
-   - Hero headline güncelle
-   - CTA sadeleştir
-   - Header menüsünü düzenle
+### Bu Card Ne Yapıyor?
 
-2. **SALES-P3-GAMING-VERTICAL** (paralel başla - DNS/infra)
-   - DNS kayıtları ekle
-   - Nginx config hazırla
-   - SSL sertifikası oluştur
+1. **Homepage Rebrand**
+   - "Web Sitenizi 5 Dakikada Oluşturun" → "Dijital Altyapınız İçin Tek Platform"
+   - 5 segmentli AudienceSelector (Web, Cloud, API, Gaming, Kurumsal)
+   - Tüm `game.hyble.co` → `gaming.hyble.co`
 
-### Hafta 2
-3. **SALES-P1-HOMEPAGE-SIMPLIFICATION** (12-16 saat)
-   - AudienceSelector komponenti
-   - SocialProof komponenti
-   - Homepage yeniden yapılandır
+2. **Template Store**
+   - `/store` - Ana mağaza sayfası
+   - `/store/[slug]` - Şablon detay sayfası
+   - Filtreleme, arama, kategori
+   - Satın alma flow'u
 
-4. **SALES-P3-GAMING-VERTICAL** (devam)
-   - Gaming hero section
-   - Game selector
-   - Brand switcher
+3. **Deployment Wizard**
+   - 5 adımlı kurulum wizard'ı
+   - Payment (Wallet/Card)
+   - Branding (Logo, renkler, font)
+   - Content (Site adı, açıklama)
+   - Domain (Subdomain/Custom)
+   - Deploy (One-click kurulum)
 
-### Hafta 3
-5. **SALES-P2-CONVERSION-FUNNEL** (16-20 saat)
-   - Exit intent popup
-   - Lead capture API
-   - Onboarding wizard
-   - Email templates
+4. **Cloud Entegrasyonu**
+   - Şablon satın al → Tek tıkla deploy
+   - Hyble Cloud üzerinde hosting
+   - SSL otomatik
+   - Subdomain veya custom domain
 
-### Hafta 4+
-6. **SALES-P4-RETENTION-GROWTH** (24-32 saat)
-   - Referral program
-   - Usage alerts
-   - NPS survey
+### Başlatma Promptu
 
----
-
-## 🔧 Teknik Gereksinimler
-
-### Yeni Prisma Modeller
 ```
-- Lead
-- EmailSequence
-- ABTestEvent
-- ReferralCode
-- Referral
-- UsageAlert
-- NpsSurvey
-- PayoutRequest
-```
+docs/cards/SALES-P5-PLATFORM-REBRAND-STORE-PART1.md ve 
+docs/cards/SALES-P5-PLATFORM-REBRAND-STORE-PART2.md dosyalarını oku.
 
-### Yeni tRPC Routers
-```
-- leadRouter
-- referralRouter
-- npsRouter
-- usageRouter
-```
+Sırayla:
+1. Prisma schema güncellemelerini yap
+2. Homepage HeroSection ve AudienceSelector'ı güncelle
+3. Store sayfalarını oluştur
+4. Deploy wizard'ı oluştur
+5. Template router'ı oluştur
 
-### Yeni Email Templates
-```
-- welcome_coupon
-- usage_alert
-- referral_invite
-- nps_followup
-- drip_day1, drip_day3, drip_day7
-```
-
-### Cron Jobs
-```
-- Usage alerts (hourly)
-- Email sequences (daily 10:00)
-- NPS survey recipients (daily 09:00)
-- Referral commission calculation (daily)
+Her adımda commit at.
 ```
 
 ---
 
-## 🚀 Claude Code Kullanımı
+## 🏗️ Mimari Özet
 
-Her card için:
 ```
-1. Card dosyasını oku
-2. Görevleri sırayla uygula
-3. Kontrol listesini tamamla
-4. Test et
-5. Commit at
-```
-
-Örnek prompt:
-```
-docs/cards/SALES-P0-URGENT-FIXES.md dosyasını oku ve içindeki görevleri sırayla uygula.
-Her görevi tamamladıktan sonra kontrol listesindeki ilgili maddeyi işaretle.
+┌─────────────────────────────────────────────────────────────────┐
+│                         hyble.co                                │
+│                                                                 │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌───────────┐ │
+│  │   Web   │ │  Cloud  │ │   API   │ │ Gaming  │ │ Kurumsal  │ │
+│  │  /store │ │ /cloud  │ │/solution│ │gaming.co│ │/enterprise│ │
+│  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └─────┬─────┘ │
+│       │           │           │           │             │       │
+│       └───────────┴───────────┴───────────┴─────────────┘       │
+│                               │                                  │
+│                         Hyble ID                                │
+│                    (Unified Auth)                               │
+│                               │                                  │
+│                         Hyble Panel                             │
+│                    (User Dashboard)                             │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 📝 Notlar
+## 📈 Beklenen Etki
 
-1. **Brand Güncellemesi:** Mineble artık yok, gaming.hyble.co / HybleGaming olarak devam
-2. **Öncelik:** P0 mutlaka ilk yapılmalı (güven sorunu kritik)
-3. **Test:** Her fazdan sonra mobile + dark mode test edilmeli
-4. **Commit Stratejisi:** Her görev için ayrı commit
-5. **Rollback:** Eski komponentler _archive klasörüne taşınmalı (silinmemeli)
+| Metrik | Önce | Sonra (Hedef) |
+|--------|------|---------------|
+| Homepage bounce rate | ~60% | ~40% |
+| Template conversion | N/A | 3-5% |
+| Deploy completion | N/A | 70%+ |
+| Segment clarity | Düşük | Yüksek |
+| Cross-sell fırsatları | Düşük | Yüksek |
 
 ---
 
-## 📞 Kontakt
+## 📝 Kritik Notlar
 
-Sorular için: Claude Code veya bu dökümanı güncelle.
+1. **Deploy Edilmedi:** P0 ve P1 değişiklikleri henüz canlıda yok
+2. **Mineble → HybleGaming:** Tüm referanslar güncellenmeli
+3. **game.hyble.co → gaming.hyble.co:** DNS ve kod değişiklikleri
+4. **Template Store:** Demo şablonlar gerekli (placeholder veya gerçek)
+5. **Cloud Entegrasyonu:** Deployment API hazır olmalı
+
+---
+
+## 🚀 Hemen Yapılacaklar
+
+1. **Mevcut değişiklikleri deploy et** (P0, P1)
+2. **P5 Part1'i başlat** (Homepage rebrand)
+3. **Demo template'ler hazırla** (En az 6 adet)
+4. **gaming.hyble.co DNS ayarla**

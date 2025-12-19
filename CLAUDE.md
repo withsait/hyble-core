@@ -139,7 +139,8 @@ pnpm db:studio                # Open Prisma Studio
 ## Server Info
 
 - **IP**: 178.63.138.97
-- **User**: hyble
+- **User**: root
+- **Password**: 8WheEUDukgJ2Pr
 - **Apps**: /home/hyble/apps/hyble-core
 - **Database**: PostgreSQL (local)
 - **Cache**: Redis (local)
