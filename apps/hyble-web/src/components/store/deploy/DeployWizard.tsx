@@ -96,7 +96,9 @@ export function DeployWizard({ template }: DeployWizardProps) {
   };
 
   const canProceed = (): boolean => {
-    switch (steps[currentStep].id) {
+    const step = steps[currentStep];
+    if (!step) return false;
+    switch (step.id) {
       case "payment":
         return wizardData.paymentComplete;
       case "branding":
@@ -130,7 +132,9 @@ export function DeployWizard({ template }: DeployWizardProps) {
   };
 
   const renderStep = () => {
-    switch (steps[currentStep].id) {
+    const step = steps[currentStep];
+    if (!step) return null;
+    switch (step.id) {
       case "payment":
         return <StepPayment template={template} data={wizardData} updateData={updateData} />;
       case "branding":

@@ -36,8 +36,10 @@ export function StepDeploy({ template, data, updateData }: StepDeployProps) {
     try {
       // Simulate deployment steps
       for (let i = 0; i < deploySteps.length; i++) {
+        const step = deploySteps[i];
+        if (!step) continue;
         setCurrentDeployStep(i);
-        await new Promise(resolve => setTimeout(resolve, deploySteps[i].duration * 1000));
+        await new Promise(resolve => setTimeout(resolve, step.duration * 1000));
       }
 
       // TODO: Actual API call to deploy
