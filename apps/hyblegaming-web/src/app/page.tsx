@@ -88,8 +88,25 @@ const games = [
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+      {/* Cross-sell Banner */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-orange-500 py-2 px-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-4 text-sm">
+          <Globe className="w-4 h-4 text-white" />
+          <span className="text-white">
+            <strong>Yeni!</strong> Oyun sunucun için web sitesi oluştur
+          </span>
+          <Link
+            href="https://hyble.co/store?tag=gaming"
+            className="flex items-center gap-1 text-white font-medium hover:underline"
+          >
+            Şablonları Gör
+            <ArrowRight className="w-3 h-3" />
+          </Link>
+        </div>
+      </div>
+
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-lg border-b border-slate-800">
+      <header className="fixed top-9 left-0 right-0 z-40 bg-slate-900/80 backdrop-blur-lg border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Gamepad2 className="h-8 w-8 text-emerald-500" />
@@ -108,13 +125,16 @@ export default function HomePage() {
             <Link href="#games" className="text-slate-300 hover:text-white transition">
               Oyunlar
             </Link>
-            <Link href="https://id.hyble.co" className="text-slate-300 hover:text-white transition">
+            <Link href="https://hyble.co" className="text-slate-300 hover:text-white transition">
+              Hyble.co
+            </Link>
+            <Link href="https://id.hyble.co/auth/login" className="text-slate-300 hover:text-white transition">
               Giriş Yap
             </Link>
           </nav>
 
           <Link
-            href="https://panel.hyble.co/game"
+            href="https://id.hyble.co/auth/register?redirect=gaming"
             className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition flex items-center gap-2"
           >
             Sunucu Oluştur
@@ -124,11 +144,11 @@ export default function HomePage() {
       </header>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-4">
+      <section className="pt-40 pb-20 px-4">
         <div className="max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-4 py-2 rounded-full text-sm mb-6">
-            <Zap className="h-4 w-4" />
-            Yakında Hizmetinizdeyiz!
+            <Gamepad2 className="h-4 w-4" />
+            Hyble Gaming by Hyble
           </div>
 
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
@@ -322,7 +342,7 @@ export default function HomePage() {
             </div>
 
             <p className="text-slate-400 text-sm">
-              Hyble Ltd. bir markasıdır. UK Company No: 15903926
+              Hyble Ltd. bir markasıdır. UK Company No: 15872841
             </p>
 
             <div className="flex items-center gap-4 text-slate-400">
