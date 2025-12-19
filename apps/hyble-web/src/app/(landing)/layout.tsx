@@ -7,6 +7,7 @@ import { WishlistProvider } from "@/lib/wishlist-context";
 import { CartDrawer } from "@/components/cart";
 import { CompareBar } from "@/components/compare";
 import { WishlistDrawer } from "@/components/wishlist";
+import { ExitIntentPopup } from "@/components/conversion";
 
 export default function LandingLayout({
   children,
@@ -25,6 +26,7 @@ export default function LandingLayout({
             <CartDrawer />
             <CompareBar />
             <WishlistDrawer />
+            <ExitIntentPopup />
           </div>
         </WishlistProvider>
       </CompareProvider>
