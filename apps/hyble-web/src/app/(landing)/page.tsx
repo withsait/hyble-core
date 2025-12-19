@@ -1,29 +1,21 @@
 import { Metadata } from "next";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { IntegrationLogos } from "@/components/landing/IntegrationLogos";
-import { FeatureBento } from "@/components/landing/FeatureBento";
-import { FeaturedProducts } from "@/components/landing/FeaturedProducts";
-import { HowItWorks } from "@/components/landing/HowItWorks";
-import { WhyHyble } from "@/components/landing/WhyHyble";
+import { AudienceSelector } from "@/components/landing/AudienceSelector";
+import { SocialProof } from "@/components/landing/SocialProof";
 import { PricingSection } from "@/components/landing/PricingSection";
-import { ScrollCTA } from "@/components/landing/ScrollCTA";
 
 export const metadata: Metadata = {
-  title: "Hyble - All in One. All in Hyble.",
-  description: "Hızlı kurulum, kolay yönetim. Hosting, ödeme, kimlik doğrulama — hepsi tek platformda. 5 dakikada başlayın!",
+  title: "Hyble - Web Sitenizi 5 Dakikada Oluşturun",
+  description: "Şablon seçin, özelleştirin, yayınlayın. Hosting dahil. Ücretsiz başlayın.",
 };
 
 export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <IntegrationLogos />
-      <FeatureBento />
-      <FeaturedProducts />
-      <HowItWorks />
-      <WhyHyble />
+      <AudienceSelector />
+      <SocialProof />
       <PricingSection />
-      <ScrollCTA />
     </>
   );
 }
