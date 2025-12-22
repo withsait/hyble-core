@@ -8,6 +8,22 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+// Minecraft Block Icon (Creeper-style)
+function MinecraftIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" className={className} fill="currentColor">
+      {/* Minecraft block/creeper face style */}
+      <rect x="0" y="0" width="16" height="16" rx="2" />
+      {/* Eyes */}
+      <rect x="2" y="3" width="4" height="4" fill="white" opacity="0.9" />
+      <rect x="10" y="3" width="4" height="4" fill="white" opacity="0.9" />
+      {/* Mouth */}
+      <rect x="5" y="8" width="6" height="2" fill="white" opacity="0.9" />
+      <rect x="6" y="10" width="4" height="4" fill="white" opacity="0.9" />
+    </svg>
+  );
+}
+
 const navItems = [
   { label: "Sunucular", href: "/servers", hasDropdown: true },
   { label: "Pluginler", href: "/plugins" },
@@ -46,7 +62,7 @@ export function SiteHeader() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <Gamepad2 className="w-5 h-5 text-white" />
+              <MinecraftIcon className="w-5 h-5 text-white" />
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-slate-900 font-semibold text-xl">Hyble</span>
@@ -121,21 +137,20 @@ export function SiteHeader() {
           {/* Right Section */}
           <div className="flex items-center gap-2">
             {/* Other Verticals */}
-            <div className="hidden lg:flex items-center gap-2 ml-2 mr-2 border-l border-emerald-100 pl-4">
-              <a
-                href="https://hyble.co"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                <Globe className="w-3.5 h-3.5" />
-                Ana Sayfa
-              </a>
+            <div className="hidden lg:flex items-center gap-1 ml-2 mr-2 border-l border-emerald-100 pl-4">
               <a
                 href="https://digital.hyble.co"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700 border border-slate-200 rounded-lg transition-colors"
               >
-                <Crown className="w-3.5 h-3.5" />
+                <Globe className="w-3.5 h-3.5" />
                 Digital
               </a>
+              <span
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-lg"
+              >
+                <MinecraftIcon className="w-3.5 h-3.5" />
+                Studios
+              </span>
             </div>
 
             {/* Auth Buttons */}
@@ -186,19 +201,18 @@ export function SiteHeader() {
               {/* Vertical Links */}
               <div className="flex gap-2 mt-4 pt-4 border-t border-emerald-100 px-3">
                 <a
-                  href="https://hyble.co"
-                  className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-slate-600 bg-stone-100 rounded-lg"
+                  href="https://digital.hyble.co"
+                  className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-slate-600 border border-slate-200 bg-white rounded-lg"
                 >
                   <Globe className="w-4 h-4" />
-                  Ana Sayfa
-                </a>
-                <a
-                  href="https://digital.hyble.co"
-                  className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-emerald-600 bg-emerald-50 rounded-lg"
-                >
-                  <Crown className="w-4 h-4" />
                   Digital
                 </a>
+                <span
+                  className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-lg"
+                >
+                  <MinecraftIcon className="w-4 h-4" />
+                  Studios
+                </span>
               </div>
 
               {/* Auth */}
