@@ -22,7 +22,7 @@ export function middleware(request: NextRequest) {
   // Host-based routing for secret.hyble.net (Admin Panel)
   if (host.includes("secret.hyble.net")) {
     // secret.hyble.net should only access /admin routes
-    if (!pathname.startsWith("/admin") && !pathname.startsWith("/api") && !pathname.startsWith("/login") && pathname !== "/") {
+    if (!pathname.startsWith("/admin") && !pathname.startsWith("/api") && !pathname.startsWith("/login") && pathname !== "/logout" && pathname !== "/") {
       // Redirect non-admin routes to /admin
       return NextResponse.redirect(new URL("/admin", request.url));
     }
@@ -124,6 +124,7 @@ export function middleware(request: NextRequest) {
   const isAuthPage =
     pathname === "/login" ||
     pathname === "/register" ||
+    pathname === "/logout" ||
     pathname === "/auth/login" ||
     pathname === "/auth/register" ||
     pathname.startsWith("/forgot-password") ||
