@@ -61,7 +61,7 @@ export default async function OrganizationDetailPage({
 }) {
   const session = await getAdminSession();
   if (!session) {
-    redirect("/login");
+    redirect("/admin/login");
   }
 
   const organization = await getOrganization(params.slug);

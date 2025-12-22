@@ -150,7 +150,7 @@ async function RecentUsersTable() {
 export default async function DashboardPage() {
   const session = await getAdminSession();
   if (!session) {
-    redirect("/login");
+    redirect("/admin/login");
   }
 
   const stats = await getDashboardStats();

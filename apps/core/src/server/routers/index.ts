@@ -44,6 +44,9 @@ import { npsRouter } from "./nps";
 // Template Store
 import { templateRouter } from "./template";
 
+// Blog
+import { blogRouter } from "./blog";
+
 /**
  * Main tRPC router for hyble-panel
  * All routers are combined here
@@ -105,6 +108,9 @@ export const appRouter = createTRPCRouter({
 
   // Template Store
   template: templateRouter,
+
+  // Blog
+  blog: blogRouter,
 });
 
 // Export type for client usage
@@ -165,4 +171,7 @@ export {
 
   // Template Store
   templateRouter,
+
+  // Blog
+  blogRouter,
 };

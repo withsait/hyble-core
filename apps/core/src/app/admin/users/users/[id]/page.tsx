@@ -73,7 +73,7 @@ export default async function UserDetailPage({
 }) {
   const session = await getAdminSession();
   if (!session) {
-    redirect("/login");
+    redirect("/admin/login");
   }
 
   const user = await getUser(params.id);

@@ -82,7 +82,7 @@ export default async function UsersPage({
 }) {
   const session = await getAdminSession();
   if (!session) {
-    redirect("/login");
+    redirect("/admin/login");
   }
 
   const { users, total, page, totalPages } = await getUsers(searchParams);

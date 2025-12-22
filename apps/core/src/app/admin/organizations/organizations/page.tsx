@@ -56,7 +56,7 @@ export default async function OrganizationsPage({
 }) {
   const session = await getAdminSession();
   if (!session) {
-    redirect("/login");
+    redirect("/admin/login");
   }
 
   const { organizations, total, page, totalPages } = await getOrganizations(searchParams);

@@ -60,7 +60,7 @@ async function getSettingsData() {
 export default async function SettingsPage() {
   const session = await getAdminSession();
   if (!session) {
-    redirect("/login");
+    redirect("/admin/login");
   }
 
   const data = await getSettingsData();

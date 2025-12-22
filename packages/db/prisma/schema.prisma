@@ -3993,3 +3993,121 @@ model TemplateDeployment {
   @@index([status])
   @@index([subdomain])
 }
+
+// ==================== BLOG ====================
+
+enum BlogPostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BlogPostVertical {
+  GENERAL    // Hyble genel
+  DIGITAL    // Hyble Digital
+  STUDIOS    // Hyble Studios
+}
+
+model BlogCategory {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+
+  // i18n Content
+  nameTr      String
+  nameEn      String
+  descTr      String?
+  descEn      String?
+
+  // Görsel
+  icon        String?  // Lucide icon name
+  color       String?  // Tailwind color (amber, emerald, sky)
+
+  // Hiyerarşi
+  parentId    String?
+  parent      BlogCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    BlogCategory[] @relation("CategoryHierarchy")
+
+  // Sıralama
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+
+  // Audit
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  posts       BlogPost[]
+
+  @@index([slug])
+  @@index([parentId])
+  @@index([isActive])
+}
+
+model BlogPost {
+  id            String          @id @default(cuid())
+  slug          String          @unique
+  status        BlogPostStatus  @default(DRAFT)
+  vertical      BlogPostVertical @default(GENERAL)
+
+  // i18n Content
+  titleTr       String
+  titleEn       String
+  excerptTr     String?         @db.Text
+  excerptEn     String?         @db.Text
+  contentTr     String          @db.Text
+  contentEn     String          @db.Text
+
+  // Kategori & Etiketler
+  categoryId    String?
+  category      BlogCategory?   @relation(fields: [categoryId], references: [id])
+  tags          String[]        // ["tutorial", "news", "feature", "update"]
+
+  // Görsel
+  featuredImage String?
+  thumbnail     String?
+  gallery       String[]        // Ek görseller
+
+  // SEO
+  metaTitleTr   String?
+  metaTitleEn   String?
+  metaDescTr    String?
+  metaDescEn    String?
+  canonicalUrl  String?
+
+  // Okuma Metrikleri
+  readingTime   Int             @default(5)  // Dakika
+  wordCount     Int             @default(0)
+
+  // Yayın Bilgileri
+  authorId      String?
+  authorName    String?         // Denormalized for display
+  authorImage   String?
+  publishedAt   DateTime?
+  scheduledAt   DateTime?
+
+  // İstatistikler
+  viewCount     Int             @default(0)
+  likeCount     Int             @default(0)
+  shareCount    Int             @default(0)
+
+  // İlişkili İçerik
+  relatedPosts  String[]        // Post IDs
+
+  // Öne Çıkarma
+  isFeatured    Boolean         @default(false)
+  isPinned      Boolean         @default(false)
+
+  // Audit
+  createdBy     String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([slug])
+  @@index([status])
+  @@index([vertical])
+  @@index([categoryId])
+  @@index([publishedAt])
+  @@index([isFeatured])
+  @@index([isPinned])
+}

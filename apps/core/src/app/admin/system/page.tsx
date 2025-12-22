@@ -178,7 +178,7 @@ function formatBytes(bytes: number) {
 export default async function SystemPage() {
   const session = await getAdminSession();
   if (!session) {
-    redirect("/login");
+    redirect("/admin/login");
   }
 
   const status = await getSystemStatus();

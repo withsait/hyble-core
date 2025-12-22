@@ -10,8 +10,9 @@ const nextAuth: NextAuthResult = NextAuth({
     maxAge: 30 * 24 * 60 * 60,
   },
   pages: {
-    signIn: "/login",
-    error: "/login",
+    signIn: "/admin/login",
+    signOut: "/logout",
+    error: "/admin/login",
   },
   providers: [
     Credentials({

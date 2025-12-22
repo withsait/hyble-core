@@ -23,6 +23,7 @@ import {
   Star,
   BarChart3,
   FileText,
+  PenLine,
 } from "lucide-react";
 
 const navItems = [
@@ -33,6 +34,7 @@ const navItems = [
   { href: "/admin/orders", label: "Siparişler", icon: ShoppingCart },
   { href: "/admin/reviews", label: "Yorumlar", icon: Star },
   { href: "/admin/analytics", label: "Analitik", icon: BarChart3 },
+  { href: "/admin/blog", label: "Blog", icon: PenLine },
   { href: "/admin/cloud", label: "Cloud", icon: Cloud },
   { href: "/admin/support", label: "Destek", icon: Ticket },
   { href: "/admin/emails", label: "Email Logları", icon: Mail },
@@ -62,7 +64,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-4">
             <span className="text-sm text-slate-300">sait@hyble.co</span>
             <Link
-              href="/auth/logout"
+              href="/logout"
               className="flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors"
             >
               <LogOut className="h-4 w-4" />

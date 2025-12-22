@@ -191,7 +191,7 @@ export default async function LogsPage({
 }) {
   const session = await getAdminSession();
   if (!session) {
-    redirect("/login");
+    redirect("/admin/login");
   }
 
   const data = await getLogsData(searchParams);

@@ -230,7 +230,7 @@ export default async function SecurityPage({
 }) {
   const session = await getAdminSession();
   if (!session) {
-    redirect("/login");
+    redirect("/admin/login");
   }
 
   const [stats, logsData] = await Promise.all([
