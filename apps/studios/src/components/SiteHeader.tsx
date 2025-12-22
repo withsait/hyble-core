@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import {
   Sun, Moon, Menu, X, ChevronDown, ExternalLink,
   Globe, Gamepad2, Server, Package, Puzzle, Cpu,
-  ArrowRight, Building2, Zap
+  ArrowRight, Crown, Zap
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -45,7 +45,7 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80">
+    <header className="sticky top-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-emerald-100/80 dark:border-emerald-900/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -85,14 +85,14 @@ export function SiteHeader() {
                       activeDropdown === "servers" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"
                     }`}
                   >
-                    <div className="w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700/50 overflow-hidden p-3">
+                    <div className="w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl shadow-emerald-200/30 dark:shadow-none border border-emerald-100 dark:border-emerald-800/30 overflow-hidden p-3">
                       <div className="space-y-1">
                         {serverItems.map((server) => (
                           <Link
                             key={server.name}
                             href={server.href}
                             onClick={() => setActiveDropdown(null)}
-                            className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
+                            className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors group"
                           >
                             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 flex items-center justify-center flex-shrink-0">
                               <server.icon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -129,18 +129,18 @@ export function SiteHeader() {
             {mounted && (
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
               >
                 {theme === "dark" ? (
-                  <Moon className="w-5 h-5 text-slate-400" />
+                  <Moon className="w-5 h-5 text-emerald-400" />
                 ) : (
-                  <Sun className="w-5 h-5 text-slate-600" />
+                  <Sun className="w-5 h-5 text-emerald-600" />
                 )}
               </button>
             )}
 
             {/* Other Verticals */}
-            <div className="hidden lg:flex items-center gap-2 ml-2 mr-2 border-l border-slate-200 dark:border-slate-700 pl-4">
+            <div className="hidden lg:flex items-center gap-2 ml-2 mr-2 border-l border-emerald-100 dark:border-emerald-800/30 pl-4">
               <a
                 href="https://hyble.co"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -150,9 +150,9 @@ export function SiteHeader() {
               </a>
               <a
                 href="https://digital.hyble.co"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg transition-colors"
               >
-                <Building2 className="w-3.5 h-3.5" />
+                <Crown className="w-3.5 h-3.5" />
                 Digital
               </a>
             </div>
@@ -176,7 +176,7 @@ export function SiteHeader() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="lg:hidden p-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
             >
               {mobileMenuOpen ? (
                 <X className="w-5 h-5 text-slate-600 dark:text-slate-300" />
@@ -189,21 +189,21 @@ export function SiteHeader() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-slate-200 dark:border-slate-800">
+          <div className="lg:hidden py-4 border-t border-emerald-100 dark:border-emerald-800/30">
             <nav className="flex flex-col gap-1">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg"
+                  className="block px-3 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg"
                 >
                   {item.label}
                 </Link>
               ))}
 
               {/* Vertical Links */}
-              <div className="flex gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 px-3">
+              <div className="flex gap-2 mt-4 pt-4 border-t border-emerald-100 dark:border-emerald-800/30 px-3">
                 <a
                   href="https://hyble.co"
                   className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 rounded-lg"
@@ -213,15 +213,15 @@ export function SiteHeader() {
                 </a>
                 <a
                   href="https://digital.hyble.co"
-                  className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-lg"
+                  className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 rounded-lg"
                 >
-                  <Building2 className="w-4 h-4" />
+                  <Crown className="w-4 h-4" />
                   Digital
                 </a>
               </div>
 
               {/* Auth */}
-              <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 px-3">
+              <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-emerald-100 dark:border-emerald-800/30 px-3">
                 <a
                   href="https://id.hyble.co/auth/login"
                   className="py-2.5 text-sm text-center text-slate-600 dark:text-slate-300"
