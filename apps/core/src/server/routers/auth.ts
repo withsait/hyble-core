@@ -38,7 +38,7 @@ const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: passwordSchema,
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
-  platform: z.enum(["HYBLE", "MINEBLE"]).default("HYBLE"),
+  platform: z.enum(["HYBLE", "STUDIOS", "DIGITAL", "CLOUD"]).default("HYBLE"),
   turnstileToken: z.string().optional(), // Cloudflare Turnstile
 });
 
@@ -46,7 +46,7 @@ const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
   rememberMe: z.boolean().default(false),
-  platform: z.enum(["HYBLE", "MINEBLE"]).default("HYBLE"),
+  platform: z.enum(["HYBLE", "STUDIOS", "DIGITAL", "CLOUD"]).default("HYBLE"),
   turnstileToken: z.string().optional(),
 });
 
