@@ -51,7 +51,7 @@ export interface RedisSession {
   email: string;
   role: string;
   trustLevel: string;
-  platform: "HYBLE" | "MINEBLE" | "BOTH";
+  platform: "HYBLE" | "STUDIOS" | "DIGITAL" | "CLOUD";
   deviceId?: string;
   ipAddress?: string;
   userAgent?: string;
