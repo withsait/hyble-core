@@ -73,7 +73,7 @@ export function UniversalBar({
         .join("")
         .toUpperCase()
         .slice(0, 2)
-    : user?.email[0].toUpperCase();
+    : user?.email?.[0]?.toUpperCase() || "U";
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
