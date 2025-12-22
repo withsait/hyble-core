@@ -22,37 +22,41 @@ const categoryUpdateSchema = categoryCreateSchema.partial().extend({
   isActive: z.boolean().optional(),
 });
 
+// Helper to allow empty strings as undefined for optional URL fields
+const optionalUrl = z.string().transform(val => val === "" ? undefined : val).optional();
+const optionalString = z.string().transform(val => val === "" ? undefined : val).optional();
+
 const postCreateSchema = z.object({
   slug: z.string().min(2).max(200).regex(/^[a-z0-9-]+$/, "Slug sadece küçük harf, rakam ve tire içerebilir"),
   vertical: z.enum(["GENERAL", "DIGITAL", "STUDIOS"]).default("GENERAL"),
 
   // i18n Content
-  titleTr: z.string().min(5).max(200),
-  titleEn: z.string().min(5).max(200),
-  excerptTr: z.string().max(500).optional(),
-  excerptEn: z.string().max(500).optional(),
-  contentTr: z.string().min(50),
-  contentEn: z.string().min(50),
+  titleTr: z.string().min(3).max(200),
+  titleEn: z.string().min(3).max(200),
+  excerptTr: optionalString,
+  excerptEn: optionalString,
+  contentTr: z.string().min(10),
+  contentEn: z.string().min(10),
 
   // Kategori & Etiketler
-  categoryId: z.string().optional(),
+  categoryId: optionalString,
   tags: z.array(z.string()).default([]),
 
-  // Görsel
-  featuredImage: z.string().url().optional().or(z.literal("")),
-  thumbnail: z.string().url().optional().or(z.literal("")),
-  gallery: z.array(z.string().url()).default([]),
+  // Görsel - Allow empty strings
+  featuredImage: optionalUrl,
+  thumbnail: optionalUrl,
+  gallery: z.array(z.string()).default([]),
 
   // SEO
-  metaTitleTr: z.string().max(70).optional(),
-  metaTitleEn: z.string().max(70).optional(),
-  metaDescTr: z.string().max(160).optional(),
-  metaDescEn: z.string().max(160).optional(),
-  canonicalUrl: z.string().url().optional().or(z.literal("")),
+  metaTitleTr: optionalString,
+  metaTitleEn: optionalString,
+  metaDescTr: optionalString,
+  metaDescEn: optionalString,
+  canonicalUrl: optionalUrl,
 
   // Yazar
-  authorName: z.string().optional(),
-  authorImage: z.string().url().optional().or(z.literal("")),
+  authorName: optionalString,
+  authorImage: optionalUrl,
 
   // İlişkili İçerik
   relatedPosts: z.array(z.string()).default([]),

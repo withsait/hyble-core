@@ -1,66 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { trpc } from "@/lib/trpc/client";
+import { Card } from "@hyble/ui";
 import {
   BarChart3,
   TrendingUp,
-  TrendingDown,
   Users,
-  Globe,
-  DollarSign,
-  ShoppingBag,
-  Eye,
-  Calendar,
   RefreshCw,
   Download,
   Loader2,
-  ArrowUpRight,
   Activity,
+  Shield,
+  Building2,
+  Calendar,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 
-interface PlatformStats {
-  totalUsers: number;
-  newUsers: number;
-  totalWebsites: number;
-  activeWebsites: number;
-  totalRevenue: number;
-  totalOrders: number;
-  totalDeployments: number;
-  avgSessionDuration: number;
-}
-
-interface DailySignup {
-  date: string;
-  signups: number;
-}
-
 export default function AdminAnalyticsPage() {
-  const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<"7d" | "30d" | "90d">("30d");
-  const [stats, setStats] = useState<PlatformStats>({
-    totalUsers: 0,
-    newUsers: 0,
-    totalWebsites: 0,
-    activeWebsites: 0,
-    totalRevenue: 0,
-    totalOrders: 0,
-    totalDeployments: 0,
-    avgSessionDuration: 0,
-  });
-  const [dailySignups, setDailySignups] = useState<DailySignup[]>([]);
 
-  useEffect(() => {
-    // In production, fetch from tRPC
-    setLoading(false);
-    setDailySignups([]);
-  }, [period]);
+  // Fetch real data from tRPC
+  const { data: dashboardStats, isLoading: statsLoading, refetch: refetchStats } = trpc.admin.getDashboardStats.useQuery();
+  const { data: systemStats, isLoading: systemLoading, refetch: refetchSystem } = trpc.admin.getSystemStats.useQuery();
+  const { data: recentActions } = trpc.admin.getAdminActions.useQuery({ page: 1, limit: 5 });
+  const { data: securityLogs } = trpc.admin.getSecurityLogs.useQuery({ page: 1, limit: 10 });
+
+  const isLoading = statsLoading || systemLoading;
+
+  const handleRefresh = () => {
+    refetchStats();
+    refetchSystem();
+  };
+
+  // Calculate percentages
+  const verifiedPercentage = dashboardStats?.users.total
+    ? Math.round((dashboardStats.users.verified / dashboardStats.users.total) * 100)
+    : 0;
+  const securePercentage = dashboardStats?.users.total
+    ? Math.round((dashboardStats.users.secure / dashboardStats.users.total) * 100)
+    : 0;
 
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <BarChart3 className="h-7 w-7 text-amber-500" />
             Platform Analitikleri
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
@@ -77,8 +66,12 @@ export default function AdminAnalyticsPage() {
             <option value="30d">Son 30 Gün</option>
             <option value="90d">Son 90 Gün</option>
           </select>
-          <button className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700">
-            <RefreshCw className="w-5 h-5" />
+          <button
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="p-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-5 h-5 ${isLoading ? "animate-spin" : ""}`} />
           </button>
           <button className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors">
             <Download className="w-4 h-4" />
@@ -87,257 +80,334 @@ export default function AdminAnalyticsPage() {
         </div>
       </div>
 
-      {/* Main Stats */}
+      {/* Main User Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+        <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
               <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <span className="flex items-center text-sm text-green-600">
-              <TrendingUp className="w-4 h-4 mr-1" />
-              +{stats.newUsers}
-            </span>
+            {systemStats?.newUsers?.today && systemStats.newUsers.today > 0 && (
+              <span className="flex items-center text-sm text-green-600">
+                <TrendingUp className="w-4 h-4 mr-1" />
+                +{systemStats.newUsers.today}
+              </span>
+            )}
           </div>
           <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-            {stats.totalUsers.toLocaleString()}
+            {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : dashboardStats?.users.total.toLocaleString() ?? 0}
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400">
             Toplam Kullanıcı
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+        <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-              <Globe className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
             </div>
-            <span className="flex items-center text-sm text-green-600">
-              <TrendingUp className="w-4 h-4 mr-1" />
-              +12%
-            </span>
+            <span className="text-sm text-slate-500">{verifiedPercentage}%</span>
           </div>
           <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-            {stats.totalWebsites.toLocaleString()}
+            {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : dashboardStats?.users.verified.toLocaleString() ?? 0}
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400">
-            Toplam Web Sitesi ({stats.activeWebsites} aktif)
+            Doğrulanmış Kullanıcı
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+        <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              <Shield className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             </div>
-            <span className="flex items-center text-sm text-green-600">
-              <TrendingUp className="w-4 h-4 mr-1" />
-              +22%
-            </span>
+            <span className="text-sm text-slate-500">{securePercentage}%</span>
           </div>
           <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-            €{stats.totalRevenue.toLocaleString()}
+            {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : (dashboardStats?.users.secure ?? 0) + (dashboardStats?.users.corporate ?? 0)}
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400">
-            Toplam Gelir
+            Güvenli Hesaplar (2FA)
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+        <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-              <ShoppingBag className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <Building2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
-            <span className="flex items-center text-sm text-green-600">
-              <TrendingUp className="w-4 h-4 mr-1" />
-              +18%
-            </span>
           </div>
           <div className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-            {stats.totalOrders.toLocaleString()}
+            {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : dashboardStats?.organizations.toLocaleString() ?? 0}
           </div>
           <div className="text-sm text-slate-500 dark:text-slate-400">
-            Toplam Sipariş
+            Organizasyonlar
           </div>
-        </div>
+        </Card>
       </div>
 
-      {/* Secondary Stats */}
+      {/* Activity Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+        <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
               <Activity className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
             </div>
             <div>
               <div className="text-xl font-bold text-slate-900 dark:text-white">
-                {stats.totalDeployments}
+                {isLoading ? "..." : dashboardStats?.recentLogins24h.toLocaleString() ?? 0}
               </div>
               <div className="text-sm text-slate-500 dark:text-slate-400">
-                Deployment (bu dönem)
+                Günlük Giriş (24 saat)
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+        <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
-              <Eye className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+            <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+              <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
             <div>
               <div className="text-xl font-bold text-slate-900 dark:text-white">
-                {Math.floor(stats.avgSessionDuration / 60)}:{(stats.avgSessionDuration % 60).toString().padStart(2, '0')}
+                {isLoading ? "..." : systemStats?.logins?.failedToday.toLocaleString() ?? 0}
               </div>
               <div className="text-sm text-slate-500 dark:text-slate-400">
-                Ortalama Oturum Süresi
+                Başarısız Giriş Denemesi
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
+        <Card className="p-6">
           <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div>
+              <div className="text-xl font-bold text-slate-900 dark:text-white">
+                {isLoading ? "..." : dashboardStats?.pendingDeletions ?? 0}
+              </div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Bekleyen Hesap Silme
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* New User Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="p-6">
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
               <Calendar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>
             <div>
               <div className="text-xl font-bold text-slate-900 dark:text-white">
-                {stats.newUsers}
+                {isLoading ? "..." : systemStats?.newUsers?.today ?? 0}
               </div>
               <div className="text-sm text-slate-500 dark:text-slate-400">
-                Yeni Kayıt (bu dönem)
+                Bugün Yeni Kayıt
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </Card>
 
-      {/* Chart Section */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-            Kullanıcı Kayıtları
-          </h2>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-amber-500" />
-              <span className="text-sm text-slate-500 dark:text-slate-400">Günlük Kayıt</span>
+        <Card className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-teal-600 dark:text-teal-400" />
             </div>
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="h-64 flex items-center justify-center">
-            <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-          </div>
-        ) : dailySignups.length > 0 ? (
-          <div className="h-64 flex items-end gap-1">
-            {dailySignups.map((day, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <div
-                  className="w-full bg-amber-500 rounded-t hover:bg-amber-600 transition-colors cursor-pointer"
-                  style={{
-                    height: `${Math.max(4, (day.signups / Math.max(...dailySignups.map(d => d.signups))) * 200)}px`
-                  }}
-                  title={`${day.date}: ${day.signups} kayıt`}
-                />
-                <span className="text-xs text-slate-400">
-                  {new Date(day.date).getDate()}
-                </span>
+            <div>
+              <div className="text-xl font-bold text-slate-900 dark:text-white">
+                {isLoading ? "..." : systemStats?.newUsers?.week ?? 0}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="h-64 flex items-center justify-center">
-            <div className="text-center">
-              <BarChart3 className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-              <p className="text-slate-500 dark:text-slate-400">
-                Bu dönem için veri bulunmuyor
-              </p>
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Bu Hafta Kayıt
+              </div>
             </div>
           </div>
-        )}
+        </Card>
+
+        <Card className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+              <BarChart3 className="w-5 h-5 text-pink-600 dark:text-pink-400" />
+            </div>
+            <div>
+              <div className="text-xl font-bold text-slate-900 dark:text-white">
+                {isLoading ? "..." : systemStats?.newUsers?.month ?? 0}
+              </div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">
+                Bu Ay Kayıt
+              </div>
+            </div>
+          </div>
+        </Card>
       </div>
 
-      {/* Quick Insights */}
+      {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-            Platform Durumu
+        {/* Recent Admin Actions */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <Activity className="h-5 w-5 text-amber-500" />
+            Son Admin İşlemleri
           </h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">
-                API Durumu
-              </span>
-              <span className="text-sm text-green-600">Çalışıyor</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">
-                Veritabanı
-              </span>
-              <span className="text-sm text-green-600">Sağlıklı</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">
-                CDN
-              </span>
-              <span className="text-sm text-green-600">Aktif</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <span className="text-sm font-medium text-green-700 dark:text-green-400">
-                Email Servisi
-              </span>
-              <span className="text-sm text-green-600">Çalışıyor</span>
-            </div>
+          <div className="space-y-3">
+            {recentActions?.actions && recentActions.actions.length > 0 ? (
+              recentActions.actions.map((action: any) => (
+                <div key={action.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      action.action.includes("BAN") ? "bg-red-100 text-red-600" :
+                      action.action.includes("UPDATE") ? "bg-blue-100 text-blue-600" :
+                      action.action.includes("DELETE") ? "bg-orange-100 text-orange-600" :
+                      "bg-slate-100 text-slate-600"
+                    }`}>
+                      <Activity className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        {action.action.replace(/_/g, " ")}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {action.admin?.email ?? "Bilinmiyor"} {action.targetUser && `→ ${action.targetUser.email}`}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-400">
+                    {new Date(action.createdAt).toLocaleString("tr-TR")}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-slate-500">
+                <Activity className="h-12 w-12 mx-auto mb-2 text-slate-300" />
+                <p>Henüz admin işlemi yok</p>
+              </div>
+            )}
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-            Gelir Dağılımı
+        {/* Recent Security Logs */}
+        <Card className="p-6">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+            <Shield className="h-5 w-5 text-amber-500" />
+            Güvenlik Logları
           </h2>
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-slate-600 dark:text-slate-400">Web Hosting</span>
-                <span className="text-sm font-medium text-slate-900 dark:text-white">45%</span>
+          <div className="space-y-3">
+            {securityLogs?.logs && securityLogs.logs.length > 0 ? (
+              securityLogs.logs.slice(0, 5).map((log: any) => (
+                <div key={log.id} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      log.status === "SUCCESS" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"
+                    }`}>
+                      {log.status === "SUCCESS" ? <CheckCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white">
+                        {log.action.replace(/_/g, " ")}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {log.user?.email ?? "Bilinmiyor"}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-400">
+                    {new Date(log.createdAt).toLocaleString("tr-TR")}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-slate-500">
+                <Shield className="h-12 w-12 mx-auto mb-2 text-slate-300" />
+                <p>Henüz güvenlik logu yok</p>
               </div>
-              <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500 rounded-full" style={{ width: "45%" }} />
-              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* User Status Distribution */}
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">
+          Kullanıcı Durumu Dağılımı
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <div className="text-2xl font-bold text-green-600">
+              {isLoading ? "..." : dashboardStats?.users.active ?? 0}
             </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-slate-600 dark:text-slate-400">Template Satışları</span>
-                <span className="text-sm font-medium text-slate-900 dark:text-white">30%</span>
-              </div>
-              <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                <div className="h-full bg-green-500 rounded-full" style={{ width: "30%" }} />
-              </div>
+            <div className="text-sm text-green-700 dark:text-green-400">Aktif</div>
+          </div>
+          <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">
+              {isLoading ? "..." : dashboardStats?.users.verified ?? 0}
             </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-slate-600 dark:text-slate-400">Freelancer Komisyonları</span>
-                <span className="text-sm font-medium text-slate-900 dark:text-white">15%</span>
-              </div>
-              <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                <div className="h-full bg-amber-500 rounded-full" style={{ width: "15%" }} />
-              </div>
+            <div className="text-sm text-blue-700 dark:text-blue-400">Doğrulanmış</div>
+          </div>
+          <div className="text-center p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+            <div className="text-2xl font-bold text-amber-600">
+              {isLoading ? "..." : dashboardStats?.users.secure ?? 0}
             </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm text-slate-600 dark:text-slate-400">Diğer</span>
-                <span className="text-sm font-medium text-slate-900 dark:text-white">10%</span>
-              </div>
-              <div className="h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
-                <div className="h-full bg-purple-500 rounded-full" style={{ width: "10%" }} />
-              </div>
+            <div className="text-sm text-amber-700 dark:text-amber-400">Güvenli</div>
+          </div>
+          <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+            <div className="text-2xl font-bold text-purple-600">
+              {isLoading ? "..." : dashboardStats?.users.corporate ?? 0}
             </div>
+            <div className="text-sm text-purple-700 dark:text-purple-400">Kurumsal</div>
+          </div>
+          <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
+            <div className="text-2xl font-bold text-red-600">
+              {isLoading ? "..." : (dashboardStats?.users.banned ?? 0) + (dashboardStats?.users.frozen ?? 0)}
+            </div>
+            <div className="text-sm text-red-700 dark:text-red-400">Yasaklı/Dondurulmuş</div>
           </div>
         </div>
-      </div>
+      </Card>
+
+      {/* Platform Health */}
+      <Card className="p-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+          Platform Durumu
+        </h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <span className="text-sm font-medium text-green-700 dark:text-green-400">API Durumu</span>
+            <span className="flex items-center gap-1 text-sm text-green-600">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              Çalışıyor
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <span className="text-sm font-medium text-green-700 dark:text-green-400">Veritabanı</span>
+            <span className="flex items-center gap-1 text-sm text-green-600">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              Sağlıklı
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <span className="text-sm font-medium text-green-700 dark:text-green-400">CDN</span>
+            <span className="flex items-center gap-1 text-sm text-green-600">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              Aktif
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <span className="text-sm font-medium text-green-700 dark:text-green-400">Email Servisi</span>
+            <span className="flex items-center gap-1 text-sm text-green-600">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              Çalışıyor
+            </span>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
