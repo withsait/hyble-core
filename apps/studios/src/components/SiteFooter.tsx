@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Gamepad2, Globe, Building2 } from "lucide-react";
+import { Gamepad2, Globe, Crown } from "lucide-react";
 
 const footerLinks = {
   sunucular: [
@@ -31,7 +31,7 @@ const footerLinks = {
 
 export function SiteFooter() {
   return (
-    <footer className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+    <footer className="bg-slate-50 dark:bg-slate-900 border-t border-emerald-100 dark:border-emerald-900/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {/* Brand */}
@@ -57,9 +57,9 @@ export function SiteFooter() {
               </a>
               <a
                 href="https://digital.hyble.co"
-                className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
               >
-                <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <Crown className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </a>
             </div>
           </div>
@@ -119,7 +119,7 @@ export function SiteFooter() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="mt-12 pt-8 border-t border-emerald-100 dark:border-emerald-900/30 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             &copy; {new Date().getFullYear()} Hyble Ltd. Tum haklari saklidir.
           </p>
