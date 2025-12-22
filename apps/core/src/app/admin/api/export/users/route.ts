@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@hyble/db";
-import { getAdminSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin/auth";
 import { format } from "date-fns";
 
 export async function GET(request: NextRequest) {

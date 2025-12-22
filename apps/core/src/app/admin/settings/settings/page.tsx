@@ -1,4 +1,4 @@
-import { getAdminSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@hyble/db";
 import {

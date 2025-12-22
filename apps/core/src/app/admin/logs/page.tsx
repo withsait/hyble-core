@@ -1,5 +1,5 @@
 import { prisma } from "@hyble/db";
-import { getAdminSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin/auth";
 import { redirect } from "next/navigation";
 import { format, subDays } from "date-fns";
 import { tr } from "date-fns/locale";

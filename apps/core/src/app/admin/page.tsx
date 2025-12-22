@@ -2,7 +2,7 @@ import { prisma } from "@hyble/db";
 import { Users, UserPlus, Activity, Wallet } from "lucide-react";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { RegistrationChart } from "@/components/admin/RegistrationChart";
-import { getAdminSession } from "@/lib/auth";
+import { getAdminSession } from "@/lib/admin/auth";
 import { redirect } from "next/navigation";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 
