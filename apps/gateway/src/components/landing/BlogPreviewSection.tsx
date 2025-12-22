@@ -15,6 +15,21 @@ import {
 
 type PostVertical = "GENERAL" | "DIGITAL" | "STUDIOS";
 
+interface BlogPost {
+  id: string;
+  slug: string;
+  vertical: PostVertical;
+  titleTr: string;
+  excerptTr: string | null;
+  featuredImage: string | null;
+  authorName: string | null;
+  authorImage: string | null;
+  category: { nameTr: string } | null;
+  tags: string[];
+  readingTime: number;
+  publishedAt: Date | string | null;
+}
+
 const verticalConfig: Record<PostVertical, { label: string; color: string; bgColor: string }> = {
   GENERAL: { label: "Hyble", color: "text-sky-600", bgColor: "bg-sky-100 dark:bg-sky-900/30" },
   DIGITAL: { label: "Digital", color: "text-amber-600", bgColor: "bg-amber-100 dark:bg-amber-900/30" },
@@ -31,7 +46,10 @@ function formatDate(date: Date | string | null) {
 }
 
 export function BlogPreviewSection() {
-  const { data: posts, isLoading } = api.blog.getFeaturedForLanding.useQuery({ limit: 3 });
+  // Type assertion for cross-package tRPC compatibility
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: postsData, isLoading } = (api as any).blog.getFeaturedForLanding.useQuery({ limit: 3 }) as { data: BlogPost[] | undefined; isLoading: boolean };
+  const posts = postsData ?? [];
 
   if (isLoading) {
     return (
@@ -43,7 +61,7 @@ export function BlogPreviewSection() {
     );
   }
 
-  if (!posts || posts.length === 0) {
+  if (posts.length === 0) {
     return null;
   }
 

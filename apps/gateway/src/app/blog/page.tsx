@@ -18,6 +18,34 @@ import {
 
 type PostVertical = "GENERAL" | "DIGITAL" | "STUDIOS";
 
+interface BlogPost {
+  id: string;
+  slug: string;
+  vertical: PostVertical;
+  titleTr: string;
+  excerptTr: string | null;
+  featuredImage: string | null;
+  thumbnail: string | null;
+  authorName: string | null;
+  authorImage: string | null;
+  category: { nameTr: string } | null;
+  tags: string[];
+  readingTime: number;
+  publishedAt: Date | string | null;
+}
+
+interface BlogCategory {
+  id: string;
+  slug: string;
+  nameTr: string;
+  _count?: { posts: number };
+}
+
+interface TagCount {
+  tag: string;
+  count: number;
+}
+
 const verticalConfig: Record<PostVertical, { label: string; color: string; bgColor: string }> = {
   GENERAL: { label: "Hyble", color: "text-sky-600", bgColor: "bg-sky-100 dark:bg-sky-900/30" },
   DIGITAL: { label: "Digital", color: "text-amber-600", bgColor: "bg-amber-100 dark:bg-amber-900/30" },
@@ -39,25 +67,32 @@ export default function BlogPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
+  // Type assertion for cross-package tRPC compatibility
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const blogApi = (api as any).blog;
+
   // Fetch posts
-  const { data: postsData, isLoading: postsLoading } = api.blog.listPublished.useQuery({
+  const { data: postsData, isLoading: postsLoading } = blogApi.listPublished.useQuery({
     limit: 20,
     vertical: verticalFilter !== "ALL" ? verticalFilter : undefined,
     tag: selectedTag || undefined,
     search: searchTerm || undefined,
-  });
+  }) as { data: { posts: BlogPost[]; total: number } | undefined; isLoading: boolean };
 
   // Fetch featured posts
-  const { data: featuredPosts } = api.blog.getFeaturedForLanding.useQuery({ limit: 3 });
+  const { data: featuredPostsData } = blogApi.getFeaturedForLanding.useQuery({ limit: 3 }) as { data: BlogPost[] | undefined };
+  const featuredPosts = featuredPostsData ?? [];
 
   // Fetch categories
-  const { data: categories } = api.blog.listCategories.useQuery({});
+  const { data: categoriesData } = blogApi.listCategories.useQuery({}) as { data: BlogCategory[] | undefined };
+  const categories = categoriesData ?? [];
 
   // Fetch all tags
-  const { data: allTags } = api.blog.getAllTags.useQuery();
+  const { data: allTagsData } = blogApi.getAllTags.useQuery() as { data: TagCount[] | undefined };
+  const allTags = allTagsData ?? [];
 
   const posts = postsData?.posts ?? [];
-  const topTags = allTags?.slice(0, 10) ?? [];
+  const topTags = allTags.slice(0, 10);
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950">
@@ -100,7 +135,7 @@ export default function BlogPage() {
       </section>
 
       {/* Featured Posts */}
-      {featuredPosts && featuredPosts.length > 0 && !searchTerm && verticalFilter === "ALL" && !selectedTag && (
+      {featuredPosts.length > 0 && !searchTerm && verticalFilter === "ALL" && !selectedTag && (
         <section className="py-12 border-b border-slate-200 dark:border-slate-800">
           <div className="container mx-auto px-4">
             <div className="flex items-center gap-2 mb-8">
@@ -195,7 +230,7 @@ export default function BlogPage() {
                 </div>
 
                 {/* Categories */}
-                {categories && categories.length > 0 && (
+                {categories.length > 0 && (
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">
                       Kategoriler

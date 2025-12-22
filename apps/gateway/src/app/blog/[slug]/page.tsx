@@ -22,6 +22,33 @@ import {
 
 type PostVertical = "GENERAL" | "DIGITAL" | "STUDIOS";
 
+interface RelatedPost {
+  id: string;
+  slug: string;
+  titleTr: string;
+  thumbnail: string | null;
+  readingTime: number;
+}
+
+interface BlogPost {
+  id: string;
+  slug: string;
+  vertical: PostVertical;
+  titleTr: string;
+  titleEn: string;
+  excerptTr: string | null;
+  contentTr: string;
+  featuredImage: string | null;
+  authorName: string | null;
+  authorImage: string | null;
+  category: { nameTr: string } | null;
+  tags: string[];
+  readingTime: number;
+  viewCount: number;
+  publishedAt: Date | string | null;
+  relatedPosts?: RelatedPost[];
+}
+
 const verticalConfig: Record<PostVertical, { label: string; color: string; bgColor: string; gradient: string }> = {
   GENERAL: {
     label: "Hyble",
@@ -79,8 +106,10 @@ export default function BlogPostPage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  // Fetch post
-  const { data: post, isLoading, error } = api.blog.getBySlug.useQuery({ slug });
+  // Fetch post - using type assertion for cross-package tRPC compatibility
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, isLoading, error } = (api as any).blog.getBySlug.useQuery({ slug });
+  const post = data as BlogPost | null;
 
   // Share functions
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";

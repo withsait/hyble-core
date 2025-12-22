@@ -1,12 +1,17 @@
 import { Metadata } from "next";
+import { Suspense } from "react";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { ComparisonSection } from "@/components/landing/ComparisonSection";
 import { VerticalShowcase } from "@/components/landing/VerticalShowcase";
 import { EcosystemSection } from "@/components/landing/EcosystemSection";
 import { TrustSection } from "@/components/landing/TrustSection";
+import { BlogPreviewSection } from "@/components/landing/BlogPreviewSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { StickyCTA } from "@/components/landing/StickyCTA";
+
+// Force dynamic rendering - client-side tRPC in BlogPreviewSection requires runtime context
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Hyble - Fikriniz Var, Biz Hayata Gecirelim",
@@ -22,6 +27,7 @@ export default function HomePage() {
       <VerticalShowcase />
       <EcosystemSection />
       <TrustSection />
+      <BlogPreviewSection />
       <CTASection />
       <StickyCTA />
     </>
