@@ -129,7 +129,9 @@
       "Bash(ssh root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && git pull origin main\")",
       "Bash(ssh root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && pnpm db:generate && pnpm db:push\")",
       "Bash(ssh root@178.63.138.97 \"cd /home/hyble/apps/hyble-core && pnpm build\")",
-      "Bash(ssh root@178.63.138.97 \"pm2 restart all && pm2 status\")"
+      "Bash(ssh root@178.63.138.97 \"pm2 restart all && pm2 status\")",
+      "Bash(./gradlew build:*)",
+      "Bash(gradle wrapper:*)"
     ],
     "deny": [],
     "ask": []

@@ -26,8 +26,21 @@ enum TrustLevel {
 
 enum Platform {
   HYBLE
-  MINEBLE
-  BOTH
+  STUDIOS   // Gaming vertical (formerly MINEBLE)
+  DIGITAL   // Web services vertical
+  CLOUD     // SaaS vertical
+}
+
+enum ServiceType {
+  GAME_SERVER      // Minecraft, Roblox, Rust etc.
+  WEB_PROJECT      // Web hosting, domains
+  SAAS_LICENSE     // GamePanel, WebStore licenses
+  DIGITAL_PRODUCT  // Digital downloads, templates
+}
+
+enum BanScope {
+  SERVICE    // Ban only affects specific service
+  ECOSYSTEM  // Ban affects entire Hyble ecosystem
 }
 
 enum AddressType {
@@ -773,27 +786,32 @@ model AdminAction {
 }
 
 model UserBan {
-  id           String    @id @default(cuid())
+  id           String       @id @default(cuid())
   userId       String
   type         BanType
+  scope        BanScope     @default(SERVICE)
+  serviceType  ServiceType? // Which service type is banned (null if ecosystem-wide)
+  platform     Platform?    // Which platform (Studios, Digital, Cloud)
   reason       String
   evidence     String?
   bannedBy     String
-  active       Boolean   @default(true)
-  expiresAt    DateTime? // null for permanent
+  active       Boolean      @default(true)
+  expiresAt    DateTime?    // null for permanent
   liftedAt     DateTime?
   liftedBy     String?
   unbannedAt   DateTime?
   unbannedById String?
-  createdAt    DateTime  @default(now())
+  createdAt    DateTime     @default(now())
 
-  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   bannedByUser   User? @relation("BannedByUser", fields: [bannedBy], references: [id])
   unbannedByUser User? @relation("UnbannedByUser", fields: [unbannedById], references: [id])
 
   @@index([userId])
   @@index([expiresAt])
   @@index([active])
+  @@index([scope])
+  @@index([serviceType])
 }
 
 // ==================== NOTIFICATIONS ====================

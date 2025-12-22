@@ -13,3 +13,4 @@ export {
   CardContent,
 } from "./components/card";
 export { ThemeToggle } from "./components/theme-toggle";
+export { UniversalBar, type AppType } from "./components/universal-bar";
