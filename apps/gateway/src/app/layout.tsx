@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { TRPCProvider } from "@/lib/trpc";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { SiteFooter } from "@/components/landing/SiteFooter";
 import { CartProvider } from "@/lib/cart-context";
@@ -71,21 +72,23 @@ export default function RootLayout({
           defaultTheme="light"
           disableTransitionOnChange
         >
-          <CartProvider>
-            <CompareProvider>
-              <WishlistProvider>
-                <div className="flex min-h-screen flex-col">
-                  <SiteHeader />
-                  <main className="flex-1">{children}</main>
-                  <SiteFooter />
-                  <CartDrawer />
-                  <CompareBar />
-                  <WishlistDrawer />
-                  <ExitIntentPopup />
-                </div>
-              </WishlistProvider>
-            </CompareProvider>
-          </CartProvider>
+          <TRPCProvider>
+            <CartProvider>
+              <CompareProvider>
+                <WishlistProvider>
+                  <div className="flex min-h-screen flex-col">
+                    <SiteHeader />
+                    <main className="flex-1">{children}</main>
+                    <SiteFooter />
+                    <CartDrawer />
+                    <CompareBar />
+                    <WishlistDrawer />
+                    <ExitIntentPopup />
+                  </div>
+                </WishlistProvider>
+              </CompareProvider>
+            </CartProvider>
+          </TRPCProvider>
         </ThemeProvider>
       </body>
     </html>
