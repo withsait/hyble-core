@@ -105,12 +105,12 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#05050a]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5">
+    <header className="sticky top-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
               <span className="text-white font-bold text-lg">H</span>
             </div>
             <span className="text-slate-900 dark:text-white font-semibold text-xl">Hyble</span>
@@ -127,8 +127,8 @@ export function SiteHeader() {
                   onMouseLeave={handleMouseLeave}
                 >
                   <button
-                    className={`flex items-center gap-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
-                      activeDropdown === (item.dropdownType || "products") ? "text-blue-600 dark:text-blue-400" : ""
+                    className={`flex items-center gap-1 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-white transition-colors ${
+                      activeDropdown === (item.dropdownType || "products") ? "text-sky-600 dark:text-white" : ""
                     }`}
                   >
                     {item.label}
@@ -144,7 +144,7 @@ export function SiteHeader() {
                         activeDropdown === "products" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"
                       }`}
                     >
-                      <div className="w-[600px] bg-white dark:bg-[#0a0a12] rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-white/10 overflow-hidden">
+                      <div className="w-[600px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-white/10 overflow-hidden">
                         <div className="grid grid-cols-2 gap-0">
                           {/* Left Column - Templates & Cloud */}
                           <div className="p-5 border-r border-slate-100 dark:border-slate-800">
@@ -161,11 +161,11 @@ export function SiteHeader() {
                                       onClick={() => setActiveDropdown(null)}
                                       className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
                                     >
-                                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center flex-shrink-0 group-hover:from-blue-100 group-hover:to-blue-50 dark:group-hover:from-blue-900/30 dark:group-hover:to-blue-800/30 transition-colors">
-                                        <item.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center flex-shrink-0 group-hover:from-sky-100 group-hover:to-sky-50 dark:group-hover:from-white/10 dark:group-hover:to-white/5 transition-colors">
+                                        <item.icon className="w-4 h-4 text-slate-500 dark:text-slate-400 group-hover:text-sky-600 dark:group-hover:text-white transition-colors" />
                                       </div>
                                       <div>
-                                        <div className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                        <div className="text-sm font-medium text-slate-800 dark:text-white group-hover:text-sky-600 dark:group-hover:text-white transition-colors">
                                           {item.name}
                                         </div>
                                         <div className="text-xs text-slate-500 dark:text-slate-400">
@@ -247,7 +247,7 @@ export function SiteHeader() {
                               <Link
                                 href="/store"
                                 onClick={() => setActiveDropdown(null)}
-                                className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group"
+                                className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-white transition-colors group"
                               >
                                 Tüm ürünlere göz at
                                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -266,7 +266,7 @@ export function SiteHeader() {
                         activeDropdown === "solutions" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"
                       }`}
                     >
-                      <div className="w-72 bg-white dark:bg-[#0a0a12] rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-white/10 overflow-hidden p-3">
+                      <div className="w-72 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-white/10 overflow-hidden p-3">
                         <div className="space-y-1">
                           {solutionItems.map((item) => (
                             <Link
@@ -300,7 +300,7 @@ export function SiteHeader() {
                         activeDropdown === "resources" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"
                       }`}
                     >
-                      <div className="w-72 bg-white dark:bg-[#0a0a12] rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-white/10 overflow-hidden p-3">
+                      <div className="w-72 bg-white dark:bg-slate-800 rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-white/10 overflow-hidden p-3">
                         <div className="space-y-1">
                           {resourceItems.map((item) => (
                             <Link
@@ -331,7 +331,7 @@ export function SiteHeader() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-white transition-colors"
                 >
                   {item.label}
                 </Link>
@@ -384,15 +384,15 @@ export function SiteHeader() {
             <div className="hidden md:flex items-center gap-2 ml-2">
               <a
                 href="https://id.hyble.co/auth/login"
-                className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                className="px-4 py-2 text-sm font-medium bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 rounded-lg border border-slate-200 dark:border-white/10 transition-colors"
               >
-                Giriş Yap
+                Giris Yap
               </a>
               <a
                 href="https://id.hyble.co/auth/register"
-                className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30"
+                className="px-5 py-2.5 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-sky-500/20 hover:shadow-xl hover:shadow-sky-500/30"
               >
-                Başla
+                Basla
               </a>
             </div>
 
@@ -488,13 +488,13 @@ export function SiteHeader() {
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 px-3">
                 <a
                   href="https://id.hyble.co/auth/login"
-                  className="py-2.5 text-sm text-center text-slate-600 dark:text-slate-300 hover:text-blue-600 transition-colors"
+                  className="py-2.5 text-sm text-center text-slate-600 dark:text-slate-300 hover:text-sky-600 dark:hover:text-white transition-colors"
                 >
                   Giriş Yap
                 </a>
                 <a
                   href="https://id.hyble.co/auth/register"
-                  className="py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl text-sm font-semibold text-center transition-all shadow-lg shadow-blue-500/20"
+                  className="py-2.5 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white rounded-xl text-sm font-semibold text-center transition-all shadow-lg shadow-sky-500/20"
                 >
                   Ücretsiz Başla
                 </a>

@@ -17,25 +17,25 @@ const trustBadges = [
     icon: Building2,
     label: "UK Registered",
     sublabel: "Companies House #15872841",
-    gradient: "from-amber-500 to-orange-500",
+    gradient: "from-sky-500 to-sky-600",
   },
   {
     icon: Shield,
     label: "GDPR Compliant",
     sublabel: "EU Data Protection",
-    gradient: "from-emerald-500 to-teal-500",
+    gradient: "from-sky-500 to-cyan-500",
   },
   {
     icon: Clock,
     label: "99.9% Uptime",
     sublabel: "SLA Guaranteed",
-    gradient: "from-orange-500 to-amber-500",
+    gradient: "from-cyan-500 to-sky-500",
   },
   {
     icon: Headphones,
     label: "7/24 Destek",
     sublabel: "Turkce & Ingilizce",
-    gradient: "from-teal-500 to-emerald-500",
+    gradient: "from-cyan-500 to-cyan-600",
   },
 ];
 
@@ -44,25 +44,25 @@ const stats = [
     icon: Users,
     value: "5,000+",
     label: "Aktif Kullanici",
-    color: "text-amber-500 dark:text-amber-400",
+    color: "text-sky-500 dark:text-sky-400",
   },
   {
     icon: Server,
     value: "500+",
     label: "Aktif Sunucu",
-    color: "text-emerald-500 dark:text-emerald-400",
+    color: "text-cyan-500 dark:text-cyan-400",
   },
   {
     icon: Star,
     value: "4.9/5",
     label: "Musteri Puani",
-    color: "text-orange-500 dark:text-orange-400",
+    color: "text-sky-600 dark:text-sky-400",
   },
   {
     icon: Zap,
     value: "<50ms",
     label: "API Yanit Suresi",
-    color: "text-teal-500 dark:text-teal-400",
+    color: "text-cyan-600 dark:text-cyan-400",
   },
 ];
 
@@ -75,6 +75,7 @@ const testimonials = [
       "Hyble Digital ile web sitemi 1 gunde kurdum. Hosting dahil olmasi buyuk avantaj.",
     rating: 5,
     vertical: "digital",
+    color: "amber",
   },
   {
     id: 2,
@@ -84,6 +85,7 @@ const testimonials = [
       "Hyble Studios ile oyun sunucum hic downtime yasamadi. Destek ekibi cok hizli.",
     rating: 5,
     vertical: "studios",
+    color: "emerald",
   },
   {
     id: 3,
@@ -93,12 +95,13 @@ const testimonials = [
       "Hyble ID API'si ile musterilerime SSO sunuyorum. Entegrasyon cok kolay.",
     rating: 5,
     vertical: "ecosystem",
+    color: "sky",
   },
 ];
 
 export function TrustSection() {
   return (
-    <section className="relative py-16 lg:py-20 overflow-hidden bg-slate-50 dark:bg-[#08080f]">
+    <section className="relative py-16 lg:py-20 overflow-hidden bg-slate-50 dark:bg-slate-800">
       <div className="absolute inset-0 grid-pattern" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -197,7 +200,7 @@ export function TrustSection() {
                     ? "bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
                     : testimonial.vertical === "studios"
                     ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400"
-                    : "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"
+                    : "bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-400"
                 }`}
               >
                 {testimonial.vertical === "digital"
@@ -230,7 +233,7 @@ export function TrustSection() {
                       ? "bg-gradient-to-br from-amber-500 to-orange-500"
                       : testimonial.vertical === "studios"
                       ? "bg-gradient-to-br from-emerald-500 to-teal-500"
-                      : "bg-gradient-to-br from-orange-500 to-amber-500"
+                      : "bg-gradient-to-br from-sky-500 to-cyan-500"
                   }`}
                 >
                   {testimonial.name.charAt(0)}

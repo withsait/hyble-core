@@ -68,12 +68,12 @@ const socialLinks = [
   { icon: InstagramIcon, href: "https://instagram.com/hyblehq", label: "Instagram", color: "hover:text-pink-400" },
   { icon: XIcon, href: "https://x.com/hyblehq", label: "X (Twitter)", color: "hover:text-white" },
   { icon: YouTubeIcon, href: "https://youtube.com/@hyblehq", label: "YouTube", color: "hover:text-red-500" },
-  { icon: LinkedInIcon, href: "https://linkedin.com/company/hyblehq", label: "LinkedIn", color: "hover:text-blue-400" },
+  { icon: LinkedInIcon, href: "https://linkedin.com/company/hyblehq", label: "LinkedIn", color: "hover:text-sky-400" },
 ];
 
 export function SiteFooter() {
   return (
-    <footer className="relative bg-[#05050a] text-white overflow-hidden">
+    <footer className="relative bg-slate-900 text-white overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px]" />
@@ -86,7 +86,7 @@ export function SiteFooter() {
             {/* Brand Column */}
             <div className="col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 flex items-center justify-center">
                   <span className="text-white font-bold text-lg">H</span>
                 </div>
                 <span className="text-white font-bold text-xl">Hyble</span>
@@ -118,7 +118,7 @@ export function SiteFooter() {
                   <span>GDPR</span>
                 </div>
                 <div className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded text-xs text-slate-400">
-                  <Globe className="w-3 h-3 text-blue-400" />
+                  <Globe className="w-3 h-3 text-sky-400" />
                   <span>DE</span>
                 </div>
                 <div className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded text-xs text-slate-400">
@@ -142,7 +142,7 @@ export function SiteFooter() {
                     >
                       {link.label}
                       {"badge" in link && link.badge && (
-                        <span className="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded">
+                        <span className="text-[10px] px-1.5 py-0.5 bg-sky-500/20 text-sky-400 rounded">
                           {link.badge}
                         </span>
                       )}
@@ -273,7 +273,7 @@ export function SiteFooter() {
                   href="https://find-and-update.company-information.service.gov.uk/company/15186175"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  className="text-sky-400 hover:text-sky-300 flex items-center gap-1"
                 >
                   Doğrula
                   <ExternalLink className="w-3 h-3" />

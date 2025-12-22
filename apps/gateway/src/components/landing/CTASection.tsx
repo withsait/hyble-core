@@ -44,20 +44,20 @@ export function CTASection() {
   }, []);
 
   return (
-    <section className="relative py-16 lg:py-20 bg-[#05050a] overflow-hidden">
+    <section className="relative py-16 lg:py-20 bg-slate-900 overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0">
-        {/* Gradient mesh - blue theme */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-[#05050a] to-cyan-900/20" />
+        {/* Gradient mesh - midnight black */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/50 via-slate-900 to-slate-800/30" />
 
-        {/* Animated gradient orbs */}
+        {/* Animated gradient orbs - subtle in dark mode */}
         <motion.div
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.2, 0.3, 0.2],
           }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-3xl bg-blue-500/20"
+          className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-3xl bg-white/[0.03]"
         />
         <motion.div
           animate={{
@@ -65,7 +65,7 @@ export function CTASection() {
             opacity: [0.15, 0.25, 0.15],
           }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full blur-3xl bg-cyan-500/20"
+          className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full blur-3xl bg-white/[0.02]"
         />
 
         {/* Grid pattern */}
@@ -86,7 +86,7 @@ export function CTASection() {
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-semibold mb-5"
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-sm font-semibold mb-5"
             >
               <Sparkles className="w-4 h-4" />
               <span>Hemen Baslayin</span>
@@ -94,7 +94,7 @@ export function CTASection() {
 
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-4 leading-tight">
               Projenizi{" "}
-              <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-sky-400 to-cyan-400 bg-clip-text text-transparent">
                 Bugun Baslatin
               </span>
             </h2>
@@ -130,7 +130,7 @@ export function CTASection() {
                 href="https://id.hyble.co/register"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30 transition-all"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-sky-500 to-sky-600 text-white rounded-xl font-semibold shadow-lg shadow-sky-500/20 hover:shadow-xl hover:shadow-sky-500/30 transition-all"
               >
                 Ucretsiz Hesap Olustur
                 <ArrowRight className="w-4 h-4" />
@@ -147,7 +147,7 @@ export function CTASection() {
             <div className="grid grid-cols-2 gap-3 mt-8">
               {benefits.map((benefit) => (
                 <div key={benefit.text} className="flex items-center gap-2 text-sm text-slate-400">
-                  <benefit.icon className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                  <benefit.icon className="w-4 h-4 text-sky-400 flex-shrink-0" />
                   <span>{benefit.text}</span>
                 </div>
               ))}
@@ -183,7 +183,7 @@ export function CTASection() {
                 </p>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500 to-cyan-500 flex items-center justify-center text-white font-bold">
                     {testimonials[currentTestimonial]?.avatar}
                   </div>
                   <div>
@@ -201,7 +201,7 @@ export function CTASection() {
                     onClick={() => setCurrentTestimonial(index)}
                     className={`w-1.5 h-1.5 rounded-full transition-all ${
                       index === currentTestimonial
-                        ? "bg-blue-400 w-4"
+                        ? "bg-sky-400 w-4"
                         : "bg-white/20 hover:bg-white/40"
                     }`}
                   />
@@ -220,7 +220,7 @@ export function CTASection() {
             </div>
 
             {/* Decorative elements */}
-            <div className="absolute -z-10 -bottom-6 -left-6 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl" />
+            <div className="absolute -z-10 -bottom-6 -left-6 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl" />
             <div className="absolute -z-10 -top-6 -right-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-3xl" />
           </motion.div>
         </div>

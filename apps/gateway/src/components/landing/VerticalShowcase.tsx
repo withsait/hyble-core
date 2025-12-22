@@ -7,12 +7,10 @@ import {
   Gamepad2,
   ArrowRight,
   Globe,
-  Palette,
   ShoppingCart,
   Server,
   Puzzle,
   Package,
-  Check,
   Sparkles,
 } from "lucide-react";
 
@@ -37,35 +35,35 @@ const digitalProducts = [
   {
     id: 1,
     title: "Kurumsal Web Sitesi",
-    description: "Profesyonel, modern ve mobil uyumlu kurumsal web siteleri",
+    description: "Profesyonel, modern ve mobil uyumlu web siteleri",
     icon: Globe,
-    features: ["Responsive Tasarim", "SEO Optimize", "Hizli Yukleme"],
-    gradient: "from-amber-500 to-orange-500",
-    iconBg: "bg-amber-100 dark:bg-amber-900/30",
-    iconColor: "text-amber-600 dark:text-amber-400",
+    features: ["Responsive", "SEO", "SSL"],
+    price: "₺499",
+    priceLabel: "'dan",
     href: "https://digital.hyble.co/templates",
+    badge: "Populer",
   },
   {
     id: 2,
     title: "E-ticaret Cozumleri",
-    description: "Odeme entegrasyonlu, stok takipli online magaza sistemleri",
+    description: "Odeme entegrasyonlu online magaza sistemleri",
     icon: ShoppingCart,
-    features: ["Odeme Entegrasyonu", "Stok Yonetimi", "Kargo Takibi"],
-    gradient: "from-orange-500 to-red-500",
-    iconBg: "bg-orange-100 dark:bg-orange-900/30",
-    iconColor: "text-orange-600 dark:text-orange-400",
+    features: ["Odeme", "Stok", "Kargo"],
+    price: "₺999",
+    priceLabel: "'dan",
     href: "https://digital.hyble.co/ecommerce",
+    badge: null,
   },
   {
     id: 3,
     title: "Ozel Tasarim & AI",
-    description: "Markaniza ozel tasarimlar ve AI destekli web deneyimleri",
+    description: "Markaniza ozel AI destekli web deneyimleri",
     icon: Sparkles,
-    features: ["Marka Kimligi", "AI Araclar", "Animasyonlar"],
-    gradient: "from-yellow-500 to-amber-500",
-    iconBg: "bg-yellow-100 dark:bg-yellow-900/30",
-    iconColor: "text-yellow-600 dark:text-yellow-400",
+    features: ["AI", "Animasyon", "Marka"],
+    price: "₺1,499",
+    priceLabel: "'dan",
     href: "https://digital.hyble.co/custom",
+    badge: "Yeni",
   },
 ];
 
@@ -73,35 +71,35 @@ const studiosProducts = [
   {
     id: 1,
     title: "Minecraft Hosting",
-    description: "Yuksek performansli, DDoS korumali Minecraft sunuculari",
+    description: "Yuksek performansli, DDoS korumali sunucular",
     icon: Server,
-    features: ["Aninda Kurulum", "DDoS Koruma", "Mod Destegi"],
-    gradient: "from-emerald-500 to-teal-500",
-    iconBg: "bg-emerald-100 dark:bg-emerald-900/30",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
+    features: ["DDoS", "Mod", "7/24"],
+    price: "₺49",
+    priceLabel: "/ay",
     href: "https://studios.hyble.co/servers",
+    badge: "Populer",
   },
   {
     id: 2,
     title: "Premium Pluginler",
-    description: "Sunucunuzu guclendirecek profesyonel Minecraft pluginleri",
+    description: "Sunucunuzu guclendirecek profesyonel pluginler",
     icon: Puzzle,
-    features: ["Turkce Destek", "Surekli Guncelleme", "API Erisimi"],
-    gradient: "from-teal-500 to-cyan-500",
-    iconBg: "bg-teal-100 dark:bg-teal-900/30",
-    iconColor: "text-teal-600 dark:text-teal-400",
+    features: ["Turkce", "API", "Update"],
+    price: "₺29",
+    priceLabel: "'dan",
     href: "https://studios.hyble.co/plugins",
+    badge: null,
   },
   {
     id: 3,
     title: "Sunucu Paketleri",
-    description: "Hazir yapilandirilmis, tema ve plugin iceren sunucu paketleri",
+    description: "Hazir yapilandirilmis tema ve plugin paketleri",
     icon: Package,
-    features: ["Hazir Yapilandirma", "Tema Dahil", "Plugin Seti"],
-    gradient: "from-green-500 to-emerald-500",
-    iconBg: "bg-green-100 dark:bg-green-900/30",
-    iconColor: "text-green-600 dark:text-green-400",
+    features: ["Hazir", "Tema", "Plugin"],
+    price: "₺199",
+    priceLabel: "'dan",
     href: "https://studios.hyble.co/packs",
+    badge: "Yeni",
   },
 ];
 
@@ -116,10 +114,10 @@ export function VerticalShowcase() {
   const verticalName = activeTab === "digital" ? "Hyble Digital" : "Hyble Studios";
 
   return (
-    <section className="relative py-16 lg:py-20 overflow-hidden bg-white dark:bg-[#05050a]">
+    <section className="relative py-16 lg:py-20 overflow-hidden bg-white dark:bg-slate-900">
       {/* Background */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-slate-50 to-white dark:from-[#05050a] dark:via-[#05050a] dark:to-[#08080f]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-slate-50 to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-800" />
         <div className="absolute inset-0 grid-pattern" />
         {/* Subtle pattern */}
         <div className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]"
@@ -140,7 +138,7 @@ export function VerticalShowcase() {
         >
           <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-4">
             One Cikan{" "}
-            <span className="bg-gradient-to-r from-amber-500 to-emerald-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-sky-500 to-cyan-500 bg-clip-text text-transparent">
               Urunler & Hizmetler
             </span>
           </h2>
@@ -182,7 +180,7 @@ export function VerticalShowcase() {
           </div>
         </motion.div>
 
-        {/* Products Grid */}
+        {/* Clean 3-Column Grid */}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -190,52 +188,75 @@ export function VerticalShowcase() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-3 gap-5"
           >
-            {products.map((product, index) => (
-              <motion.a
-                key={product.id}
-                href={product.href}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="group relative p-6 bg-white/80 dark:bg-white/[0.02] rounded-2xl border border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-none hover:-translate-y-1 backdrop-blur-sm"
-              >
-                {/* Icon */}
-                <div
-                  className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${product.gradient} flex items-center justify-center mb-4 shadow-lg group-hover:scale-105 transition-transform`}
+            {products.map((product, index) => {
+              const isDigital = activeTab === "digital";
+              const accentColor = isDigital ? "amber" : "emerald";
+
+              return (
+                <motion.a
+                  key={product.id}
+                  href={product.href}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`group relative bg-white dark:bg-white/[0.02] rounded-2xl border border-slate-200 dark:border-white/10 hover:border-${accentColor}-300 dark:hover:border-${accentColor}-500/30 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden`}
                 >
-                  <product.icon className="w-7 h-7 text-white" />
-                </div>
+                  {/* Subtle top accent on hover only */}
+                  <div className={`absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r ${isDigital ? "from-amber-500 to-orange-500" : "from-emerald-500 to-teal-500"} opacity-0 group-hover:opacity-100 transition-opacity`} />
 
-                {/* Content */}
-                <h3 className={`text-xl font-semibold text-slate-900 dark:text-white mb-2 group-hover:${product.iconColor} transition-colors`}>
-                  {product.title}
-                </h3>
-                <p className="text-slate-600 dark:text-slate-400 mb-4 text-sm leading-relaxed">
-                  {product.description}
-                </p>
-
-                {/* Features */}
-                <div className="space-y-2 mb-4">
-                  {product.features.map((feature) => (
-                    <div
-                      key={feature}
-                      className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400"
-                    >
-                      <Check className={`w-4 h-4 ${product.iconColor} flex-shrink-0`} />
-                      <span>{feature}</span>
+                  {/* Badge - minimal */}
+                  {product.badge && (
+                    <div className={`absolute top-4 right-4 ${product.badge === "Populer" ? (isDigital ? "bg-amber-500" : "bg-emerald-500") : "bg-slate-500"} text-white text-[10px] font-bold px-2 py-0.5 rounded-full`}>
+                      {product.badge}
                     </div>
-                  ))}
-                </div>
+                  )}
 
-                {/* Arrow */}
-                <div className={`flex items-center gap-1 text-sm font-medium text-slate-400 group-hover:${product.iconColor} transition-colors`}>
-                  <span>Incele</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </motion.a>
-            ))}
+                  <div className="p-6">
+                    {/* Icon - clean, outlined style */}
+                    <div className={`w-12 h-12 rounded-xl ${isDigital ? "bg-amber-50 dark:bg-amber-500/10" : "bg-emerald-50 dark:bg-emerald-500/10"} flex items-center justify-center mb-4 group-hover:scale-105 transition-transform`}>
+                      <product.icon className={`w-6 h-6 ${isDigital ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`} />
+                    </div>
+
+                    {/* Title */}
+                    <h3 className={`text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:${isDigital ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"} transition-colors`}>
+                      {product.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">
+                      {product.description}
+                    </p>
+
+                    {/* Features - simple tags */}
+                    <div className="flex flex-wrap gap-1.5 mb-5">
+                      {product.features.map((feature) => (
+                        <span
+                          key={feature}
+                          className="text-xs px-2 py-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded-md"
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Price & CTA */}
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-white/5">
+                      <div className="flex items-baseline gap-0.5">
+                        <span className={`text-xl font-bold ${isDigital ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"}`}>
+                          {product.price}
+                        </span>
+                        <span className="text-slate-400 text-sm">{product.priceLabel}</span>
+                      </div>
+                      <div className={`w-9 h-9 rounded-full ${isDigital ? "bg-amber-100 dark:bg-amber-500/20 group-hover:bg-amber-500" : "bg-emerald-100 dark:bg-emerald-500/20 group-hover:bg-emerald-500"} flex items-center justify-center transition-colors`}>
+                        <ArrowRight className={`w-4 h-4 ${isDigital ? "text-amber-600 dark:text-amber-400 group-hover:text-white" : "text-emerald-600 dark:text-emerald-400 group-hover:text-white"} transition-colors`} />
+                      </div>
+                    </div>
+                  </div>
+                </motion.a>
+              );
+            })}
           </motion.div>
         </AnimatePresence>
 

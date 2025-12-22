@@ -82,13 +82,14 @@ export function HeroSection() {
   return (
     <section className="relative min-h-screen flex flex-col justify-center py-6 lg:py-8 overflow-hidden">
       {/* Background with grid pattern */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-[#05050a] dark:via-[#05050a] dark:to-[#08080f]">
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800">
         {/* Grid pattern - visible in both modes */}
         <div className="absolute inset-0 grid-pattern" />
 
-        {/* Animated gradient orbs - more subtle */}
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-amber-500/15 dark:bg-amber-500/5 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-emerald-500/15 dark:bg-emerald-500/5 rounded-full blur-[120px]" />
+        {/* Animated gradient orbs - sky/cyan for light, subtle gray for dark */}
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-sky-500/15 dark:bg-white/[0.02] rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-500/15 dark:bg-white/[0.02] rounded-full blur-[120px]" />
+        <div className="absolute top-1/3 right-1/3 w-[400px] h-[400px] bg-sky-400/12 dark:bg-white/[0.015] rounded-full blur-[120px]" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
@@ -106,7 +107,7 @@ export function HeroSection() {
             transition={{ delay: 0.1 }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-white/90 dark:bg-white/5 backdrop-blur-xl rounded-full border border-slate-200 dark:border-white/10 shadow-lg shadow-slate-200/20 dark:shadow-none mb-4"
           >
-            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-6 h-6 bg-gradient-to-br from-sky-500 to-sky-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-xs">H</span>
             </div>
             <span className="text-sm font-medium text-slate-700 dark:text-white">
@@ -121,33 +122,41 @@ export function HeroSection() {
             transition={{ delay: 0.15 }}
             className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-[1.1] mb-3"
           >
-            <span className="text-slate-900 dark:text-white">Dijital </span>
-            <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">Isletme</span>
-            <span className="text-slate-900 dark:text-white"> & </span>
-            <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">Gaming</span>
+            <span className="text-slate-900 dark:text-white">Fikriniz Var, </span>
+            <span className="bg-gradient-to-r from-sky-500 to-cyan-500 bg-clip-text text-transparent">Biz Hayata Gecirelim</span>
           </motion.h1>
 
-          {/* Subtitle */}
+          {/* Subtitle with concrete value props */}
           <motion.p
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-4"
+            className="text-base sm:text-lg lg:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-2"
           >
-            Web siteleri, e-ticaret ve Minecraft sunuculari icin
-            <span className="text-slate-900 dark:text-white font-semibold"> tek platform</span>
+            Web siteniz <span className="text-amber-600 dark:text-amber-400 font-semibold">24 saatte</span> hazir,
+            sunucunuz <span className="text-emerald-600 dark:text-emerald-400 font-semibold">5 dakikada</span> aktif
+          </motion.p>
+
+          {/* Trust line */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.25 }}
+            className="text-sm text-slate-500 dark:text-slate-500 mb-4"
+          >
+            UK kayitli sirket • 5,000+ mutlu musteri • 99.9% uptime garantisi
           </motion.p>
 
           {/* CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
+            transition={{ delay: 0.3 }}
             className="flex flex-wrap justify-center gap-3"
           >
             <a
               href="https://id.hyble.co/register"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all hover:scale-[1.02]"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-sky-500 to-sky-600 hover:from-sky-600 hover:to-sky-700 text-white rounded-xl font-semibold shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all hover:scale-[1.02]"
             >
               <span>Ucretsiz Basla</span>
               <ArrowRight className="w-4 h-4" />
@@ -265,15 +274,15 @@ export function HeroSection() {
           className="flex justify-center gap-4 lg:gap-6 mt-4 text-xs text-slate-500 dark:text-slate-500"
         >
           <span className="flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-sky-500" />
             Kredi karti gerektirmez
           </span>
           <span className="flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-sky-500" />
             Aninda kurulum
           </span>
           <span className="hidden sm:flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-sky-500" />
             Turkce destek
           </span>
         </motion.div>
