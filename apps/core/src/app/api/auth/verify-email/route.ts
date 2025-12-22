@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@hyble/db";
 
-// Hardcoded production URL - never use localhost
-const BASE_URL = "https://id.hyble.co";
+// Dynamic BASE_URL based on environment
+const BASE_URL = process.env.NODE_ENV === "production"
+  ? "https://id.hyble.co"
+  : (process.env.NEXTAUTH_URL || "http://localhost:3000");
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token");

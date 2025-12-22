@@ -15,24 +15,39 @@ function getResend() {
 // Brand configurations
 type Brand = "hyble" | "mineble";
 
+const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
+
+// Dynamic base URL for development support
+const getBaseUrl = () => {
+  if (IS_DEVELOPMENT) {
+    return process.env.NEXTAUTH_URL || "http://localhost:3000";
+  }
+  return "https://id.hyble.co";
+};
+
+const getDashboardUrl = (brand: Brand) => {
+  if (IS_DEVELOPMENT) {
+    return "http://localhost:3000/dashboard";
+  }
+  return brand === "mineble" ? "https://panel.mineble.com" : "https://panel.hyble.co";
+};
+
 const BRAND_CONFIG = {
   hyble: {
     name: "Hyble",
     color: "#3B82F6", // Blue (primary brand color)
     fromEmail: "Hyble <noreply@hyble.co>",
-    baseUrl: "https://id.hyble.co",
-    dashboardUrl: "https://panel.hyble.co",
+    get baseUrl() { return getBaseUrl(); },
+    get dashboardUrl() { return getDashboardUrl("hyble"); },
   },
   mineble: {
     name: "Mineble",
     color: "#10b981", // Emerald
     fromEmail: "Mineble <noreply@mineble.com>",
-    baseUrl: "https://id.hyble.co", // Same auth hub
-    dashboardUrl: "https://panel.mineble.com",
+    get baseUrl() { return getBaseUrl(); }, // Same auth hub
+    get dashboardUrl() { return getDashboardUrl("mineble"); },
   },
 };
-
-const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
 
 // Rate limit settings per email type (emails per hour)
 const EMAIL_RATE_LIMITS: Record<EmailType, { limit: number; windowSeconds: number }> = {
