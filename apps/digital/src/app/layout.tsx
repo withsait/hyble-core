@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { SiteHeader } from "@/components/SiteHeader";
+import { SiteFooter } from "@/components/SiteFooter";
 import "./globals.css";
 
 const inter = Inter({
@@ -10,11 +13,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL("https://digital.hyble.co"),
   title: {
-    default: "Hyble Digital - Corporate Solutions",
+    default: "Hyble Digital - Kurumsal Dijital Cozumler",
     template: "%s | Hyble Digital",
   },
-  description: "Kurumsal web siteleri, temalar, araclari ve ozel siparisler. Isletmeniz icin profesyonel dijital cozumler.",
-  keywords: ["web templates", "corporate websites", "web tools", "custom orders", "digital solutions"],
+  description: "Kurumsal web siteleri, sablonlar, araclar ve ozel projeler. Isletmenizi dijital dunyada one cikarin.",
+  keywords: ["kurumsal web sitesi", "web sablonlari", "dijital cozumler", "e-ticaret", "landing page"],
   authors: [{ name: "Hyble Digital" }],
   openGraph: {
     type: "website",
@@ -36,9 +39,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr">
-      <body className={inter.className}>
-        {children}
+    <html lang="tr" suppressHydrationWarning>
+      <body className={`${inter.className} antialiased`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="min-h-screen flex flex-col">
+            <SiteHeader />
+            <main className="flex-1">{children}</main>
+            <SiteFooter />
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );
