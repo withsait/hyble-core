@@ -69,7 +69,7 @@ export function HeroSection() {
   return (
     <section className="relative min-h-screen flex items-center py-16 lg:py-24 overflow-hidden">
       {/* Premium Grid Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-900">
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-white to-blue-50/50 dark:from-[#0f172a] dark:via-slate-900 dark:to-slate-900">
         {/* Grid Pattern */}
         <div
           className="absolute inset-0"

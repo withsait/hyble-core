@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, Globe, Gamepad2, Mail, Phone, MapPin } from "lucide-react";
+import { Crown, Globe, Gamepad2, Mail, Phone, MapPin } from "lucide-react";
 
 const footerLinks = {
   urunler: [
@@ -31,22 +31,22 @@ const footerLinks = {
 
 export function SiteFooter() {
   return (
-    <footer className="bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+    <footer className="bg-gradient-to-b from-amber-50/50 to-white dark:from-slate-900 dark:to-[#0f172a] border-t border-amber-100 dark:border-amber-900/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                <Building2 className="w-4 h-4 text-white" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 flex items-center justify-center shadow-md shadow-amber-500/20">
+                <Crown className="w-4 h-4 text-white" />
               </div>
               <div className="flex items-center gap-1">
                 <span className="font-semibold text-slate-900 dark:text-white">Hyble</span>
-                <span className="font-semibold text-blue-600 dark:text-blue-400">Digital</span>
+                <span className="font-semibold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">Digital</span>
               </div>
             </Link>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-              Kurumsal dijital cozumler. Isletmenizi dijital dunyada one cikarin.
+              Premium kurumsal dijital cozumler. Isletmenizi dijital dunyada one cikarin.
             </p>
             <div className="flex gap-2">
               <a
@@ -70,7 +70,7 @@ export function SiteFooter() {
             <ul className="space-y-2">
               {footerLinks.urunler.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -83,7 +83,7 @@ export function SiteFooter() {
             <ul className="space-y-2">
               {footerLinks.cozumler.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  <Link href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -96,7 +96,7 @@ export function SiteFooter() {
             <ul className="space-y-2">
               {footerLinks.sirket.map((link) => (
                 <li key={link.href}>
-                  <a href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  <a href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
                     {link.label}
                   </a>
                 </li>
@@ -109,7 +109,7 @@ export function SiteFooter() {
             <ul className="space-y-2">
               {footerLinks.yasal.map((link) => (
                 <li key={link.href}>
-                  <a href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                  <a href={link.href} className="text-sm text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
                     {link.label}
                   </a>
                 </li>
@@ -119,7 +119,7 @@ export function SiteFooter() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="mt-12 pt-8 border-t border-amber-100 dark:border-amber-900/30 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             &copy; {new Date().getFullYear()} Hyble Ltd. Tum haklari saklidir.
           </p>
