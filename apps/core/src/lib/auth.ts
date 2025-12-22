@@ -166,34 +166,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
-    // OAuth providers - only enabled if credentials are configured
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? [
-          Google({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            allowDangerousEmailAccountLinking: true,
-          }),
-        ]
-      : []),
-    ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET
-      ? [
-          GitHub({
-            clientId: process.env.GITHUB_CLIENT_ID,
-            clientSecret: process.env.GITHUB_CLIENT_SECRET,
-            allowDangerousEmailAccountLinking: true,
-          }),
-        ]
-      : []),
-    ...(process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET
-      ? [
-          Discord({
-            clientId: process.env.DISCORD_CLIENT_ID,
-            clientSecret: process.env.DISCORD_CLIENT_SECRET,
-            allowDangerousEmailAccountLinking: true,
-          }),
-        ]
-      : []),
+    // OAuth providers - always include, NextAuth will handle missing credentials gracefully
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
+      allowDangerousEmailAccountLinking: true,
+    }),
+    GitHub({
+      clientId: process.env.GITHUB_CLIENT_ID ?? "",
+      clientSecret: process.env.GITHUB_CLIENT_SECRET ?? "",
+      allowDangerousEmailAccountLinking: true,
+    }),
+    Discord({
+      clientId: process.env.DISCORD_CLIENT_ID ?? "",
+      clientSecret: process.env.DISCORD_CLIENT_SECRET ?? "",
+      allowDangerousEmailAccountLinking: true,
+    }),
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
