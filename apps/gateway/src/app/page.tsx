@@ -1,21 +1,23 @@
 import { Metadata } from "next";
 import { HeroSection } from "@/components/landing/HeroSection";
-import { AudienceSelector } from "@/components/landing/AudienceSelector";
-import { SocialProof } from "@/components/landing/SocialProof";
-import { PricingSection } from "@/components/landing/PricingSection";
+import { EcosystemSection } from "@/components/landing/EcosystemSection";
+import { VerticalShowcase } from "@/components/landing/VerticalShowcase";
+import { TrustSection } from "@/components/landing/TrustSection";
+import { CTASection } from "@/components/landing/CTASection";
 
 export const metadata: Metadata = {
-  title: "Hyble - Web Sitenizi 5 Dakikada Oluşturun",
-  description: "Şablon seçin, özelleştirin, yayınlayın. Hosting dahil. Ücretsiz başlayın.",
+  title: "Hyble - Build Digital. Play Digital.",
+  description: "Kurumsal web cozumleri ve gaming altyapisi tek catida. UK kayitli, 7/24 destek, 99.9% uptime.",
 };
 
 export default function HomePage() {
   return (
     <>
       <HeroSection />
-      <AudienceSelector />
-      <SocialProof />
-      <PricingSection />
+      <EcosystemSection />
+      <VerticalShowcase />
+      <TrustSection />
+      <CTASection />
     </>
   );
 }

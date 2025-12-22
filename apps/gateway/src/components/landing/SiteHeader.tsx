@@ -105,7 +105,7 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 left-0 right-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80">
+    <header className="sticky top-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#05050a]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -144,7 +144,7 @@ export function SiteHeader() {
                         activeDropdown === "products" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"
                       }`}
                     >
-                      <div className="w-[600px] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700/50 overflow-hidden">
+                      <div className="w-[600px] bg-white dark:bg-[#0a0a12] rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-white/10 overflow-hidden">
                         <div className="grid grid-cols-2 gap-0">
                           {/* Left Column - Templates & Cloud */}
                           <div className="p-5 border-r border-slate-100 dark:border-slate-800">
@@ -266,7 +266,7 @@ export function SiteHeader() {
                         activeDropdown === "solutions" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"
                       }`}
                     >
-                      <div className="w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700/50 overflow-hidden p-3">
+                      <div className="w-72 bg-white dark:bg-[#0a0a12] rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-white/10 overflow-hidden p-3">
                         <div className="space-y-1">
                           {solutionItems.map((item) => (
                             <Link
@@ -300,7 +300,7 @@ export function SiteHeader() {
                         activeDropdown === "resources" ? "opacity-100 visible translate-y-0" : "opacity-0 invisible -translate-y-2"
                       }`}
                     >
-                      <div className="w-72 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700/50 overflow-hidden p-3">
+                      <div className="w-72 bg-white dark:bg-[#0a0a12] rounded-2xl shadow-2xl shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-white/10 overflow-hidden p-3">
                         <div className="space-y-1">
                           {resourceItems.map((item) => (
                             <Link
@@ -366,7 +366,7 @@ export function SiteHeader() {
             <div className="hidden lg:flex items-center gap-2 ml-2 mr-2 border-l border-slate-200 dark:border-slate-700 pl-4">
               <a
                 href="https://digital.hyble.co"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded-lg transition-colors"
               >
                 <Globe className="w-3.5 h-3.5" />
                 Digital
@@ -390,7 +390,7 @@ export function SiteHeader() {
               </a>
               <a
                 href="https://id.hyble.co/auth/register"
-                className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-amber-500/20 hover:shadow-xl hover:shadow-amber-500/30"
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-blue-500/20 hover:shadow-xl hover:shadow-blue-500/30"
               >
                 Başla
               </a>
@@ -470,7 +470,7 @@ export function SiteHeader() {
               <div className="flex gap-2 mt-4 pt-4 border-t border-slate-200 dark:border-slate-800 px-3">
                 <a
                   href="https://digital.hyble.co"
-                  className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 rounded-lg"
+                  className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30 rounded-lg"
                 >
                   <Globe className="w-4 h-4" />
                   Digital
@@ -494,7 +494,7 @@ export function SiteHeader() {
                 </a>
                 <a
                   href="https://id.hyble.co/auth/register"
-                  className="py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl text-sm font-semibold text-center transition-all shadow-lg shadow-amber-500/20"
+                  className="py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl text-sm font-semibold text-center transition-all shadow-lg shadow-blue-500/20"
                 >
                   Ücretsiz Başla
                 </a>

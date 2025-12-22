@@ -10,3 +10,6 @@ export { PricingSection } from "./PricingSection";
 export { SocialProof } from "./SocialProof";
 export { AnnouncementBar } from "./AnnouncementBar";
 export { TrustFloatingBar } from "./TrustFloatingBar";
+export { EcosystemSection } from "./EcosystemSection";
+export { VerticalShowcase } from "./VerticalShowcase";
+export { TrustSection } from "./TrustSection";

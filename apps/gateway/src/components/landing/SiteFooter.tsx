@@ -73,7 +73,7 @@ const socialLinks = [
 
 export function SiteFooter() {
   return (
-    <footer className="relative bg-slate-900 text-white overflow-hidden">
+    <footer className="relative bg-[#05050a] text-white overflow-hidden">
       {/* Background pattern */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px]" />
@@ -86,7 +86,7 @@ export function SiteFooter() {
             {/* Brand Column */}
             <div className="col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                   <span className="text-white font-bold text-lg">H</span>
                 </div>
                 <span className="text-white font-bold text-xl">Hyble</span>
@@ -103,7 +103,7 @@ export function SiteFooter() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`w-9 h-9 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 ${social.color} transition-colors`}
+                    className={`w-9 h-9 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 ${social.color} transition-colors`}
                     aria-label={social.label}
                   >
                     <social.icon className="w-4 h-4" />
@@ -113,15 +113,15 @@ export function SiteFooter() {
 
               {/* Trust Badges */}
               <div className="flex flex-wrap gap-2">
-                <div className="flex items-center gap-1 px-2 py-1 bg-slate-800 rounded text-xs text-slate-400">
+                <div className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded text-xs text-slate-400">
                   <Shield className="w-3 h-3 text-green-400" />
                   <span>GDPR</span>
                 </div>
-                <div className="flex items-center gap-1 px-2 py-1 bg-slate-800 rounded text-xs text-slate-400">
+                <div className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded text-xs text-slate-400">
                   <Globe className="w-3 h-3 text-blue-400" />
                   <span>DE</span>
                 </div>
-                <div className="flex items-center gap-1 px-2 py-1 bg-slate-800 rounded text-xs text-slate-400">
+                <div className="flex items-center gap-1 px-2 py-1 bg-white/5 rounded text-xs text-slate-400">
                   <Clock className="w-3 h-3 text-amber-400" />
                   <span>99.9%</span>
                 </div>
@@ -257,7 +257,7 @@ export function SiteFooter() {
           </div>
 
           {/* Company Info Bar */}
-          <div className="border-t border-slate-800 pt-6">
+          <div className="border-t border-white/5 pt-6">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 <div className="flex items-center gap-1.5">
