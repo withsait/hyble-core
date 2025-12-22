@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3002",
+    "dev": "next dev -p 3003",
     "build": "next build",
-    "start": "next start -p 3002",
+    "start": "next start -p 3003",
     "lint": "next lint"
   },
   "dependencies": {
+    "@hyble/api": "workspace:*",
     "@hyble/ui": "workspace:*",
     "@tanstack/react-query": "^5.62.16",
     "@trpc/client": "^11.0.0-rc.660",

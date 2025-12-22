@@ -1,18 +1,32 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Header } from "@/components/layout/Header";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { APIProvider } from "@hyble/api";
+import { PanelSidebar } from "@/components/panel/PanelSidebar";
+import { PanelHeader } from "@/components/panel/PanelHeader";
 
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
-  title: "Console - Hyble",
-  description: "Manage your Hyble services from a single dashboard.",
+  metadataBase: new URL("https://console.hyble.co"),
+  title: {
+    default: "Console | Hyble",
+    template: "%s | Hyble Console",
+  },
+  description: "Hyble hesabınızı yönetin. Ürünler, faturalar, destek.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -20,17 +34,24 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // In production, this would come from session
-  const user = null;
-
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="min-h-screen font-sans antialiased">
-        <Sidebar />
-        <Header user={user} credits={0} cartCount={0} />
-        <main className="ml-64 pt-14">
-          <div className="p-6">{children}</div>
-        </main>
+    <html lang="tr" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          disableTransitionOnChange
+        >
+          <APIProvider source="console">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+              <PanelSidebar />
+              <div className="lg:pl-64">
+                <PanelHeader />
+                <main className="p-6">{children}</main>
+              </div>
+            </div>
+          </APIProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

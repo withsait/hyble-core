@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3003",
+    "dev": "next dev -p 3002",
     "build": "next build",
-    "start": "next start -p 3003",
+    "start": "next start -p 3002",
     "lint": "next lint"
   },
   "dependencies": {
+    "@hyble/api": "workspace:*",
     "@hyble/ui": "workspace:*",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.25",

@@ -6,8 +6,8 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./server": "./src/server.ts",
-    "./client": "./src/client.ts"
+    "./client": "./src/client.ts",
+    "./react": "./src/react.tsx"
   },
   "dependencies": {
     "@trpc/client": "^11.0.0-rc.532",
@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/react": "^18.3.0",
     "typescript": "^5.7.2"
   },
   "peerDependencies": {

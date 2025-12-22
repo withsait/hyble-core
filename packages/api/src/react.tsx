@@ -4,7 +4,12 @@ import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, loggerLink } from "@trpc/client";
 import superjson from "superjson";
-import { trpc } from "./client";
+import { api } from "./client";
+
+interface APIProviderProps {
+  children: React.ReactNode;
+  source?: string;
+}
 
 function getApiUrl() {
   if (typeof window !== "undefined") {
@@ -13,7 +18,7 @@ function getApiUrl() {
   return process.env.NEXT_PUBLIC_API_URL || "https://api.hyble.co";
 }
 
-export function TRPCProvider({ children }: { children: React.ReactNode }) {
+export function APIProvider({ children, source = "hyble-app" }: APIProviderProps) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -26,9 +31,9 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
       })
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [trpcClient] = useState(() =>
-    (trpc as any).createClient({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (api as any).createClient({
       links: [
         loggerLink({
           enabled: () => process.env.NODE_ENV === "development",
@@ -38,7 +43,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
           transformer: superjson,
           headers() {
             return {
-              "x-trpc-source": "hyble-web",
+              "x-trpc-source": source,
             };
           },
         }),
@@ -47,7 +52,7 @@ export function TRPCProvider({ children }: { children: React.ReactNode }) {
   );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const TRPCProvider = (trpc as any).Provider;
+  const TRPCProvider = (api as any).Provider;
 
   return (
     <TRPCProvider client={trpcClient} queryClient={queryClient}>

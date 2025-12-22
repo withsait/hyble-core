@@ -1,57 +1,70 @@
 # Hyble Core
 
-UK-registered hosting platform with two brands:
-- **Hyble**: Web hosting, cloud services (Amber/Orange theme)
-- **Mineble**: Minecraft game server hosting (Emerald/Green theme)
+UK-registered software platform with two main verticals:
+- **Hyble Digital**: Corporate websites, templates, tools, custom orders (digital.hyble.co)
+- **Hyble Studios**: Game servers, plugins, server packs, gaming solutions (studios.hyble.co)
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     DEDICATED SERVER                            │
-│              (Hetzner - 178.63.138.97)                          │
+┌─────────────────────────────────────────────────────────────────────┐
+│                      DEDICATED SERVER                               │
+│                (Hetzner - 178.63.138.97)                            │
+│                                                                      │
+│  ┌─────────────────────────────────────────────────────────────┐    │
+│  │                      hyble-core                              │    │
+│  │                    (Container #1)                            │    │
+│  │                      Port 3000                               │    │
+│  │                                                              │    │
+│  │  secret.hyble.net → Admin Panel (God Panel)                 │    │
+│  │  id.hyble.co      → Auth Hub (Unified Auth)                 │    │
+│  │  api.hyble.co     → tRPC API (Backend)                      │    │
+│  │                                                              │    │
+│  │  • PostgreSQL TEK YAZMA YETKİSİ                             │    │
+│  │  • Cloud Infrastructure (deploy, domains, SSL)              │    │
+│  │  • All backend logic & services                             │    │
+│  └─────────────────────────────────────────────────────────────┘    │
+│                              │                                       │
+│                       Internal tRPC                                  │
+│                              │                                       │
+│  ┌───────────────────────────┼───────────────────────────┐          │
+│  │                           │                           │          │
+│  ▼                           ▼                           ▼          │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐          │
+│  │   gateway   │    │   digital   │    │   studios   │          │
+│  │  Port 3001  │    │  Port 3002  │    │  Port 3003  │          │
+│  │             │    │             │    │             │          │
+│  │ hyble.co    │    │ digital.    │    │ studios.    │          │
+│  │             │    │ hyble.co    │    │ hyble.co    │          │
+│  │ Portfolio   │    │             │    │             │          │
+│  │ Landing     │    │ Templates   │    │ Servers     │          │
+│  │ Wizard      │    │ Tools       │    │ Plugins     │          │
+│  │             │    │ Custom Work │    │ Packs       │          │
+│  └─────────────┘    └─────────────┘    └─────────────┘          │
+│                              │                                   │
+│                              ▼                                   │
+│                     ┌─────────────┐                              │
+│                     │   console   │                              │
+│                     │  Port 3004  │                              │
+│                     │             │                              │
+│                     │ console.    │                              │
+│                     │ hyble.co    │                              │
+│                     │             │                              │
+│                     │ Dashboard   │                              │
+│                     │ Billing     │                              │
+│                     │ Support     │                              │
+│                     └─────────────┘                              │
 │                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                    hyble-panel                          │   │
-│  │                  (Container #1)                          │   │
-│  │                                                          │   │
-│  │  secret.hyble.net → (admin)   God Panel                 │   │
-│  │  id.hyble.co      → (auth)    Unified Auth Hub          │   │
-│  │  api.hyble.co     → /api      tRPC API                  │   │
-│  │                                                          │   │
-│  │  • PostgreSQL TEK YAZMA YETKİSİ                         │   │
-│  │  • tRPC Server (tüm backend logic)                      │   │
-│  │  • Cron Jobs (faturalama, temizlik)                     │   │
-│  │  • External API (Hetzner, Stripe, Resend)               │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                           │                                     │
-│                    Internal Network                             │
-│                    (tRPC over HTTP)                             │
-│                           │                                     │
-│         ┌─────────────────┴─────────────────┐                  │
-│         ▼                                   ▼                  │
-│  ┌─────────────────┐              ┌─────────────────┐          │
-│  │   hyble-web     │              │  mineble-web    │          │
-│  │  (Container #2) │              │  (Container #3) │          │
-│  │                 │              │                 │          │
-│  │ hyble.co        │              │ mineble.com     │          │
-│  │ panel.hyble.co  │              │ panel.mineble   │          │
-│  │ cloud.hyble.co  │              │ game.mineble    │          │
-│  │                 │              │                 │          │
-│  │ API Client ONLY │              │ API Client ONLY │          │
-│  │ ❌ DB erişimi   │              │ ❌ DB erişimi   │          │
-│  └─────────────────┘              └─────────────────┘          │
-│                                                                 │
-│  ┌─────────────┐  ┌─────────────┐                              │
-│  │ PostgreSQL  │  │    Redis    │                              │
-│  │ hyble_core  │  │  (sessions) │                              │
-│  └─────────────┘  └─────────────┘                              │
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                      Nginx                               │   │
-│  │            (Reverse Proxy + SSL)                         │   │
-│  └─────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
+│  ┌─────────────┐  ┌─────────────┐                               │
+│  │ PostgreSQL  │  │    Redis    │                               │
+│  │ hyble_core  │  │  (sessions) │                               │
+│  └─────────────┘  └─────────────┘                               │
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                        Nginx                             │    │
+│  │              (Reverse Proxy + SSL)                       │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Monorepo Structure
@@ -59,30 +72,51 @@ UK-registered hosting platform with two brands:
 ```
 hyble-core/
 ├── apps/
-│   ├── hyble-panel/         # Container 1: God Panel + Auth + API
+│   ├── core/              # Port 3000 - Backend Merkezi
 │   │   ├── src/
 │   │   │   ├── app/
-│   │   │   │   ├── admin/   # secret.hyble.net routes
-│   │   │   │   ├── auth/    # id.hyble.co routes
-│   │   │   │   └── api/     # api.hyble.co
-│   │   │   ├── server/      # tRPC routers & services
-│   │   │   └── lib/         # Auth, DB configs
+│   │   │   │   ├── admin/     # secret.hyble.net
+│   │   │   │   ├── auth/      # id.hyble.co  
+│   │   │   │   ├── api/       # api.hyble.co
+│   │   │   │   └── dashboard/ # Core dashboard
+│   │   │   ├── server/        # tRPC routers
+│   │   │   └── lib/           # Auth, DB, services
 │   │   └── Dockerfile
 │   │
-│   ├── hyble-web/           # Container 2: Hyble Frontend
-│   │   ├── src/app/
-│   │   │   ├── (marketing)/ # hyble.co
-│   │   │   └── (panel)/     # panel.hyble.co
-│   │   └── Dockerfile
+│   ├── gateway/           # Port 3001 - Landing & Portfolio
+│   │   └── src/app/
+│   │       ├── page.tsx       # hyble.co homepage
+│   │       ├── about/         # About us
+│   │       ├── contact/       # Contact
+│   │       └── wizard/        # Vertical selection wizard
 │   │
-│   └── mineble-web/         # Container 3: Mineble Frontend (later)
+│   ├── digital/           # Port 3002 - Corporate Vertical
+│   │   └── src/app/
+│   │       ├── templates/     # Website templates
+│   │       ├── tools/         # Web tools
+│   │       ├── store/         # Marketplace
+│   │       └── custom/        # Custom orders
+│   │
+│   ├── studios/           # Port 3003 - Gaming Vertical
+│   │   └── src/app/
+│   │       ├── servers/       # Game servers
+│   │       ├── plugins/       # Plugin marketplace
+│   │       ├── packs/         # Server packs
+│   │       └── solutions/     # Custom gaming solutions
+│   │
+│   └── console/           # Port 3004 - User Panel
+│       └── src/app/
+│           ├── dashboard/     # Unified dashboard
+│           ├── billing/       # Billing & invoices
+│           ├── wallet/        # Hyble Credits
+│           ├── support/       # Tickets
+│           └── settings/      # Profile, security
 │
 ├── packages/
-│   ├── @hyble/db/           # Prisma schema (hyble-panel only!)
-│   ├── @hyble/api/          # tRPC client + types
-│   ├── @hyble/ui/           # Shared UI components
-│   ├── @hyble/email/        # Email templates (Resend)
-│   └── @hyble/config/       # ESLint, TS, Tailwind configs
+│   ├── @hyble/db/         # Prisma schema (core only!)
+│   ├── @hyble/ui/         # Shared UI components
+│   ├── @hyble/email/      # Email templates (Resend)
+│   └── @hyble/config/     # ESLint, TS, Tailwind configs
 │
 └── tooling/
     ├── docker/
@@ -107,13 +141,26 @@ hyble-core/
 | Email | Resend |
 | Deployment | Docker + PM2 |
 
+## Apps & Domains
+
+| App | Port | Domain(s) | Purpose |
+|-----|------|-----------|---------|
+| core | 3000 | secret.hyble.net, id.hyble.co, api.hyble.co | Backend, Admin, Auth |
+| gateway | 3001 | hyble.co | Landing, Portfolio, Wizard |
+| digital | 3002 | digital.hyble.co | Corporate vertical |
+| studios | 3003 | studios.hyble.co | Gaming vertical |
+| console | 3004 | console.hyble.co | User dashboard |
+
 ## Commands
 
 ```bash
 # Development
 pnpm dev                      # Start all apps
-pnpm dev --filter hyble-panel # Start hyble-panel only
-pnpm dev --filter hyble-web   # Start hyble-web only
+pnpm dev:core                 # Start core only (port 3000)
+pnpm dev:gateway              # Start gateway only (port 3001)
+pnpm dev:digital              # Start digital only (port 3002)
+pnpm dev:studios              # Start studios only (port 3003)
+pnpm dev:console              # Start console only (port 3004)
 
 # Build
 pnpm build                    # Build all apps
@@ -125,27 +172,18 @@ pnpm db:migrate               # Run migrations
 pnpm db:studio                # Open Prisma Studio
 ```
 
-## Domains
-
-| Domain | Port | App | Description |
-|--------|------|-----|-------------|
-| secret.hyble.net | 3000 | hyble-panel | God Panel (admin only) |
-| id.hyble.co | 3000 | hyble-panel | Auth Hub (all users) |
-| api.hyble.co | 3000 | hyble-panel | tRPC API |
-| hyble.co | 3001 | hyble-web | Marketing site |
-| panel.hyble.co | 3001 | hyble-web | User panel |
-| mineble.com | 3002 | mineble-web | Mineble (future) |
-
 ## Server Info
 
 - **IP**: 178.63.138.97
 - **User**: root
-- **Password**: 8WheEUDukgJ2Pr
 - **Apps**: /home/hyble/apps/hyble-core
 - **Database**: PostgreSQL (local)
 - **Cache**: Redis (local)
 
-## Admin Access
+## Key Principles
 
-- **URL**: https://secret.hyble.net
-- **Email**: sait@hyble.co
+1. **Core = God Panel**: Only core has DB write access
+2. **Frontend apps = API clients**: gateway, digital, studios, console use tRPC
+3. **Unified Auth**: id.hyble.co handles all authentication
+4. **Hyble Credits**: Single wallet system across all verticals
+5. **Vertical Separation**: Digital and Studios are independent, sellable units

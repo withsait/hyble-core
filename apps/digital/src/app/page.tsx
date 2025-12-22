@@ -1,365 +1,192 @@
-"use client";
-
+import { Metadata } from "next";
 import Link from "next/link";
+import { Card } from "@hyble/ui";
 import {
-  Globe,
-  Server,
-  Shield,
-  Zap,
-  Clock,
-  Headphones,
-  ChevronRight,
-  Check,
-  ArrowRight,
-  Sparkles,
-  Building2,
-  Lock,
-  Database,
-  Mail,
-  HardDrive,
+  Globe, Palette, Code, Wrench, ArrowRight, Check,
+  Sparkles, Layout, Zap, Shield, Clock, Users
 } from "lucide-react";
-import { motion } from "framer-motion";
+
+export const metadata: Metadata = {
+  title: "Hyble Digital - Corporate Solutions",
+  description: "Kurumsal web siteleri, temalar, araclar ve ozel siparisler. Isletmeniz icin profesyonel dijital cozumler.",
+};
 
 const services = [
   {
-    icon: Server,
-    title: "Web Hosting",
-    description: "SSD depolama, otomatik yedekleme ve %99.9 uptime garantisi.",
-    price: "£4.99/ay",
+    name: "Web Sablonlari",
+    description: "Hazir kullanima uygun temalar",
+    href: "/templates",
+    icon: Layout,
+    features: ["Responsive Tasarim", "SEO Optimize", "Kolay Ozellestirme"],
   },
   {
+    name: "Cozumler",
+    description: "Entegre ekosistem servisleri",
+    href: "/solutions",
     icon: Globe,
-    title: "Domain Kayıt",
-    description: "Yüzlerce TLD seçeneği ve ücretsiz WHOIS gizliliği.",
-    price: "£9.99/yıl",
+    features: ["Hyble ID", "Hyble Wallet", "Hyble Cloud"],
   },
   {
-    icon: Shield,
-    title: "SSL Sertifikaları",
-    description: "Ücretsiz Let's Encrypt veya premium SSL seçenekleri.",
-    price: "Ücretsiz - £99/yıl",
-  },
-  {
-    icon: Mail,
-    title: "Kurumsal E-posta",
-    description: "Profesyonel e-posta çözümleri, spam koruması dahil.",
-    price: "£2.99/ay",
-  },
-  {
-    icon: Database,
-    title: "Managed Database",
-    description: "PostgreSQL, MySQL, Redis için yönetilen veritabanı.",
-    price: "£9.99/ay",
-  },
-  {
-    icon: HardDrive,
-    title: "Cloud VPS",
-    description: "Yüksek performanslı sanal sunucu çözümleri.",
-    price: "£14.99/ay",
+    name: "Demo",
+    description: "Canli onizlemeler",
+    href: "/demo",
+    icon: Sparkles,
+    features: ["Interaktif Demo", "Gercek Zamanli", "Test Ortami"],
   },
 ];
 
 const features = [
   {
     icon: Zap,
-    title: "Hızlı Altyapı",
-    description: "SSD tabanlı sunucular ve global CDN ile maksimum hız.",
+    title: "Hizli Kurulum",
+    description: "Dakikalar icinde online olun. Tek tikla deploy.",
   },
   {
     icon: Shield,
-    title: "Güvenlik",
-    description: "DDoS koruması, firewall ve otomatik yedekleme.",
+    title: "Guvenli Altyapi",
+    description: "SSL, DDoS korumasi ve gunluk yedekleme dahil.",
+  },
+  {
+    icon: Code,
+    title: "Modern Teknoloji",
+    description: "Next.js, React, TypeScript ile gelistirildi.",
   },
   {
     icon: Clock,
-    title: "99.9% Uptime",
-    description: "SLA garantili kesintisiz hizmet.",
+    title: "7/24 Destek",
+    description: "Turkce destek ekibi her zaman yaninda.",
   },
   {
-    icon: Headphones,
-    title: "7/24 Destek",
-    description: "Uzman teknik ekibimiz her zaman yanınızda.",
+    icon: Palette,
+    title: "Ozellestirilebilir",
+    description: "Markaniza uygun renk ve tasarim secenekleri.",
   },
-];
-
-const trustItems = [
-  { icon: Shield, label: "256-bit SSL", sublabel: "Tüm verileriniz şifreli" },
-  { icon: Building2, label: "UK Kayıtlı Şirket", sublabel: "Companies House #15872841" },
-  { icon: Lock, label: "GDPR Uyumlu", sublabel: "Avrupa veri koruma standartları" },
+  {
+    icon: Users,
+    title: "Coklu Kullanici",
+    description: "Ekip yonetimi ve rol tabanli erisim kontrolu.",
+  },
 ];
 
 const stats = [
+  { value: "500+", label: "Aktif Site" },
   { value: "99.9%", label: "Uptime" },
+  { value: "<1s", label: "Yukleme Suresi" },
   { value: "7/24", label: "Destek" },
-  { value: "EU", label: "Sunucu" },
 ];
 
 export default function DigitalHomePage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Cross-sell Banner */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-emerald-500 to-teal-600 py-2 px-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-4 text-sm">
-          <Server className="w-4 h-4 text-white" />
-          <span className="text-white">
-            <strong>Oyun sunucusu mu arıyorsunuz?</strong> Hyble Studios'a göz atın
-          </span>
-          <Link
-            href="https://studios.hyble.co"
-            className="flex items-center gap-1 text-white font-medium hover:underline"
-          >
-            Studios'a Git
-            <ArrowRight className="w-3 h-3" />
-          </Link>
-        </div>
-      </div>
-
-      {/* Header */}
-      <header className="fixed top-9 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
-              <Globe className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-slate-900">
-              Hyble<span className="text-amber-600">Digital</span>
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-8">
-            <Link href="#services" className="text-slate-600 hover:text-amber-600 transition font-medium">
-              Servisler
-            </Link>
-            <Link href="#features" className="text-slate-600 hover:text-amber-600 transition font-medium">
-              Özellikler
-            </Link>
-            <Link href="https://hyble.co" className="text-slate-600 hover:text-amber-600 transition font-medium">
-              Hyble.co
-            </Link>
-            <Link href="https://id.hyble.co/auth/login" className="text-slate-600 hover:text-amber-600 transition font-medium">
-              Giriş Yap
-            </Link>
-          </nav>
-
-          <Link
-            href="https://id.hyble.co/auth/register?redirect=digital"
-            className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white px-5 py-2.5 rounded-xl font-semibold transition-all flex items-center gap-2 shadow-lg shadow-amber-500/20"
-          >
-            Başla
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-white dark:bg-slate-900">
       {/* Hero */}
-      <section className="relative pt-40 pb-20 px-4 min-h-screen flex items-center overflow-hidden">
-        {/* Premium Grid Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-white to-orange-50/50">
-          {/* Grid Pattern */}
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `
-                linear-gradient(to right, rgba(245, 158, 11, 0.08) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(245, 158, 11, 0.08) 1px, transparent 1px)
-              `,
-              backgroundSize: '48px 48px',
-            }}
-          />
-          {/* Gradient Orbs */}
-          <div className="absolute top-20 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-        </div>
+      <section className="relative pt-20 pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-blue-50 via-white to-white dark:from-blue-950/20 dark:via-slate-900 dark:to-slate-900" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-blue-500/10 blur-[120px] rounded-full" />
 
-        <div className="relative z-10 max-w-7xl mx-auto w-full">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            {/* Left Content */}
-            <div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-100 to-orange-100 border border-amber-200/50 rounded-full mb-8 shadow-sm"
-              >
-                <Sparkles className="w-4 h-4 text-amber-600" />
-                <span className="text-sm font-medium text-amber-700">
-                  Enterprise Web Services
-                </span>
-              </motion.div>
+        <div className="relative max-w-7xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 rounded-full text-sm text-blue-700 dark:text-blue-300 mb-8">
+            <Globe className="w-4 h-4" />
+            Hyble Digital
+          </div>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-[1.1]"
-              >
-                <span className="text-slate-900">Dijital </span>
-                <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
-                  Varlığınızı
-                </span>
-                <br />
-                <span className="text-slate-900">Oluşturun</span>
-              </motion.h1>
+          <h1 className="text-4xl md:text-6xl font-bold text-slate-900 dark:text-white mb-6">
+            Kurumsal Dijital
+            <span className="block text-blue-600 dark:text-blue-400">Cozumler</span>
+          </h1>
 
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-lg sm:text-xl text-slate-600 max-w-xl mb-8 leading-relaxed"
-              >
-                Profesyonel web hosting, domain kayıt, SSL sertifikaları ve güvenilirlik
-                talep eden işletmeler için tasarlanmış yönetilen hizmetler.
-              </motion.p>
+          <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-10">
+            Web siteleri, sablonlar, araclar ve ozel projeler.
+            Isletmenizi dijital dunyada one cikarin.
+          </p>
 
-              {/* Feature Pills */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex flex-wrap gap-3 mb-8"
-              >
-                {[
-                  { icon: Zap, label: "Hızlı Altyapı" },
-                  { icon: Shield, label: "99.9% Uptime" },
-                  { icon: Headphones, label: "7/24 Destek" },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full border border-amber-200 shadow-sm"
-                  >
-                    <item.icon className="w-4 h-4 text-amber-500" />
-                    <span className="text-sm font-medium text-slate-700">{item.label}</span>
-                  </div>
-                ))}
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="flex flex-col sm:flex-row gap-4 mb-8"
-              >
-                <Link
-                  href="https://console.hyble.co/digital"
-                  className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-xl font-semibold text-lg transition-all shadow-lg shadow-amber-500/30 hover:shadow-xl hover:shadow-amber-500/40 hover:-translate-y-0.5"
-                >
-                  Ücretsiz Başla
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
-                <Link
-                  href="#services"
-                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white hover:bg-slate-50 text-slate-800 rounded-xl font-semibold text-lg transition-all border border-slate-200 shadow-sm"
-                >
-                  Servisleri Gör
-                  <ChevronRight className="h-5 w-5" />
-                </Link>
-              </motion.div>
-
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="text-sm text-slate-500"
-              >
-                Kredi kartı gerekmez • 14 gün ücretsiz deneme
-              </motion.p>
-            </div>
-
-            {/* Right Content - Trust Panel */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="relative"
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <a
+              href="https://id.hyble.co/auth/register"
+              className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
             >
-              <div className="relative bg-white rounded-3xl border border-slate-200/80 shadow-2xl shadow-slate-200/50 p-8 backdrop-blur-sm">
-                <div className="absolute -top-px -right-px w-20 h-20 bg-gradient-to-br from-amber-500 to-orange-500 rounded-tr-3xl rounded-bl-3xl opacity-10" />
-
-                <h3 className="text-xl font-bold text-slate-900 mb-2 text-center">
-                  Güvenilir Altyapı
-                </h3>
-                <p className="text-slate-500 text-sm text-center mb-8">
-                  İşletmeniz için kurumsal seviye güvenlik
-                </p>
-
-                <div className="space-y-4 mb-8">
-                  {trustItems.map((item, index) => (
-                    <motion.div
-                      key={item.label}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.4 + index * 0.1 }}
-                      className="flex items-center gap-4 p-4 bg-amber-50/50 rounded-2xl"
-                    >
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/10 to-orange-500/10 flex items-center justify-center flex-shrink-0">
-                        <item.icon className="w-6 h-6 text-amber-600" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-slate-900">{item.label}</div>
-                        <div className="text-sm text-slate-500">{item.sublabel}</div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  {stats.map((stat) => (
-                    <div key={stat.label} className="text-center">
-                      <div className="text-2xl font-bold text-amber-600">{stat.value}</div>
-                      <div className="text-xs text-slate-500">{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Section */}
-      <section id="services" className="py-20 px-4 bg-slate-50/50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4 text-slate-900">Servislerimiz</h2>
-            <p className="text-slate-600">Online varlığınızı kurmak ve büyütmek için ihtiyacınız olan her şey</p>
+              Hemen Basla
+            </a>
+            <Link
+              href="/templates"
+              className="px-8 py-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-semibold rounded-xl transition-colors"
+            >
+              Sablonlari Incele
+            </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map((service, i) => (
-              <div
-                key={i}
-                className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-amber-300 hover:shadow-lg transition group"
-              >
-                <div className="h-12 w-12 bg-amber-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-amber-200 transition">
-                  <service.icon className="h-6 w-6 text-amber-600" />
-                </div>
-                <h3 className="font-semibold text-lg mb-2 text-slate-900">{service.title}</h3>
-                <p className="text-slate-600 text-sm mb-4">{service.description}</p>
-                <p className="text-xl font-bold text-amber-600">{service.price}</p>
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-3xl mx-auto">
+            {stats.map((stat) => (
+              <div key={stat.label}>
+                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stat.value}</div>
+                <div className="text-sm text-slate-500">{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="py-20 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
+      {/* Services */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/50">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4 text-slate-900">Neden Hyble Digital?</h2>
-            <p className="text-slate-600">İşletmeniz için en iyi altyapı</p>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Hizmetlerimiz</h2>
+            <p className="text-slate-600 dark:text-slate-400">Isletmeniz icin ihtiyaciniz olan her sey</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, i) => (
-              <div
-                key={i}
-                className="bg-white border border-slate-200 rounded-2xl p-6 hover:border-amber-300 hover:shadow-lg transition group text-center"
-              >
-                <div className="h-12 w-12 bg-amber-100 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:bg-amber-200 transition">
-                  <feature.icon className="h-6 w-6 text-amber-600" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {services.map((service) => (
+              <Link key={service.name} href={service.href} className="group">
+                <Card className="p-6 h-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-blue-500/50 transition-all hover:-translate-y-1 hover:shadow-xl">
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-4">
+                    <service.icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {service.name}
+                  </h3>
+
+                  <p className="text-slate-600 dark:text-slate-400 mb-4">
+                    {service.description}
+                  </p>
+
+                  <ul className="space-y-2">
+                    {service.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                        <Check className="w-4 h-4 text-blue-500" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-4 flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium">
+                    Incele <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Neden Hyble Digital?</h2>
+            <p className="text-slate-600 dark:text-slate-400">Isletmeler icin tasarlanmis profesyonel cozumler</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature) => (
+              <div key={feature.title} className="flex gap-4">
+                <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                  <feature.icon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <h3 className="font-semibold text-lg mb-2 text-slate-900">{feature.title}</h3>
-                <p className="text-slate-600 text-sm">{feature.description}</p>
+                <div>
+                  <h3 className="font-semibold text-slate-900 dark:text-white mb-1">{feature.title}</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{feature.description}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -367,54 +194,44 @@ export default function DigitalHomePage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4 bg-gradient-to-br from-amber-500 to-orange-600">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/50">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4 text-white">Hemen Başlayın</h2>
-          <p className="text-amber-100 mb-8">
-            Profesyonel web hosting ile dijital varlığınızı güçlendirin.
-          </p>
-          <Link
-            href="https://console.hyble.co/digital"
-            className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-amber-600 px-8 py-4 rounded-xl font-semibold text-lg transition shadow-xl"
-          >
-            <Globe className="h-5 w-5" />
-            Ücretsiz Başla
-            <ArrowRight className="h-5 w-5" />
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-200 py-12 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-                <Globe className="h-4 w-4 text-white" />
-              </div>
-              <span className="font-bold text-slate-900">
-                Hyble<span className="text-amber-600">Digital</span>
-              </span>
-            </div>
-
-            <p className="text-slate-500 text-sm">
-              Hyble Ltd. bir markasıdır. UK Company No: 15872841
+          <div className="p-12 rounded-3xl bg-gradient-to-b from-blue-600 to-blue-700 text-white">
+            <Globe className="w-16 h-16 mx-auto mb-6 opacity-80" />
+            <h2 className="text-3xl font-bold mb-4">
+              Dijital Donusumunuzu Baslatın
+            </h2>
+            <p className="opacity-90 mb-8 max-w-xl mx-auto">
+              Ucretsiz hesap olusturun, sablonlari inceleyin ve isletmenizi dijitallestirin.
             </p>
-
-            <div className="flex items-center gap-4 text-slate-500">
-              <Link href="https://hyble.co" className="hover:text-amber-600 transition">
-                Hyble
-              </Link>
-              <Link href="https://hyble.co/legal/privacy" className="hover:text-amber-600 transition">
-                Gizlilik
-              </Link>
-              <Link href="https://hyble.co/legal/terms" className="hover:text-amber-600 transition">
-                Şartlar
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href="https://id.hyble.co/auth/register"
+                className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors"
+              >
+                Ucretsiz Baslayın
+              </a>
+              <Link
+                href="/solutions"
+                className="px-8 py-4 bg-blue-500 hover:bg-blue-400 text-white font-semibold rounded-xl transition-colors"
+              >
+                Cozumleri Kesfet
               </Link>
             </div>
           </div>
         </div>
-      </footer>
+      </section>
+
+      {/* Footer Note */}
+      <section className="py-8 px-4 text-center border-t border-slate-200 dark:border-slate-800">
+        <p className="text-sm text-slate-500">
+          Oyun sunuculari ve gaming cozumleri icin{" "}
+          <a href="https://studios.hyble.co" className="text-blue-600 dark:text-blue-400 hover:underline">
+            studios.hyble.co
+          </a>
+          {" "}adresini ziyaret edin.
+        </p>
+      </section>
     </div>
   );
 }
