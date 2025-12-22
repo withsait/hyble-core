@@ -8,18 +8,21 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-// Minecraft Block Icon (Creeper-style)
+// Minecraft Creeper Face Icon
 function MinecraftIcon({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 16 16" className={className} fill="currentColor">
-      {/* Minecraft block/creeper face style */}
-      <rect x="0" y="0" width="16" height="16" rx="2" />
-      {/* Eyes */}
-      <rect x="2" y="3" width="4" height="4" fill="white" opacity="0.9" />
-      <rect x="10" y="3" width="4" height="4" fill="white" opacity="0.9" />
-      {/* Mouth */}
-      <rect x="5" y="8" width="6" height="2" fill="white" opacity="0.9" />
-      <rect x="6" y="10" width="4" height="4" fill="white" opacity="0.9" />
+    <svg viewBox="0 0 8 8" className={className}>
+      {/* Background */}
+      <rect width="8" height="8" fill="currentColor" rx="1" />
+      {/* Left Eye */}
+      <rect x="1" y="1" width="2" height="2" fill="#1a1a1a" />
+      {/* Right Eye */}
+      <rect x="5" y="1" width="2" height="2" fill="#1a1a1a" />
+      {/* Mouth - T shape */}
+      <rect x="3" y="3" width="2" height="1" fill="#1a1a1a" />
+      <rect x="2" y="4" width="4" height="1" fill="#1a1a1a" />
+      <rect x="2" y="5" width="1" height="2" fill="#1a1a1a" />
+      <rect x="5" y="5" width="1" height="2" fill="#1a1a1a" />
     </svg>
   );
 }
