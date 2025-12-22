@@ -3,30 +3,19 @@
 @tailwind utilities;
 
 :root {
-  /* Light Mode (default) - Emerald theme for Studios */
-  --background: 255 255 255;
+  /* Light Only - Emerald theme with cream/off-white for Studios */
+  --background: 255 253 250;
   --foreground: 15 23 42;
   --primary: 16 185 129;
   --primary-foreground: 255 255 255;
-  --secondary: 248 250 252;
+  --secondary: 254 252 247;
   --muted: 148 163 184;
   --border: 226 232 240;
 }
 
-.dark {
-  /* Dark Mode - Emerald theme for Studios */
-  --background: 15 23 42;
-  --foreground: 248 250 252;
-  --primary: 52 211 153;
-  --primary-foreground: 15 23 42;
-  --secondary: 30 41 59;
-  --muted: 100 116 139;
-  --border: 51 65 85;
-}
-
 @layer base {
   body {
-    @apply bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 transition-colors;
+    @apply bg-stone-50 text-slate-900 transition-colors;
   }
 }
 
@@ -64,11 +53,7 @@ html {
 
 /* Selection styling - Emerald theme */
 ::selection {
-  @apply bg-emerald-500/20 text-emerald-600;
-}
-
-.dark ::selection {
-  @apply bg-emerald-400/20 text-emerald-400;
+  @apply bg-emerald-500/20 text-emerald-700;
 }
 
 /* Slide up animation for compare bar */
