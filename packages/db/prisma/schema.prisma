@@ -4111,3 +4111,650 @@ model BlogPost {
   @@index([isFeatured])
   @@index([isPinned])
 }
+
+// ==================== HYBLEBILLING CORE ====================
+
+// -------------------- BILLING CUSTOMER --------------------
+// User ile ilişkilendirilmiş billing müşterisi
+model BillingCustomer {
+  id              String              @id @default(cuid())
+
+  // User ile ilişki
+  userId          String              @unique
+
+  // Billing bilgileri
+  email           String
+  firstName       String
+  lastName        String
+  companyName     String?
+
+  // Vergi bilgileri
+  taxId           String?             // TCKN veya VKN
+  vatNumber       String?             // AB VAT numarası
+  taxExempt       Boolean             @default(false)
+
+  // Tercihler
+  currencyCode    String              @default("EUR")
+  language        String              @default("tr")
+  timezone        String              @default("Europe/Istanbul")
+
+  // Konum
+  country         String?
+
+  // Durum
+  status          CustomerStatus      @default(ACTIVE)
+
+  // Meta
+  metadata        Json?
+
+  // İlişkiler
+  addresses       BillingAddress[]
+  services        BillingService[]
+  invoices        BillingInvoice[]
+  paymentTokens   BillingPaymentToken[]
+  billingWallet   BillingWallet?
+
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([email])
+  @@index([status])
+}
+
+enum CustomerStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSED
+  PENDING
+}
+
+model BillingAddress {
+  id            String              @id @default(cuid())
+
+  customerId    String
+  customer      BillingCustomer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  type          String              @default("billing") // billing, shipping
+
+  line1         String
+  line2         String?
+  city          String
+  state         String?
+  postalCode    String
+  country       String
+
+  isDefault     Boolean             @default(false)
+
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([customerId])
+}
+
+// -------------------- BILLING SERVICES --------------------
+// Müşteriye sağlanan servisler (abonelikler, lisanslar vb.)
+
+enum BillingServiceStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  TERMINATED
+  CANCELLED
+}
+
+enum BillingCycle {
+  ONE_TIME
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUALLY
+  ANNUALLY
+  BIENNIALLY
+  TRIENNIALLY
+}
+
+model BillingService {
+  id              String                  @id @default(cuid())
+
+  // İlişkiler
+  customerId      String
+  customer        BillingCustomer         @relation(fields: [customerId], references: [id])
+
+  productId       String
+
+  // Tanımlayıcı
+  identifier      String?                 // Domain, server adı vb.
+
+  // Vertical
+  vertical        String                  @default("hyble") // hyble, gaming, digital
+
+  // Faturalama
+  billingCycle    BillingCycle
+  amount          Decimal                 @db.Decimal(10, 2)
+  currencyCode    String
+
+  // Tarihler
+  startDate       DateTime                @default(now())
+  nextDueDate     DateTime
+  terminationDate DateTime?
+
+  // Durum
+  status          BillingServiceStatus    @default(PENDING)
+
+  // Abonelik ilişkisi
+  subscriptionId  String?                 @unique
+
+  // Konfigürasyon
+  configOptions   Json?
+
+  // Provisioning verisi
+  provisioningData Json?                  // Credentials, IP'ler vb.
+
+  // Notlar
+  adminNotes      String?
+
+  // Fatura kalemleri
+  invoiceItems    BillingInvoiceItem[]
+
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([nextDueDate])
+  @@index([vertical])
+}
+
+// -------------------- BILLING INVOICES --------------------
+
+enum BillingInvoiceStatus {
+  DRAFT
+  PENDING
+  PAID
+  PARTIALLY_PAID
+  OVERDUE
+  CANCELLED
+  REFUNDED
+}
+
+model BillingInvoice {
+  id              String                  @id @default(cuid())
+  invoiceNumber   String                  @unique
+
+  // Müşteri
+  customerId      String
+  customer        BillingCustomer         @relation(fields: [customerId], references: [id])
+
+  // Tutarlar
+  subtotal        Decimal                 @db.Decimal(10, 2)
+  taxTotal        Decimal                 @db.Decimal(10, 2) @default(0)
+  discount        Decimal                 @db.Decimal(10, 2) @default(0)
+  total           Decimal                 @db.Decimal(10, 2)
+  amountPaid      Decimal                 @db.Decimal(10, 2) @default(0)
+  balance         Decimal                 @db.Decimal(10, 2)
+
+  // Para birimi
+  currencyCode    String
+  exchangeRate    Decimal                 @db.Decimal(10, 6) @default(1)
+
+  // Durum
+  status          BillingInvoiceStatus    @default(DRAFT)
+
+  // Tarihler
+  issueDate       DateTime                @default(now())
+  dueDate         DateTime
+  paidDate        DateTime?
+
+  // Notlar
+  notes           String?
+  adminNotes      String?
+
+  // Fatura adresi snapshot
+  billingAddress  Json?
+
+  // İlişkiler
+  items           BillingInvoiceItem[]
+  payments        BillingPayment[]
+
+  // Kupon
+  couponId        String?
+  couponCode      String?
+
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@index([customerId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([invoiceNumber])
+}
+
+model BillingInvoiceItem {
+  id            String              @id @default(cuid())
+
+  invoiceId     String
+  invoice       BillingInvoice      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  // Servis referansı
+  serviceId     String?
+  service       BillingService?     @relation(fields: [serviceId], references: [id])
+
+  // Detaylar
+  description   String
+  quantity      Int                 @default(1)
+  unitPrice     Decimal             @db.Decimal(10, 2)
+
+  // Vergi
+  taxable       Boolean             @default(true)
+  taxRate       Decimal             @db.Decimal(5, 2) @default(0)
+  taxAmount     Decimal             @db.Decimal(10, 2) @default(0)
+
+  // İndirim
+  discountAmount Decimal            @db.Decimal(10, 2) @default(0)
+
+  // Toplamlar
+  subtotal      Decimal             @db.Decimal(10, 2)
+  total         Decimal             @db.Decimal(10, 2)
+
+  // Faturalama dönemi
+  periodStart   DateTime?
+  periodEnd     DateTime?
+
+  createdAt     DateTime            @default(now())
+
+  @@index([invoiceId])
+  @@index([serviceId])
+}
+
+// -------------------- BILLING PAYMENTS --------------------
+
+enum BillingPaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum BillingPaymentMethod {
+  CREDIT_CARD
+  DEBIT_CARD
+  BANK_TRANSFER
+  PAYPAL
+  WALLET
+  MANUAL
+  IYZICO
+}
+
+model BillingPaymentGateway {
+  id                  String    @id @default(cuid())
+
+  name                String
+  slug                String    @unique
+
+  // Durum
+  isActive            Boolean   @default(false)
+  isDefault           Boolean   @default(false)
+  testMode            Boolean   @default(true)
+
+  // Kimlik bilgileri (encrypted JSON)
+  credentials         Json
+
+  // Özellikler
+  supportsTokenization Boolean  @default(false)
+  supportsRefund      Boolean   @default(true)
+  supportsRecurring   Boolean   @default(false)
+
+  // Desteklenen para birimleri
+  supportedCurrencies String[]  @default(["TRY"])
+
+  // İlişkiler
+  payments            BillingPayment[]
+  tokens              BillingPaymentToken[]
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model BillingPaymentToken {
+  id            String                  @id @default(cuid())
+
+  customerId    String
+  customer      BillingCustomer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  gatewayId     String
+  gateway       BillingPaymentGateway   @relation(fields: [gatewayId], references: [id])
+
+  // Token
+  token         String
+
+  // Kart bilgileri (masked)
+  cardLast4     String
+  cardBrand     String
+  cardExpMonth  Int
+  cardExpYear   Int
+  cardholderName String?
+
+  // Fatura adresi
+  billingAddress Json?
+
+  // Durum
+  isDefault     Boolean                 @default(false)
+  isActive      Boolean                 @default(true)
+
+  // İlişkiler
+  payments      BillingPayment[]
+
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  @@index([customerId])
+}
+
+model BillingPayment {
+  id              String                  @id @default(cuid())
+
+  // İlişkiler
+  invoiceId       String
+  invoice         BillingInvoice          @relation(fields: [invoiceId], references: [id])
+
+  customerId      String
+
+  // Tutar
+  amount          Decimal                 @db.Decimal(10, 2)
+  currencyCode    String
+
+  // Gateway
+  gatewayId       String
+  gateway         BillingPaymentGateway   @relation(fields: [gatewayId], references: [id])
+  gatewayTxnId    String?
+
+  // Ödeme token'ı
+  paymentTokenId  String?
+  paymentToken    BillingPaymentToken?    @relation(fields: [paymentTokenId], references: [id])
+
+  // Yöntem ve durum
+  paymentMethod   BillingPaymentMethod
+  status          BillingPaymentStatus    @default(PENDING)
+
+  // Kart bilgileri
+  cardLast4       String?
+  cardBrand       String?
+
+  // Ücretler
+  gatewayFee      Decimal                 @db.Decimal(10, 2) @default(0)
+
+  // İadeler
+  refundedAmount  Decimal                 @db.Decimal(10, 2) @default(0)
+  refunds         BillingRefund[]
+
+  // Meta
+  metadata        Json?
+
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@index([invoiceId])
+  @@index([customerId])
+  @@index([status])
+  @@index([gatewayTxnId])
+}
+
+model BillingRefund {
+  id            String              @id @default(cuid())
+
+  paymentId     String
+  payment       BillingPayment      @relation(fields: [paymentId], references: [id])
+
+  amount        Decimal             @db.Decimal(10, 2)
+  reason        String?
+
+  // Gateway
+  gatewayRefundId String?
+
+  // Durum
+  status        String              @default("pending") // pending, completed, failed
+
+  // Admin
+  processedBy   String?
+  processedAt   DateTime?
+
+  createdAt     DateTime            @default(now())
+
+  @@index([paymentId])
+}
+
+// -------------------- TAX ENGINE --------------------
+
+model TaxRule {
+  id            String    @id @default(cuid())
+
+  name          String
+
+  // Konum eşleştirme
+  country       String?   // ISO kod, null = tümü
+  state         String?
+
+  // Oran
+  rate          Decimal   @db.Decimal(5, 2)
+
+  // Davranış
+  isInclusive   Boolean   @default(false)
+  isCompound    Boolean   @default(false)
+  priority      Int       @default(0)
+
+  isActive      Boolean   @default(true)
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([country])
+}
+
+model TaxExemption {
+  id            String    @id @default(cuid())
+
+  customerId    String    @unique
+
+  taxNumber     String?   // VAT numarası
+  isVerified    Boolean   @default(false)
+  verifiedAt    DateTime?
+
+  exemptionType String    // VAT_REGISTERED, NON_PROFIT, etc.
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// -------------------- CURRENCY --------------------
+
+model BillingCurrency {
+  id              String    @id @default(cuid())
+
+  code            String    @unique
+  name            String
+  symbol          String
+
+  // Format
+  decimalPlaces   Int       @default(2)
+  symbolPosition  String    @default("before")
+  thousandsSep    String    @default(",")
+  decimalSep      String    @default(".")
+
+  // Döviz kuru (base = EUR)
+  exchangeRate    Decimal   @db.Decimal(10, 6) @default(1)
+  lastUpdated     DateTime  @default(now())
+
+  isDefault       Boolean   @default(false)
+  isActive        Boolean   @default(true)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// -------------------- BILLING WALLET (Hyble Credits) --------------------
+
+model BillingWallet {
+  id            String                      @id @default(cuid())
+
+  customerId    String                      @unique
+  customer      BillingCustomer             @relation(fields: [customerId], references: [id])
+
+  // Bakiye
+  balance       Decimal                     @db.Decimal(10, 2) @default(0)
+
+  // Promo bakiyesi (ayrı, süreli)
+  promoBalance  Decimal                     @db.Decimal(10, 2) @default(0)
+
+  // Otomatik yükleme
+  autoTopUpEnabled    Boolean               @default(false)
+  autoTopUpAmount     Decimal?              @db.Decimal(10, 2)
+  autoTopUpThreshold  Decimal?              @db.Decimal(10, 2)
+  autoTopUpTokenId    String?
+
+  // İşlemler
+  transactions  BillingWalletTransaction[]
+
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+}
+
+enum BillingWalletTxType {
+  CREDIT
+  DEBIT
+  REFUND
+  PROMO
+  ADJUSTMENT
+}
+
+model BillingWalletTransaction {
+  id            String                  @id @default(cuid())
+
+  walletId      String
+  wallet        BillingWallet           @relation(fields: [walletId], references: [id])
+
+  // Tür
+  type          BillingWalletTxType
+
+  // Tutar
+  amount        Decimal                 @db.Decimal(10, 2)
+  balanceBefore Decimal                 @db.Decimal(10, 2)
+  balanceAfter  Decimal                 @db.Decimal(10, 2)
+
+  // Referans
+  referenceType String?                 // Invoice, TopUp, Promo
+  referenceId   String?
+
+  // Açıklama
+  description   String?
+
+  createdAt     DateTime                @default(now())
+
+  @@index([walletId])
+  @@index([createdAt])
+}
+
+model CreditPackage {
+  id            String   @id @default(cuid())
+
+  name          String
+
+  // Tutar
+  creditAmount  Decimal  @db.Decimal(10, 2)
+  price         Decimal  @db.Decimal(10, 2)
+
+  // Bonus
+  bonusAmount   Decimal  @db.Decimal(10, 2) @default(0)
+
+  currencyCode  String
+
+  isActive      Boolean  @default(true)
+  isFeatured    Boolean  @default(false)
+  sortOrder     Int      @default(0)
+
+  createdAt     DateTime @default(now())
+}
+
+// -------------------- WEBHOOKS & EVENTS --------------------
+
+model BillingWebhookEndpoint {
+  id            String    @id @default(cuid())
+
+  url           String
+  secret        String    // İmza doğrulama için
+
+  // Gönderilecek eventler
+  events        String[]  @default([])
+
+  // Durum
+  isActive      Boolean   @default(true)
+
+  // İstatistikler
+  lastCalledAt  DateTime?
+  failureCount  Int       @default(0)
+
+  // Loglar
+  logs          BillingWebhookLog[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model BillingWebhookLog {
+  id            String                  @id @default(cuid())
+
+  endpointId    String
+  endpoint      BillingWebhookEndpoint  @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  event         String
+  payload       Json
+
+  // Yanıt
+  statusCode    Int?
+  responseBody  String?
+
+  // Durum
+  success       Boolean
+  error         String?
+
+  // Zamanlama
+  duration      Int?            // ms
+
+  createdAt     DateTime        @default(now())
+
+  @@index([endpointId])
+  @@index([event])
+  @@index([createdAt])
+}
+
+// -------------------- AUDIT LOG --------------------
+
+model BillingAuditLog {
+  id            String   @id @default(cuid())
+
+  // Aktör
+  actorType     String   // customer, admin, system
+  actorId       String?
+
+  // Aksiyon
+  action        String   // invoice.created, payment.completed, vb.
+
+  // Hedef
+  resourceType  String   // Invoice, Payment, Service
+  resourceId    String
+
+  // Değişiklikler
+  previousData  Json?
+  newData       Json?
+
+  // Bağlam
+  ipAddress     String?
+  userAgent     String?
+
+  createdAt     DateTime @default(now())
+
+  @@index([resourceType, resourceId])
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+}
