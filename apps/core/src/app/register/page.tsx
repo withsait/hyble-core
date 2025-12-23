@@ -44,8 +44,14 @@ function ThemeToggle() {
 
 export default function RegisterPage() {
   const router = useRouter();
-  // Default redirect to dashboard on id.hyble.co after registration
-  const defaultCallback = "/dashboard";
+
+  // Console URL for redirect after registration
+  const consoleUrl = process.env.NODE_ENV === "production"
+    ? "https://console.hyble.co/dashboard"
+    : "http://localhost:3004/dashboard";
+
+  // Default redirect to console dashboard after registration
+  const defaultCallback = consoleUrl;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

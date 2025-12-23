@@ -187,3 +187,89 @@ pnpm db:studio                # Open Prisma Studio
 3. **Unified Auth**: id.hyble.co handles all authentication
 4. **Hyble Credits**: Single wallet system across all verticals
 5. **Vertical Separation**: Digital and Studios are independent, sellable units
+
+---
+
+## Domain Architecture
+
+### id.hyble.co (Auth Gateway + Account)
+Minimal auth gateway - sadece login/register ve hesap yonetimi:
+- `/login` - Giris yap → console.hyble.co/dashboard'a yonlendir
+- `/register` - Kayit ol → console.hyble.co/dashboard'a yonlendir
+- `/account` - Hesap Merkezi (Collapsible sections):
+  - Profil Bilgileri (ad, soyad, dil, para birimi)
+  - Guvenlik (email, sifre, 2FA)
+  - Bagli Hesaplar (Google, GitHub, Discord)
+  - Aktif Oturumlar
+  - Tehlikeli Bolge (hesabi dondur/sil)
+- `/verify-email`, `/reset-password`, `/verify-2fa` - Auth akislari
+- `/logout` - Cikis
+
+### console.hyble.co (User Panel)
+Kullanici paneli - tum servisler tek yerden:
+- `/dashboard` - Ana sayfa
+- `/billing` - Faturalar, odemeler, abonelikler
+- `/wallet` - Hyble Credits
+- `/websites` - Web siteleri (Digital)
+- `/servers` - Sunucular (Studios)
+- `/support` - Destek talepleri
+- Sidebar'da "Hesap" butonu → id.hyble.co/account
+
+### secret.hyble.net (Admin Panel)
+Ayri domain guvenlik icin (.net vs .co):
+- `/admin/dashboard` - Genel istatistikler
+- `/admin/users` - Kullanici yonetimi (console'daki her seyi gor/duzenle)
+- `/admin/wallets` - Tum cuzdanlar
+- `/admin/billing` - Tum faturalar
+- `/admin/support` - Tum ticketlar
+- `/admin/...` - Diger yonetim panelleri
+
+
+---
+
+## HybleBilling Core
+
+**Status:** Implementation Phase  
+**Spec Files:** `/HybleBilling/hyble-billing-core/`
+
+### Overview
+
+Modular billing infrastructure for the entire Hyble ecosystem.
+
+### Features
+
+- Invoice Management
+- Payment Processing (Stripe, iyzico, PayPal)
+- Recurring Billing (Subscriptions)
+- Hyble Credits (Cross-vertical Wallet)
+- Multi-Currency (TRY, USD, EUR)
+- Tax Engine (KDV, VAT)
+- Coupon System
+
+### Implementation Files
+
+```
+/HybleBilling/hyble-billing-core/
+├── FEATURE_SELECTION.md     # Selected features
+├── DATABASE_SCHEMA.md       # Prisma models (24)
+├── API_REFERENCE.md         # tRPC endpoints (80+)
+└── INTEGRATION_GUIDE.md     # Integration guide
+```
+
+### Key Locations
+
+- **Database:** `packages/db/prisma/schema.prisma`
+- **Package:** `packages/billing/`
+- **API:** `apps/core/src/server/routers/billing/`
+- **Admin UI:** `apps/core/src/app/admin/billing/`
+- **Console UI:** `apps/console/src/app/billing/`
+
+### Quick Start
+
+```bash
+# See implementation prompt
+cat CLAUDE_CODE_BILLING_PROMPT.md
+
+# See detailed guide
+cat HYBLEBILLING_IMPLEMENTATION.md
+```

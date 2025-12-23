@@ -14,7 +14,16 @@ export async function GET() {
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      include: { profile: true },
+      include: {
+        profile: true,
+        twoFactorAuth: true,
+        connectedAccounts: {
+          select: {
+            provider: true,
+            providerAccountId: true,
+          },
+        },
+      },
     });
 
     if (!user) {
@@ -29,6 +38,8 @@ export async function GET() {
       phoneNumber: user.phoneNumber,
       phoneVerified: user.phoneVerified,
       emailVerified: user.emailVerified,
+      createdAt: user.createdAt,
+      status: user.status,
       profile: user.profile
         ? {
             firstName: user.profile.firstName,
@@ -41,6 +52,13 @@ export async function GET() {
             dateFormat: user.profile.dateFormat,
           }
         : null,
+      twoFactorAuth: user.twoFactorAuth
+        ? {
+            enabled: user.twoFactorAuth.enabled,
+            backupCodesRemaining: user.twoFactorAuth.backupCodes?.length || 0,
+          }
+        : null,
+      connectedAccounts: user.connectedAccounts,
     });
   } catch (error) {
     console.error("[profile] GET error:", error);
@@ -123,4 +141,9 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// PATCH - Same as PUT for compatibility
+export async function PATCH(request: NextRequest) {
+  return PUT(request);
 }

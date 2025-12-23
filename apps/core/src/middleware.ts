@@ -32,31 +32,58 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Host-based routing for id.hyble.co (Auth Hub + Identity Management)
+  // Host-based routing for id.hyble.co (Auth Hub + Account Management)
   if (host.includes("id.hyble.co") || host.includes("localhost:3000")) {
-    // Root path for logged-in users goes to dashboard, for guests to login
-    if (pathname === "/") {
-      const sessionToken =
-        request.cookies.get("__Secure-authjs.session-token")?.value ||
-        request.cookies.get("authjs.session-token")?.value;
+    const sessionToken =
+      request.cookies.get("__Secure-authjs.session-token")?.value ||
+      request.cookies.get("authjs.session-token")?.value;
 
+    // Root path: logged-in users go to account, guests go to login
+    if (pathname === "/") {
       if (sessionToken) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
+        return NextResponse.redirect(new URL("/account", request.url));
       } else {
         return NextResponse.redirect(new URL("/login", request.url));
       }
     }
+
+    // Redirect old dashboard routes to account
+    if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) {
+      if (sessionToken) {
+        return NextResponse.redirect(new URL("/account", request.url));
+      } else {
+        return NextResponse.redirect(new URL("/login", request.url));
+      }
+    }
+
+    // Redirect old settings routes to account with section param
+    if (pathname === "/settings" || pathname === "/settings/security") {
+      return NextResponse.redirect(new URL("/account?section=security", request.url));
+    }
+    if (pathname === "/settings/sessions") {
+      return NextResponse.redirect(new URL("/account?section=sessions", request.url));
+    }
+    if (pathname === "/settings/notifications") {
+      return NextResponse.redirect(new URL("/account?section=profile", request.url));
+    }
   }
 
-  // Host-based routing for panel.hyble.co (User Dashboard)
-  if (host.includes("panel.hyble.co")) {
-    // panel.hyble.co should access /dashboard routes
+  // Host-based routing for console.hyble.co (User Dashboard)
+  if (host.includes("console.hyble.co") || host.includes("panel.hyble.co")) {
+    // console.hyble.co should access /dashboard routes
     if (pathname === "/") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
-    // Block /admin access from panel.hyble.co
+    // Block /admin access from console.hyble.co
     if (pathname.startsWith("/admin")) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    // Redirect settings to id.hyble.co/account
+    if (pathname === "/settings" || pathname.startsWith("/settings/")) {
+      const idUrl = process.env.NODE_ENV === "production"
+        ? "https://id.hyble.co/account"
+        : "http://localhost:3000/account";
+      return NextResponse.redirect(new URL(idUrl));
     }
   }
 
@@ -156,9 +183,9 @@ export function middleware(request: NextRequest) {
     return response;
   };
 
-  // Redirect logged-in users away from auth pages (except verify-2fa)
-  if (isAuthPage && isLoggedIn && !pathname.startsWith("/verify-2fa")) {
-    const response = NextResponse.redirect(new URL("/dashboard", request.url));
+  // Redirect logged-in users away from auth pages (except verify-2fa and logout)
+  if (isAuthPage && isLoggedIn && !pathname.startsWith("/verify-2fa") && pathname !== "/logout") {
+    const response = NextResponse.redirect(new URL("/account", request.url));
     return createSecureResponse(response);
   }
 

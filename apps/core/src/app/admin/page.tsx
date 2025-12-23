@@ -120,7 +120,7 @@ async function RecentUsersTable() {
         </thead>
         <tbody>
           {recentUsers.map((user) => (
-            <tr key={user.id} className="border-b border-slate-200/50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+            <tr key={user.id} className="border-b border-slate-200/50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-[#0d0d14]/50">
               <td className="py-3 px-4">
                 <Link href={`/admin/users/${user.id}`} className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
@@ -170,7 +170,7 @@ function QuickActionCard({ href, icon: Icon, title, description, color }: {
   return (
     <Link
       href={href}
-      className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-amber-500 dark:hover:border-amber-500 transition-colors group"
+      className="flex items-center gap-4 p-4 bg-white dark:bg-[#12121a] border border-slate-200 dark:border-slate-800/50 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 transition-colors group"
     >
       <div className={`w-10 h-10 rounded-lg ${color} flex items-center justify-center`}>
         <Icon className="w-5 h-5" />
@@ -179,7 +179,7 @@ function QuickActionCard({ href, icon: Icon, title, description, color }: {
         <p className="font-medium text-slate-900 dark:text-white">{title}</p>
         <p className="text-sm text-slate-500 dark:text-slate-400">{description}</p>
       </div>
-      <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-amber-500 transition-colors" />
+      <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-blue-500 transition-colors" />
     </Link>
   );
 }
@@ -193,7 +193,7 @@ export default async function DashboardPage() {
   const stats = await getDashboardStats();
 
   return (
-    <div className="min-h-screen p-8 bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen p-8 bg-slate-50 dark:bg-[#0a0a0f]">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
         <p className="text-slate-600 dark:text-slate-400 mt-1">
@@ -231,7 +231,7 @@ export default async function DashboardPage() {
 
       {/* Secondary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+        <div className="bg-white dark:bg-[#12121a] border border-slate-200 dark:border-slate-800/50 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
               <Shield className="w-4 h-4 text-green-600 dark:text-green-400" />
@@ -242,10 +242,10 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+        <div className="bg-white dark:bg-[#12121a] border border-slate-200 dark:border-slate-800/50 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <Shield className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <Shield className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <p className="text-lg font-bold text-slate-900 dark:text-white">{stats.secureUsers}</p>
@@ -253,7 +253,7 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+        <div className="bg-white dark:bg-[#12121a] border border-slate-200 dark:border-slate-800/50 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
               <Building2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -264,7 +264,7 @@ export default async function DashboardPage() {
             </div>
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-4">
+        <div className="bg-white dark:bg-[#12121a] border border-slate-200 dark:border-slate-800/50 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
               <Ticket className="w-4 h-4 text-red-600 dark:text-red-400" />
@@ -315,12 +315,12 @@ export default async function DashboardPage() {
       <RegistrationChart data={stats.registrationData} />
 
       {/* Recent Users Table */}
-      <div className="mt-8 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+      <div className="mt-8 bg-white dark:bg-[#12121a] border border-slate-200 dark:border-slate-800/50 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Son Kullanıcılar</h3>
           <Link
             href="/admin/users"
-            className="text-sm text-amber-600 hover:text-amber-700 dark:text-amber-500 dark:hover:text-amber-400 flex items-center gap-1"
+            className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400 flex items-center gap-1"
           >
             Tümünü Gör
             <ArrowRight className="w-4 h-4" />

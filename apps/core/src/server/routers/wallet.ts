@@ -672,4 +672,167 @@ export const walletRouter = createTRPCRouter({
         breakdown: breakdown.success ? breakdown.spent : null,
       };
     }),
+
+  // Admin: List all wallets
+  adminListWallets: adminProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        limit: z.number().min(1).max(100).default(50),
+        cursor: z.string().optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      const where: Prisma.WalletWhereInput = input.search
+        ? {
+            user: {
+              OR: [
+                { email: { contains: input.search, mode: "insensitive" } },
+                { name: { contains: input.search, mode: "insensitive" } },
+              ],
+            },
+          }
+        : {};
+
+      const [wallets, total] = await Promise.all([
+        prisma.wallet.findMany({
+          where,
+          take: input.limit + 1,
+          cursor: input.cursor ? { id: input.cursor } : undefined,
+          orderBy: { createdAt: "desc" },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+          },
+        }),
+        prisma.wallet.count({ where }),
+      ]);
+
+      let nextCursor: string | undefined;
+      if (wallets.length > input.limit) {
+        const nextItem = wallets.pop();
+        nextCursor = nextItem?.id;
+      }
+
+      return {
+        wallets: wallets.map((w) => ({
+          id: w.id,
+          userId: w.userId,
+          currency: w.currency,
+          balance: w.balance.toString(),
+          mainBalance: w.mainBalance.toString(),
+          bonusBalance: w.bonusBalance.toString(),
+          promoBalance: w.promoBalance.toString(),
+          createdAt: w.createdAt,
+          user: w.user,
+        })),
+        total,
+        nextCursor,
+      };
+    }),
+
+  // Admin: Get user wallet
+  adminGetUserWallet: adminProcedure
+    .input(z.object({ userId: z.string() }))
+    .query(async ({ input }) => {
+      const wallet = await prisma.wallet.findFirst({
+        where: { userId: input.userId },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      if (!wallet) {
+        return null;
+      }
+
+      return {
+        id: wallet.id,
+        userId: wallet.userId,
+        currency: wallet.currency,
+        balance: wallet.balance.toString(),
+        mainBalance: wallet.mainBalance.toString(),
+        bonusBalance: wallet.bonusBalance.toString(),
+        promoBalance: wallet.promoBalance.toString(),
+        user: wallet.user,
+      };
+    }),
+
+  // Admin: Adjust balance (add or subtract)
+  adminAdjustBalance: adminProcedure
+    .input(
+      z.object({
+        userId: z.string(),
+        amount: z.number(), // Can be negative for subtract
+        description: z.string(),
+        currency: z.string().default("EUR"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const wallet = await getOrCreateWallet(input.userId, input.currency);
+      const amountDecimal = new Prisma.Decimal(Math.abs(input.amount));
+      const isAddition = input.amount > 0;
+
+      // For subtraction, check balance
+      if (!isAddition && wallet.mainBalance.lessThan(amountDecimal)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Yetersiz bakiye",
+        });
+      }
+
+      const newMainBalance = isAddition
+        ? wallet.mainBalance.add(amountDecimal)
+        : wallet.mainBalance.sub(amountDecimal);
+      const newTotalBalance = isAddition
+        ? wallet.balance.add(amountDecimal)
+        : wallet.balance.sub(amountDecimal);
+
+      const [transaction] = await prisma.$transaction([
+        prisma.transaction.create({
+          data: {
+            walletId: wallet.id,
+            type: isAddition ? "ADJUSTMENT" : "CHARGE",
+            status: "COMPLETED",
+            amount: Math.abs(input.amount),
+            balanceBefore: wallet.balance,
+            balanceAfter: newTotalBalance,
+            currency: input.currency,
+            description: input.description,
+            balanceType: "MAIN",
+            paymentMethod: "MANUAL",
+            metadata: {
+              adminId: ctx.user.id,
+              adminEmail: ctx.user.email,
+              action: isAddition ? "ADD" : "SUBTRACT",
+            },
+          },
+        }),
+        prisma.wallet.update({
+          where: { id: wallet.id },
+          data: {
+            balance: newTotalBalance,
+            mainBalance: newMainBalance,
+          },
+        }),
+      ]);
+
+      return {
+        success: true,
+        transactionId: transaction.id,
+        newBalance: newTotalBalance.toString(),
+      };
+    }),
 });

@@ -7,11 +7,11 @@ import {
   Wallet,
   Receipt,
   HeadphonesIcon,
-  Settings,
   LogOut,
   Globe,
   ShoppingBag,
   Heart,
+  User,
 } from "lucide-react";
 
 const navigation = [
@@ -22,8 +22,12 @@ const navigation = [
   { name: "Cüzdan", href: "/wallet", icon: Wallet },
   { name: "Faturalama", href: "/billing", icon: Receipt },
   { name: "Destek", href: "/support", icon: HeadphonesIcon },
-  { name: "Ayarlar", href: "/settings", icon: Settings },
 ];
+
+// Account URL - external link to id.hyble.co
+const accountUrl = process.env.NODE_ENV === "production"
+  ? "https://id.hyble.co/account"
+  : "http://localhost:3000/account";
 
 export function PanelSidebar() {
   const pathname = usePathname();
@@ -65,17 +69,27 @@ export function PanelSidebar() {
                 })}
               </ul>
             </li>
-            <li className="mt-auto">
-              <Link
-                href="https://id.hyble.co/logout"
+            <li className="mt-auto space-y-1">
+              <a
+                href={accountUrl}
                 className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-slate-700 hover:bg-slate-50 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400"
               >
-                <LogOut
+                <User
                   className="h-6 w-6 shrink-0 text-slate-400 group-hover:text-blue-600 dark:text-slate-500 dark:group-hover:text-blue-400"
                   aria-hidden="true"
                 />
+                Hesap
+              </a>
+              <a
+                href="https://id.hyble.co/logout"
+                className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-slate-700 hover:bg-slate-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-red-400"
+              >
+                <LogOut
+                  className="h-6 w-6 shrink-0 text-slate-400 group-hover:text-red-600 dark:text-slate-500 dark:group-hover:text-red-400"
+                  aria-hidden="true"
+                />
                 Çıkış Yap
-              </Link>
+              </a>
             </li>
           </ul>
         </nav>

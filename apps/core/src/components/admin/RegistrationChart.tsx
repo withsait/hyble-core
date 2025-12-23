@@ -17,7 +17,7 @@ interface ChartData {
 
 export function RegistrationChart({ data }: { data: ChartData[] }) {
   return (
-    <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-6">
+    <div className="bg-white dark:bg-[#12121a] border border-slate-200 dark:border-slate-800/50 rounded-2xl p-6">
       <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-6">
         Kullanıcı Kayıtları (Son 7 Gün)
       </h3>
