@@ -17,6 +17,10 @@ export async function GET() {
       include: {
         profile: true,
         twoFactorAuth: true,
+        backupCodes: {
+          where: { usedAt: null },
+          select: { id: true },
+        },
         connectedAccounts: {
           select: {
             provider: true,
@@ -55,7 +59,7 @@ export async function GET() {
       twoFactorAuth: user.twoFactorAuth
         ? {
             enabled: user.twoFactorAuth.enabled,
-            backupCodesRemaining: user.twoFactorAuth.backupCodes?.length || 0,
+            backupCodesRemaining: user.backupCodes?.length || 0,
           }
         : null,
       connectedAccounts: user.connectedAccounts,
