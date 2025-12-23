@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: session.user.id,
         action: "PASSWORD_CHANGE",
+        status: "SUCCESS",
         ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null,
         userAgent: request.headers.get("user-agent") || null,
         metadata: {},
