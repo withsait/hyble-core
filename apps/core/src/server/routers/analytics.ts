@@ -356,6 +356,160 @@ export const analyticsRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  // Get aggregated analytics for all user's websites
+  getUserStats: protectedProcedure
+    .input(
+      z.object({
+        period: z.enum(["7d", "30d", "90d"]).default("30d"),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const days = input.period === "7d" ? 7 : input.period === "30d" ? 30 : 90;
+      const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+      // Get user's websites
+      const websites = await prisma.website.findMany({
+        where: { userId: ctx.user.id, deletedAt: null },
+        select: { id: true },
+      });
+
+      const websiteIds = websites.map(w => w.id);
+
+      if (websiteIds.length === 0) {
+        return {
+          totalPageViews: 0,
+          totalUniqueVisitors: 0,
+          avgSessionDuration: 0,
+          avgBounceRate: 0,
+          websiteCount: 0,
+          daily: [],
+          topPages: [],
+          sources: [],
+          devices: [],
+          countries: [],
+          previousPeriod: {
+            pageViews: 0,
+            uniqueVisitors: 0,
+          },
+        };
+      }
+
+      // Get analytics for all websites
+      const analytics = await prisma.websiteAnalytics.findMany({
+        where: {
+          websiteId: { in: websiteIds },
+          date: { gte: startDate },
+        },
+        orderBy: { date: "asc" },
+      });
+
+      // Get previous period for comparison
+      const prevStartDate = new Date(startDate.getTime() - days * 24 * 60 * 60 * 1000);
+      const prevAnalytics = await prisma.websiteAnalytics.findMany({
+        where: {
+          websiteId: { in: websiteIds },
+          date: {
+            gte: prevStartDate,
+            lt: startDate,
+          },
+        },
+      });
+
+      // Aggregate current period
+      const totals = analytics.reduce(
+        (acc, day) => ({
+          pageViews: acc.pageViews + day.pageViews,
+          uniqueVisitors: acc.uniqueVisitors + day.uniqueVisitors,
+          sessions: acc.sessions + day.sessions,
+          avgSessionDuration: acc.avgSessionDuration + day.avgSessionDuration,
+          bounceRate: acc.bounceRate + Number(day.bounceRate),
+        }),
+        { pageViews: 0, uniqueVisitors: 0, sessions: 0, avgSessionDuration: 0, bounceRate: 0 }
+      );
+
+      const avgSessionDuration = analytics.length > 0 ? totals.avgSessionDuration / analytics.length : 0;
+      const avgBounceRate = analytics.length > 0 ? totals.bounceRate / analytics.length : 0;
+
+      // Aggregate previous period
+      const prevTotals = prevAnalytics.reduce(
+        (acc, day) => ({
+          pageViews: acc.pageViews + day.pageViews,
+          uniqueVisitors: acc.uniqueVisitors + day.uniqueVisitors,
+        }),
+        { pageViews: 0, uniqueVisitors: 0 }
+      );
+
+      // Aggregate by date
+      const dailyMap = new Map<string, { pageViews: number; uniqueVisitors: number }>();
+      analytics.forEach((day) => {
+        const dateKey = day.date.toISOString().split("T")[0]!;
+        const existing = dailyMap.get(dateKey) || { pageViews: 0, uniqueVisitors: 0 };
+        dailyMap.set(dateKey, {
+          pageViews: existing.pageViews + day.pageViews,
+          uniqueVisitors: existing.uniqueVisitors + day.uniqueVisitors,
+        });
+      });
+
+      const daily = Array.from(dailyMap.entries()).map(([date, data]) => ({
+        date,
+        ...data,
+      }));
+
+      // Aggregate sources, devices, countries, pages
+      const sources: Record<string, number> = {};
+      const devices: Record<string, number> = {};
+      const countries: Record<string, number> = {};
+      const pages: Record<string, number> = {};
+
+      analytics.forEach((day) => {
+        if (day.sourceData) {
+          const data = day.sourceData as Record<string, number>;
+          Object.entries(data).forEach(([key, value]) => {
+            sources[key] = (sources[key] || 0) + value;
+          });
+        }
+        if (day.deviceData) {
+          const data = day.deviceData as Record<string, number>;
+          Object.entries(data).forEach(([key, value]) => {
+            devices[key] = (devices[key] || 0) + value;
+          });
+        }
+        if (day.countryData) {
+          const data = day.countryData as Record<string, number>;
+          Object.entries(data).forEach(([key, value]) => {
+            countries[key] = (countries[key] || 0) + value;
+          });
+        }
+        if (day.topPages) {
+          const data = day.topPages as Array<{ path: string; views: number }>;
+          data.forEach(({ path, views }) => {
+            pages[path] = (pages[path] || 0) + views;
+          });
+        }
+      });
+
+      return {
+        totalPageViews: totals.pageViews,
+        totalUniqueVisitors: totals.uniqueVisitors,
+        avgSessionDuration,
+        avgBounceRate,
+        websiteCount: websiteIds.length,
+        daily,
+        topPages: Object.entries(pages)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 10)
+          .map(([path, views]) => ({ path, views })),
+        sources: Object.entries(sources)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 5),
+        devices: Object.entries(devices).sort(([, a], [, b]) => b - a),
+        countries: Object.entries(countries)
+          .sort(([, a], [, b]) => b - a)
+          .slice(0, 5),
+        previousPeriod: prevTotals,
+      };
+    }),
+
   // Admin: Get platform-wide analytics
   adminGetPlatformStats: adminProcedure
     .input(

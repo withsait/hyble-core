@@ -84,10 +84,23 @@ export const secureProcedure = protectedProcedure.use(async ({ ctx, next }) => {
 
 // Admin procedure - requires admin role
 export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-  if (ctx.user.role !== "admin") {
+  const adminRoles = ["admin", "super_admin"];
+  if (!adminRoles.includes(ctx.user.role)) {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "You must be an admin to access this resource",
+    });
+  }
+
+  return next({ ctx });
+});
+
+// Super admin procedure - requires super_admin role
+export const superAdminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  if (ctx.user.role !== "super_admin") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "You must be a super admin to access this resource",
     });
   }
 

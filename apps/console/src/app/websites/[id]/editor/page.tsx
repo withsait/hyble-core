@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { sanitizeBuilderContent } from "@hyble/ui";
 import {
   ArrowLeft,
   Save,
@@ -1302,9 +1303,11 @@ function BlockRenderer({ block, previewMode }: { block: Block; previewMode: bool
       );
 
     case "text":
+      // Sanitize HTML to prevent XSS attacks
+      const sanitizedText = sanitizeBuilderContent(content.text || "<p>Metin icerigi...</p>");
       return (
         <div style={baseStyle}>
-          <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content.text || "<p>Metin icerigi...</p>" }} />
+          <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: sanitizedText }} />
         </div>
       );
 

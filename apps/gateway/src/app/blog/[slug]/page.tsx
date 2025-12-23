@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { api } from "@/lib/trpc";
+import { sanitizeBlogContent } from "@hyble/ui";
 import {
   ArrowLeft,
   Calendar,
@@ -94,10 +95,13 @@ function MarkdownContent({ content }: { content: string }) {
     .replace(/^- (.*$)/gim, '<li class="ml-4 list-disc">$1</li>')
     .replace(/\n/gim, '<br />');
 
+  // Sanitize HTML to prevent XSS attacks
+  const sanitizedHtml = sanitizeBlogContent(`<p class="mb-4">${html}</p>`);
+
   return (
     <div
       className="prose prose-lg dark:prose-invert max-w-none"
-      dangerouslySetInnerHTML={{ __html: `<p class="mb-4">${html}</p>` }}
+      dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
     />
   );
 }

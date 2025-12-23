@@ -1,7 +1,8 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Bell, Menu, Search, User, Sun, Moon } from "lucide-react";
+import { Menu, Search, User, Sun, Moon } from "lucide-react";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 
 export function PanelHeader() {
   const { theme, setTheme } = useTheme();
@@ -11,7 +12,7 @@ export function PanelHeader() {
   };
 
   return (
-    <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-slate-200 bg-white px-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:gap-x-6 sm:px-6 lg:px-8">
+    <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-slate-200 bg-white px-4 shadow-sm dark:border-slate-800/50 dark:bg-[#0d0d14] sm:gap-x-6 sm:px-6 lg:px-8">
       <button
         type="button"
         className="-m-2.5 p-2.5 text-slate-700 lg:hidden dark:text-slate-200"
@@ -53,13 +54,7 @@ export function PanelHeader() {
               <Moon className="h-6 w-6" aria-hidden="true" />
             )}
           </button>
-          <button
-            type="button"
-            className="-m-2.5 p-2.5 text-slate-400 hover:text-slate-500 dark:text-slate-500 dark:hover:text-slate-400"
-          >
-            <span className="sr-only">Bildirimler</span>
-            <Bell className="h-6 w-6" aria-hidden="true" />
-          </button>
+          <NotificationCenter />
           <div
             className="hidden lg:block lg:h-6 lg:w-px lg:bg-slate-200 dark:lg:bg-slate-700"
             aria-hidden="true"

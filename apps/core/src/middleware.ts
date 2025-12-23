@@ -1,6 +1,24 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { generateRequestId } from "@/lib/middleware/logging";
+import { validateCsrfToken, checkIpSecurity } from "@/lib/middleware/security";
+
+// CSRF-protected paths (state-changing operations)
+const CSRF_PROTECTED_PATHS = [
+  "/api/auth/",
+  "/api/users/",
+  "/api/admin/",
+  "/api/billing/",
+  "/api/wallet/",
+  "/api/settings/",
+];
+
+// Paths excluded from CSRF (webhooks, public APIs)
+const CSRF_EXCLUDED_PATHS = [
+  "/api/webhooks/",
+  "/api/cron/",
+  "/api/trpc",
+];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -9,6 +27,15 @@ export function middleware(request: NextRequest) {
 
   // Generate request ID for tracing
   const requestId = request.headers.get("x-request-id") || generateRequestId();
+
+  // IP Security Check
+  const ipCheck = checkIpSecurity(request);
+  if (!ipCheck.allowed) {
+    return NextResponse.json(
+      { error: "Access denied", reason: ipCheck.reason },
+      { status: 403, headers: { "X-Request-Id": requestId } }
+    );
+  }
 
   // Skip static files
   if (
@@ -89,6 +116,17 @@ export function middleware(request: NextRequest) {
 
   // API route handling
   if (pathname.startsWith("/api/")) {
+    // CSRF Token Validation for protected paths
+    const needsCsrf = CSRF_PROTECTED_PATHS.some(path => pathname.startsWith(path));
+    const isExcluded = CSRF_EXCLUDED_PATHS.some(path => pathname.startsWith(path));
+
+    if (needsCsrf && !isExcluded && !validateCsrfToken(request)) {
+      return NextResponse.json(
+        { error: "Invalid or missing CSRF token" },
+        { status: 403, headers: { "X-Request-Id": requestId } }
+      );
+    }
+
     const response = NextResponse.next();
 
     // Add request ID

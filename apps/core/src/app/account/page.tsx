@@ -28,6 +28,9 @@ import {
   Tablet,
   Sun,
   Moon,
+  Bell,
+  Mail,
+  MessageSquare,
 } from "lucide-react";
 
 // Types
@@ -62,6 +65,22 @@ interface Session {
   ipAddress: string | null;
   lastActiveAt: string;
   isCurrent: boolean;
+}
+
+interface NotificationPrefs {
+  securityEmail: boolean;
+  securityPanel: boolean;
+  billingEmail: boolean;
+  billingPanel: boolean;
+  projectsEmail: boolean;
+  projectsPanel: boolean;
+  supportEmail: boolean;
+  supportPanel: boolean;
+  updatesEmail: boolean;
+  updatesPanel: boolean;
+  marketingEmail: boolean;
+  marketingPanel: boolean;
+  discordDm: boolean;
 }
 
 // Section Component
@@ -261,6 +280,10 @@ function AccountPageContent() {
   // Session State
   const [revokingSession, setRevokingSession] = useState<string | null>(null);
 
+  // Notification Preferences State
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPrefs | null>(null);
+  const [savingNotifs, setSavingNotifs] = useState(false);
+
   // Messages
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -282,10 +305,11 @@ function AccountPageContent() {
 
   const fetchUserData = async () => {
     try {
-      const [userRes, sessionsRes, twoFARes] = await Promise.all([
+      const [userRes, sessionsRes, twoFARes, notifsRes] = await Promise.all([
         fetch("/api/users/profile"),
         fetch("/api/sessions"),
         fetch("/api/users/2fa/status"),
+        fetch("/api/users/notification-preferences"),
       ]);
 
       if (userRes.ok) {
@@ -308,6 +332,11 @@ function AccountPageContent() {
       if (twoFARes.ok) {
         const twoFAData = await twoFARes.json();
         setTwoFAStatus(twoFAData);
+      }
+
+      if (notifsRes.ok) {
+        const notifsData = await notifsRes.json();
+        setNotificationPrefs(notifsData);
       }
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -449,6 +478,33 @@ function AccountPageContent() {
       setError(err instanceof Error ? err.message : "2FA devre disi birakilamadi");
     } finally {
       setProcessing2FA(false);
+    }
+  };
+
+  // Update Notification Preference
+  const updateNotificationPref = async (key: keyof NotificationPrefs, value: boolean) => {
+    if (!notificationPrefs) return;
+
+    const oldValue = notificationPrefs[key];
+    setNotificationPrefs({ ...notificationPrefs, [key]: value });
+    setSavingNotifs(true);
+
+    try {
+      const res = await fetch("/api/users/notification-preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [key]: value }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Tercihler guncellenemedi");
+      }
+    } catch (err) {
+      // Revert on error
+      setNotificationPrefs({ ...notificationPrefs, [key]: oldValue });
+      setError(err instanceof Error ? err.message : "Bir hata olustu");
+    } finally {
+      setSavingNotifs(false);
     }
   };
 
@@ -909,6 +965,178 @@ function AccountPageContent() {
                 );
               })}
             </div>
+          </Section>
+
+          {/* Notifications Section */}
+          <Section
+            id="notifications"
+            title="Bildirim Tercihleri"
+            icon={Bell}
+            openSection={openSection}
+            setOpenSection={setOpenSection}
+          >
+            {notificationPrefs && (
+              <div className="space-y-6">
+                {/* Security - Always On */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-blue-600" />
+                    Guvenlik
+                    <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full">Zorunlu</span>
+                  </h4>
+                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-5 h-5 text-slate-400" />
+                      <span className="text-slate-700 dark:text-slate-300">E-posta</span>
+                    </div>
+                    <div className="w-10 h-6 bg-blue-600 rounded-full relative cursor-not-allowed opacity-75">
+                      <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <Bell className="w-5 h-5 text-slate-400" />
+                      <span className="text-slate-700 dark:text-slate-300">Panel Bildirimi</span>
+                    </div>
+                    <div className="w-10 h-6 bg-blue-600 rounded-full relative cursor-not-allowed opacity-75">
+                      <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Billing */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                    <span className="text-green-600">$</span>
+                    Faturalama
+                  </h4>
+                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-5 h-5 text-slate-400" />
+                      <span className="text-slate-700 dark:text-slate-300">E-posta</span>
+                    </div>
+                    <button
+                      onClick={() => updateNotificationPref('billingEmail', !notificationPrefs.billingEmail)}
+                      className={`w-10 h-6 rounded-full relative transition-colors ${notificationPrefs.billingEmail ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationPrefs.billingEmail ? 'right-1' : 'left-1'}`} />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <Bell className="w-5 h-5 text-slate-400" />
+                      <span className="text-slate-700 dark:text-slate-300">Panel Bildirimi</span>
+                    </div>
+                    <button
+                      onClick={() => updateNotificationPref('billingPanel', !notificationPrefs.billingPanel)}
+                      className={`w-10 h-6 rounded-full relative transition-colors ${notificationPrefs.billingPanel ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationPrefs.billingPanel ? 'right-1' : 'left-1'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Projects */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-purple-600" />
+                    Projeler
+                  </h4>
+                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-5 h-5 text-slate-400" />
+                      <span className="text-slate-700 dark:text-slate-300">E-posta</span>
+                    </div>
+                    <button
+                      onClick={() => updateNotificationPref('projectsEmail', !notificationPrefs.projectsEmail)}
+                      className={`w-10 h-6 rounded-full relative transition-colors ${notificationPrefs.projectsEmail ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationPrefs.projectsEmail ? 'right-1' : 'left-1'}`} />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <Bell className="w-5 h-5 text-slate-400" />
+                      <span className="text-slate-700 dark:text-slate-300">Panel Bildirimi</span>
+                    </div>
+                    <button
+                      onClick={() => updateNotificationPref('projectsPanel', !notificationPrefs.projectsPanel)}
+                      className={`w-10 h-6 rounded-full relative transition-colors ${notificationPrefs.projectsPanel ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationPrefs.projectsPanel ? 'right-1' : 'left-1'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Support */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-slate-900 dark:text-white flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4 text-amber-600" />
+                    Destek
+                  </h4>
+                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-5 h-5 text-slate-400" />
+                      <span className="text-slate-700 dark:text-slate-300">E-posta</span>
+                    </div>
+                    <button
+                      onClick={() => updateNotificationPref('supportEmail', !notificationPrefs.supportEmail)}
+                      className={`w-10 h-6 rounded-full relative transition-colors ${notificationPrefs.supportEmail ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationPrefs.supportEmail ? 'right-1' : 'left-1'}`} />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <Bell className="w-5 h-5 text-slate-400" />
+                      <span className="text-slate-700 dark:text-slate-300">Panel Bildirimi</span>
+                    </div>
+                    <button
+                      onClick={() => updateNotificationPref('supportPanel', !notificationPrefs.supportPanel)}
+                      className={`w-10 h-6 rounded-full relative transition-colors ${notificationPrefs.supportPanel ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationPrefs.supportPanel ? 'right-1' : 'left-1'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Updates & Marketing */}
+                <div className="space-y-3">
+                  <h4 className="font-medium text-slate-900 dark:text-white">Guncellemeler ve Pazarlama</h4>
+                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                    <div>
+                      <p className="text-slate-700 dark:text-slate-300">Urun Guncellemeleri</p>
+                      <p className="text-xs text-slate-500">Yeni ozellikler ve iyilestirmeler</p>
+                    </div>
+                    <button
+                      onClick={() => updateNotificationPref('updatesEmail', !notificationPrefs.updatesEmail)}
+                      className={`w-10 h-6 rounded-full relative transition-colors ${notificationPrefs.updatesEmail ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationPrefs.updatesEmail ? 'right-1' : 'left-1'}`} />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                    <div>
+                      <p className="text-slate-700 dark:text-slate-300">Pazarlama</p>
+                      <p className="text-xs text-slate-500">Kampanyalar ve ozel teklifler</p>
+                    </div>
+                    <button
+                      onClick={() => updateNotificationPref('marketingEmail', !notificationPrefs.marketingEmail)}
+                      className={`w-10 h-6 rounded-full relative transition-colors ${notificationPrefs.marketingEmail ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationPrefs.marketingEmail ? 'right-1' : 'left-1'}`} />
+                    </button>
+                  </div>
+                </div>
+
+                {savingNotifs && (
+                  <div className="text-center text-sm text-slate-500 flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Kaydediliyor...
+                  </div>
+                )}
+              </div>
+            )}
           </Section>
 
           {/* Sessions Section */}

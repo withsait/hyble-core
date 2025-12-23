@@ -181,7 +181,7 @@ function WalletContent() {
       </div>
 
       {/* Quick Deposit Options */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+      <div className="bg-white dark:bg-[#12121a] rounded-xl shadow-sm border border-slate-200 dark:border-slate-800/50 p-6">
         <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-4">
           Hızlı Yükleme
         </h2>
@@ -193,7 +193,7 @@ function WalletContent() {
                 setDepositAmount(amount);
                 setShowDepositModal(true);
               }}
-              className="p-4 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-center"
+              className="p-4 border border-slate-200 dark:border-slate-800/50 rounded-xl hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-center"
             >
               <p className="text-2xl font-bold text-slate-900 dark:text-white">€{amount}</p>
               <p className="text-sm text-slate-500 dark:text-slate-400">Yükle</p>
@@ -203,8 +203,8 @@ function WalletContent() {
       </div>
 
       {/* Transaction History */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+      <div className="bg-white dark:bg-[#12121a] rounded-xl shadow-sm border border-slate-200 dark:border-slate-800/50">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800/50 flex items-center justify-between">
           <h2 className="text-lg font-medium text-slate-900 dark:text-white">
             İşlem Geçmişi
           </h2>
@@ -230,7 +230,7 @@ function WalletContent() {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-200 dark:divide-slate-700">
+          <div className="divide-y divide-slate-200 dark:divide-slate-800/50">
             {transactions.map((tx) => {
               const config = txTypeConfig[tx.type as TransactionType];
               const Icon = config?.icon || ArrowDownLeft;
@@ -239,7 +239,7 @@ function WalletContent() {
               return (
                 <div
                   key={tx.id}
-                  className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                  className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-[#0d0d14]/50 transition-colors"
                 >
                   <div className="flex items-center gap-4">
                     <div className={`p-2 rounded-lg ${config?.color || "bg-slate-100"}`}>
@@ -279,7 +279,7 @@ function WalletContent() {
       {/* Deposit Modal */}
       {showDepositModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
+          <div className="bg-white dark:bg-[#12121a] rounded-2xl p-6 w-full max-w-md mx-4 shadow-xl">
             <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
               Para Yükle
             </h3>

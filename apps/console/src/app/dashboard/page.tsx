@@ -88,7 +88,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Websites Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+        <div className="bg-white dark:bg-[#12121a] rounded-xl p-5 border border-slate-200 dark:border-slate-800/50">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-600 dark:text-slate-400">Web Sitelerim</p>
@@ -112,7 +112,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Organizations Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+        <div className="bg-white dark:bg-[#12121a] rounded-xl p-5 border border-slate-200 dark:border-slate-800/50">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-600 dark:text-slate-400">Organizasyonlar</p>
@@ -141,7 +141,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Support Card */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
+        <div className="bg-white dark:bg-[#12121a] rounded-xl p-5 border border-slate-200 dark:border-slate-800/50">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-600 dark:text-slate-400">Destek Talepleri</p>
@@ -173,8 +173,8 @@ export default function DashboardPage() {
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Transactions */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+        <div className="bg-white dark:bg-[#12121a] rounded-xl shadow-sm border border-slate-200 dark:border-slate-800/50">
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800/50 flex items-center justify-between">
             <h2 className="text-lg font-medium text-slate-900 dark:text-white">
               Son İşlemler
             </h2>
@@ -195,7 +195,7 @@ export default function DashboardPage() {
               Henüz işlem bulunmuyor.
             </div>
           ) : (
-            <div className="divide-y divide-slate-200 dark:divide-slate-700">
+            <div className="divide-y divide-slate-200 dark:divide-slate-800/50">
               {transactions.slice(0, 4).map((tx: any) => {
                 const isPositive = ["DEPOSIT", "REFUND", "BONUS", "ADJUSTMENT"].includes(tx.type);
                 return (
@@ -228,8 +228,8 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Support Tickets */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+        <div className="bg-white dark:bg-[#12121a] rounded-xl shadow-sm border border-slate-200 dark:border-slate-800/50">
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800/50 flex items-center justify-between">
             <h2 className="text-lg font-medium text-slate-900 dark:text-white">
               Destek Talepleri
             </h2>
@@ -250,14 +250,14 @@ export default function DashboardPage() {
               Henüz destek talebi yok.
             </div>
           ) : (
-            <div className="divide-y divide-slate-200 dark:divide-slate-700">
+            <div className="divide-y divide-slate-200 dark:divide-slate-800/50">
               {tickets.slice(0, 4).map((ticket: any) => {
                 const isOpen = ["OPEN", "IN_PROGRESS", "AWAITING_REPLY"].includes(ticket.status);
                 return (
                   <Link
                     key={ticket.id}
                     href={`/support/${ticket.referenceNo}`}
-                    className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                    className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-[#0d0d14]/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-lg ${isOpen ? "bg-blue-100 dark:bg-blue-900/30" : "bg-green-100 dark:bg-green-900/30"}`}>
@@ -286,14 +286,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 p-6">
+      <div className="bg-white dark:bg-[#12121a] rounded-xl shadow-sm border border-slate-200 dark:border-slate-800/50 p-6">
         <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-4">
           Hızlı İşlemler
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <Link
             href="/websites/new"
-            className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 dark:border-slate-800/50 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
           >
             <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
               <Globe className="h-5 w-5 text-blue-600" />
@@ -302,7 +302,7 @@ export default function DashboardPage() {
           </Link>
           <Link
             href="/wallet"
-            className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+            className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 dark:border-slate-800/50 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
           >
             <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
               <Wallet className="h-5 w-5 text-green-600" />
@@ -311,7 +311,7 @@ export default function DashboardPage() {
           </Link>
           <Link
             href="/organizations/new"
-            className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+            className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 dark:border-slate-800/50 hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
           >
             <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
               <Building2 className="h-5 w-5 text-amber-600" />
@@ -320,7 +320,7 @@ export default function DashboardPage() {
           </Link>
           <Link
             href="/support/new"
-            className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+            className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 dark:border-slate-800/50 hover:border-purple-500 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
           >
             <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
               <HeadphonesIcon className="h-5 w-5 text-purple-600" />

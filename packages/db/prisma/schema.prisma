@@ -193,6 +193,8 @@ model User {
   @@index([status])
   @@index([createdAt])
   @@index([lastActiveAt])
+  @@index([email, status]) // Composite for auth checks
+  @@index([status, createdAt]) // For filtered listings
 }
 
 model UserProfile {
@@ -468,6 +470,8 @@ model Invoice {
   @@index([status])
   @@index([createdAt])
   @@index([invoiceNumber])
+  @@index([userId, status, createdAt]) // Composite for user invoice listings
+  @@index([status, dueDate]) // For overdue processing
 }
 
 model StripeCustomer {
@@ -576,6 +580,7 @@ model OrganizationMember {
   @@unique([organizationId, userId])
   @@index([organizationId])
   @@index([userId])
+  @@index([organizationId, role]) // For role-based filtering
 }
 
 model OrganizationInvite {
@@ -1669,6 +1674,8 @@ model Ticket {
   @@index([referenceNo])
   @@index([category])
   @@index([createdAt])
+  @@index([userId, status, createdAt]) // Composite for user ticket listings
+  @@index([status, priority, createdAt]) // For admin queue
 }
 
 model TicketMessage {
@@ -4757,4 +4764,16 @@ model BillingAuditLog {
   @@index([actorId])
   @@index([action])
   @@index([createdAt])
+}
+
+// -------------------- SYSTEM SETTINGS --------------------
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([key])
 }

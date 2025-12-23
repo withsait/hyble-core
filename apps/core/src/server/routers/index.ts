@@ -19,6 +19,9 @@ import { emailRouter } from "./email";
 import { downloadRouter } from "./download";
 import { licenseRouter } from "./license";
 
+// HybleBilling Core
+import { billingRouter } from "./billing";
+
 // Store Features (Single Vendor)
 import { reviewRouter } from "./review";
 
@@ -47,6 +50,9 @@ import { templateRouter } from "./template";
 // Blog
 import { blogRouter } from "./blog";
 
+// Settings
+import { settingsRouter } from "./settings";
+
 /**
  * Main tRPC router for hyble-panel
  * All routers are combined here
@@ -64,7 +70,10 @@ export const appRouter = createTRPCRouter({
   apiKey: apiKeyRouter,
   wallet: walletRouter,
 
-  // E-Commerce (Single Vendor)
+  // HybleBilling Core (New modular billing system)
+  billing: billingRouter,
+
+  // E-Commerce (Single Vendor) - Legacy routers
   pim: pimRouter,
   payment: paymentRouter,
   invoice: invoiceRouter,
@@ -111,6 +120,9 @@ export const appRouter = createTRPCRouter({
 
   // Blog
   blog: blogRouter,
+
+  // Settings
+  settings: settingsRouter,
 });
 
 // Export type for client usage
@@ -127,7 +139,10 @@ export {
   apiKeyRouter,
   walletRouter,
 
-  // E-Commerce
+  // HybleBilling
+  billingRouter,
+
+  // E-Commerce (Legacy)
   pimRouter,
   paymentRouter,
   invoiceRouter,
@@ -174,4 +189,7 @@ export {
 
   // Blog
   blogRouter,
+
+  // Settings
+  settingsRouter,
 };

@@ -34,7 +34,7 @@ export function PanelSidebar() {
 
   return (
     <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
-      <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-slate-200 bg-white px-6 pb-4 dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-slate-200 bg-white px-6 pb-4 dark:border-slate-800/50 dark:bg-[#0d0d14]">
         <div className="flex h-16 shrink-0 items-center">
           <span className="text-2xl font-bold text-blue-600">Hyble</span>
         </div>
@@ -50,8 +50,8 @@ export function PanelSidebar() {
                         href={item.href}
                         className={`group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 ${
                           isActive
-                            ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
-                            : "text-slate-700 hover:bg-slate-50 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400"
+                            ? "bg-blue-50 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400"
+                            : "text-slate-700 hover:bg-slate-50 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-blue-400"
                         }`}
                       >
                         <item.icon
@@ -72,7 +72,7 @@ export function PanelSidebar() {
             <li className="mt-auto space-y-1">
               <a
                 href={accountUrl}
-                className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-slate-700 hover:bg-slate-50 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400"
+                className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-slate-700 hover:bg-slate-50 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-blue-400"
               >
                 <User
                   className="h-6 w-6 shrink-0 text-slate-400 group-hover:text-blue-600 dark:text-slate-500 dark:group-hover:text-blue-400"
@@ -82,7 +82,7 @@ export function PanelSidebar() {
               </a>
               <a
                 href="https://id.hyble.co/logout"
-                className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-slate-700 hover:bg-slate-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-red-400"
+                className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-slate-700 hover:bg-slate-50 hover:text-red-600 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-red-400"
               >
                 <LogOut
                   className="h-6 w-6 shrink-0 text-slate-400 group-hover:text-red-600 dark:text-slate-500 dark:group-hover:text-red-400"

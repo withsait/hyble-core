@@ -554,3 +554,18 @@ export const CRON_JOBS = {
   API_KEYS: "cleanupExpiredApiKeys",
   ALL: "runDailyJobs",
 } as const;
+
+// Re-export billing cron jobs
+export {
+  generateRenewalInvoices,
+  processExpiredServices,
+  sendOverdueReminders,
+  markOverdueInvoices,
+  processAutoTopUp,
+  cleanupExpiredCoupons,
+  processDepletedCoupons,
+  processPromoBalanceExpiry,
+  generateMonthlyReport,
+  runDailyBillingJobs,
+  BILLING_CRON_JOBS,
+} from "./billing-worker";

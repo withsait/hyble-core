@@ -13,18 +13,33 @@ export interface SecurityHeadersConfig {
 }
 
 const defaultSecurityHeaders: SecurityHeadersConfig = {
-  // Content Security Policy
-  contentSecurityPolicy: [
-    "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
-    "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://api.hyble.io https://*.hyble.io wss://*.hyble.io",
-    "frame-ancestors 'none'",
-    "form-action 'self'",
-    "base-uri 'self'",
-  ].join("; "),
+  // Content Security Policy - Hardened (no unsafe-inline/unsafe-eval)
+  // Note: In development, Next.js requires unsafe-eval for hot reload
+  contentSecurityPolicy: process.env.NODE_ENV === "production"
+    ? [
+        "default-src 'self'",
+        "script-src 'self' https://cdn.jsdelivr.net https://www.googletagmanager.com 'nonce-{NONCE}'",
+        "style-src 'self' https://fonts.googleapis.com 'nonce-{NONCE}'",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data: https: blob:",
+        "connect-src 'self' https://api.hyble.io https://*.hyble.io wss://*.hyble.io https://www.google-analytics.com",
+        "frame-ancestors 'none'",
+        "form-action 'self'",
+        "base-uri 'self'",
+        "object-src 'none'",
+        "upgrade-insecure-requests",
+      ].join("; ")
+    : [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+        "font-src 'self' https://fonts.gstatic.com",
+        "img-src 'self' data: https: blob:",
+        "connect-src 'self' https://api.hyble.io https://*.hyble.io wss://*.hyble.io ws://localhost:*",
+        "frame-ancestors 'none'",
+        "form-action 'self'",
+        "base-uri 'self'",
+      ].join("; "),
 
   // Prevent clickjacking
   xFrameOptions: "DENY",

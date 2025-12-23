@@ -43,7 +43,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <APIProvider source="console">
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+            <div className="min-h-screen bg-slate-50 dark:bg-[#0a0a0f]">
               <PanelSidebar />
               <div className="lg:pl-64">
                 <PanelHeader />

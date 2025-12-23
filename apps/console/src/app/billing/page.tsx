@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useState, memo, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc";
 import {
@@ -24,6 +24,7 @@ import { tr } from "date-fns/locale";
 
 type InvoiceStatus = "DRAFT" | "PENDING" | "PAID" | "OVERDUE" | "CANCELLED" | "REFUNDED";
 
+// Moved outside component to prevent recreation on each render
 const statusConfig: Record<InvoiceStatus, { label: string; color: string; icon: typeof CheckCircle }> = {
   DRAFT: { label: "Taslak", color: "bg-slate-100 text-slate-700", icon: FileText },
   PENDING: { label: "Bekliyor", color: "bg-yellow-100 text-yellow-700", icon: Clock },
@@ -32,6 +33,75 @@ const statusConfig: Record<InvoiceStatus, { label: string; color: string; icon: 
   CANCELLED: { label: "İptal", color: "bg-slate-100 text-slate-500", icon: XCircle },
   REFUNDED: { label: "İade Edildi", color: "bg-purple-100 text-purple-700", icon: RefreshCw },
 };
+
+// Memoized invoice row component to prevent unnecessary re-renders
+interface InvoiceRowProps {
+  invoice: any;
+  payingInvoiceId: string | null;
+  onPayInvoice: (invoiceId: string, amount: number) => void;
+}
+
+const InvoiceRow = memo(function InvoiceRow({ invoice, payingInvoiceId, onPayInvoice }: InvoiceRowProps) {
+  const config = statusConfig[invoice.status as InvoiceStatus];
+  const StatusIcon = config?.icon || Receipt;
+
+  return (
+    <div className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+      <div className="flex items-center gap-4">
+        <div className={`p-2 rounded-lg ${config?.color || "bg-slate-100"}`}>
+          <StatusIcon className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="font-medium text-slate-900 dark:text-white">
+            {invoice.invoiceNumber}
+          </p>
+          <div className="flex items-center gap-3 mt-1">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${config?.color || "bg-slate-100"}`}>
+              {config?.label || invoice.status}
+            </span>
+            <span className="text-xs text-slate-500">
+              {format(new Date(invoice.createdAt), "d MMM yyyy", { locale: tr })}
+            </span>
+            {invoice.dueDate && invoice.status === "PENDING" && (
+              <span className="text-xs text-slate-500">
+                Vade: {format(new Date(invoice.dueDate), "d MMM", { locale: tr })}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-4">
+        <p className="font-semibold text-slate-900 dark:text-white">
+          €{parseFloat(invoice.total).toFixed(2)}
+        </p>
+        <div className="flex items-center gap-1">
+          <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <Eye className="h-4 w-4 text-slate-500" />
+          </button>
+          <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <Download className="h-4 w-4 text-slate-500" />
+          </button>
+          {invoice.status === "PENDING" && (
+            <button
+              onClick={() => onPayInvoice(invoice.id, parseFloat(invoice.total))}
+              disabled={payingInvoiceId === invoice.id}
+              className="ml-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              {payingInvoiceId === invoice.id ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Ödeniyor...
+                </>
+              ) : (
+                "Öde"
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
 
 export default function BillingPage() {
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL");
@@ -57,7 +127,7 @@ export default function BillingPage() {
     },
   });
 
-  const handlePayInvoice = async (invoiceId: string, amount: number) => {
+  const handlePayInvoice = useCallback(async (invoiceId: string, amount: number) => {
     if (!balanceData || balanceData.totalBalance < amount) {
       alert(`Yetersiz bakiye. Mevcut: €${balanceData?.totalBalance?.toFixed(2) || 0}, Gerekli: €${amount.toFixed(2)}`);
       return;
@@ -77,15 +147,17 @@ export default function BillingPage() {
     } catch (error) {
       console.error("Payment error:", error);
     }
-  };
+  }, [balanceData, payInvoiceMutation]);
 
   const invoices = invoicesData?.items ?? [];
   const balance = balanceData?.balance ?? 0;
   const totalBalance = balanceData?.totalBalance ?? 0;
 
-  // Calculate stats
-  const totalPaid = invoices.filter((i) => i.status === "PAID").reduce((sum, i) => sum + parseFloat(i.total), 0);
-  const pendingAmount = invoices.filter((i) => i.status === "PENDING").reduce((sum, i) => sum + parseFloat(i.total), 0);
+  // Calculate stats with useMemo to prevent recalculation on every render
+  const { totalPaid, pendingAmount } = useMemo(() => ({
+    totalPaid: invoices.filter((i) => i.status === "PAID").reduce((sum, i) => sum + parseFloat(i.total), 0),
+    pendingAmount: invoices.filter((i) => i.status === "PENDING").reduce((sum, i) => sum + parseFloat(i.total), 0),
+  }), [invoices]);
 
   return (
     <div className="space-y-6">
@@ -184,70 +256,14 @@ export default function BillingPage() {
           </div>
         ) : (
           <div className="divide-y divide-slate-200 dark:divide-slate-700">
-            {invoices.map((invoice) => {
-              const config = statusConfig[invoice.status as InvoiceStatus];
-              const StatusIcon = config?.icon || Receipt;
-
-              return (
-                <div
-                  key={invoice.id}
-                  className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`p-2 rounded-lg ${config?.color || "bg-slate-100"}`}>
-                      <StatusIcon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-900 dark:text-white">
-                        {invoice.invoiceNumber}
-                      </p>
-                      <div className="flex items-center gap-3 mt-1">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${config?.color || "bg-slate-100"}`}>
-                          {config?.label || invoice.status}
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          {format(new Date(invoice.createdAt), "d MMM yyyy", { locale: tr })}
-                        </span>
-                        {invoice.dueDate && invoice.status === "PENDING" && (
-                          <span className="text-xs text-slate-500">
-                            Vade: {format(new Date(invoice.dueDate), "d MMM", { locale: tr })}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <p className="font-semibold text-slate-900 dark:text-white">
-                      €{parseFloat(invoice.total).toFixed(2)}
-                    </p>
-                    <div className="flex items-center gap-1">
-                      <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                        <Eye className="h-4 w-4 text-slate-500" />
-                      </button>
-                      <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                        <Download className="h-4 w-4 text-slate-500" />
-                      </button>
-                      {invoice.status === "PENDING" && (
-                        <button
-                          onClick={() => handlePayInvoice(invoice.id, parseFloat(invoice.total))}
-                          disabled={payingInvoiceId === invoice.id}
-                          className="ml-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                        >
-                          {payingInvoiceId === invoice.id ? (
-                            <>
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                              Ödeniyor...
-                            </>
-                          ) : (
-                            "Öde"
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {invoices.map((invoice) => (
+              <InvoiceRow
+                key={invoice.id}
+                invoice={invoice}
+                payingInvoiceId={payingInvoiceId}
+                onPayInvoice={handlePayInvoice}
+              />
+            ))}
           </div>
         )}
       </div>

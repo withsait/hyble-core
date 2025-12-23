@@ -1,5 +1,12 @@
 // Utils
 export { cn } from "./lib/utils";
+export {
+  sanitizeHtml,
+  sanitizeBlogContent,
+  sanitizeBuilderContent,
+  sanitizeText,
+  escapeHtml,
+} from "./lib/sanitize";
 
 // Components
 export { Button, buttonVariants, type ButtonProps } from "./components/button";

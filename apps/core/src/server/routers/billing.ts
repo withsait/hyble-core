@@ -3,6 +3,7 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import Stripe from "stripe";
 import { createTRPCRouter, protectedProcedure, adminProcedure } from "../trpc/trpc";
 import {
   customerService,
@@ -13,6 +14,11 @@ import {
   taxService,
   couponService,
 } from "@/lib/billing";
+
+// Initialize Stripe client once at module level
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY)
+  : null;
 
 // ==================== CUSTOMER ROUTER ====================
 
@@ -383,15 +389,12 @@ const billingWalletRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!process.env.STRIPE_SECRET_KEY) {
+      if (!stripe) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Payment gateway not configured",
         });
       }
-
-      const Stripe = (await import("stripe")).default;
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
       // Get or create billing customer
       let customer = await customerService.getByUserId(ctx.user.id);
@@ -444,15 +447,12 @@ const billingWalletRouter = createTRPCRouter({
   verifyDeposit: protectedProcedure
     .input(z.object({ sessionId: z.string() }))
     .query(async ({ ctx, input }) => {
-      if (!process.env.STRIPE_SECRET_KEY) {
+      if (!stripe) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Payment gateway not configured",
         });
       }
-
-      const Stripe = (await import("stripe")).default;
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
       const session = await stripe.checkout.sessions.retrieve(input.sessionId);
 
