@@ -49,8 +49,9 @@ export default function LogoutPage() {
         // Even on error, clear what we can and redirect
         try {
           document.cookie.split(";").forEach((c) => {
-            const name = c.split("=")[0].trim();
-            if (name.includes("authjs") || name.includes("next-auth")) {
+            const parts = c.split("=");
+            const name = parts[0]?.trim();
+            if (name && (name.includes("authjs") || name.includes("next-auth"))) {
               document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
             }
           });
