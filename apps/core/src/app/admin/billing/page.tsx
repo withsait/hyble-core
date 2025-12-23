@@ -73,23 +73,27 @@ export default function AdminBillingPage() {
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL");
   const [page, setPage] = useState(1);
 
-  // tRPC queries
-  const { data: invoiceStats, isLoading: statsLoading } = trpc.invoice.adminStats.useQuery({ period: "month" });
+  // tRPC queries - using new HybleBilling router
+  const { data: invoiceStats, isLoading: statsLoading } = trpc.billing.invoice.adminStats.useQuery();
 
-  const { data: invoicesData, isLoading: invoicesLoading, refetch: refetchInvoices } = trpc.invoice.adminList.useQuery({
-    page,
+  const { data: invoicesData, isLoading: invoicesLoading, refetch: refetchInvoices } = trpc.billing.invoice.adminList.useQuery({
     limit: 20,
+    offset: (page - 1) * 20,
     status: statusFilter === "ALL" ? undefined : statusFilter,
-    search: searchTerm || undefined,
   });
 
-  const { data: subscriptionsData, isLoading: subscriptionsLoading } = trpc.subscription.adminList.useQuery({
-    page: 1,
+  const { data: subscriptionsData, isLoading: subscriptionsLoading } = trpc.billing.subscription.adminList.useQuery({
     limit: 50,
+    offset: 0,
+  });
+
+  const { data: paymentsData, isLoading: paymentsLoading, refetch: refetchPayments } = trpc.billing.payment.adminList.useQuery({
+    limit: 50,
+    offset: 0,
   });
 
   // Mutations
-  const updateInvoiceStatus = trpc.invoice.adminUpdateStatus.useMutation({
+  const updateInvoiceStatus = trpc.billing.invoice.adminUpdateStatus.useMutation({
     onSuccess: () => refetchInvoices(),
   });
 
@@ -253,7 +257,7 @@ export default function AdminBillingPage() {
                 <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
                 <p className="text-muted-foreground mt-2">Yükleniyor...</p>
               </div>
-            ) : invoicesData?.invoices.length === 0 ? (
+            ) : !invoicesData?.items || invoicesData.items.length === 0 ? (
               <div className="p-12 text-center">
                 <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">Fatura bulunamadı</p>
@@ -274,7 +278,7 @@ export default function AdminBillingPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {invoicesData?.invoices.map((invoice: any) => {
+                      {invoicesData?.items.map((invoice: any) => {
                         const config = statusConfig[invoice.status as InvoiceStatus];
                         const StatusIcon = config.icon;
                         return (
@@ -283,7 +287,7 @@ export default function AdminBillingPage() {
                               <p className="font-mono font-medium">{invoice.invoiceNumber}</p>
                             </td>
                             <td className="px-4 py-3">
-                              <p className="text-sm font-mono text-muted-foreground">{invoice.userId.slice(0, 8)}...</p>
+                              <p className="text-sm font-mono text-muted-foreground">{invoice.customerId?.slice(0, 8) || "-"}...</p>
                             </td>
                             <td className="px-4 py-3">
                               <p className="font-semibold">€{parseFloat(invoice.total).toFixed(2)}</p>
@@ -336,7 +340,7 @@ export default function AdminBillingPage() {
                     </tbody>
                   </table>
                 </div>
-                {invoicesData && invoicesData.totalPages > 1 && (
+                {invoicesData && invoicesData.hasMore && (
                   <div className="flex items-center justify-between px-4 py-3 border-t">
                     <p className="text-sm text-muted-foreground">
                       Toplam {invoicesData.total} fatura
@@ -353,7 +357,7 @@ export default function AdminBillingPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={page >= invoicesData.totalPages}
+                        disabled={!invoicesData.hasMore}
                         onClick={() => setPage(page + 1)}
                       >
                         Sonraki
@@ -369,14 +373,85 @@ export default function AdminBillingPage() {
 
       {/* Transactions Tab */}
       {activeTab === "transactions" && (
-        <Card className="p-6">
-          <div className="text-center py-8">
-            <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-medium mb-2">İşlem Geçmişi</h3>
-            <p className="text-sm text-muted-foreground">
-              İşlem geçmişi modülü hazırlanıyor. Cüzdan işlemleri için Cüzdanlar sekmesini kullanın.
-            </p>
+        <Card>
+          <div className="p-4 border-b">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Ödeme İşlemleri</h3>
+              <Button variant="outline" size="sm" onClick={() => refetchPayments()}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Yenile
+              </Button>
+            </div>
           </div>
+          {paymentsLoading ? (
+            <div className="p-12 text-center">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+              <p className="text-muted-foreground mt-2">Yükleniyor...</p>
+            </div>
+          ) : !paymentsData?.items || paymentsData.items.length === 0 ? (
+            <div className="p-12 text-center">
+              <CreditCard className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">Ödeme kaydı bulunamadı</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="text-left px-4 py-3 text-sm font-semibold">Fatura</th>
+                    <th className="text-left px-4 py-3 text-sm font-semibold">Müşteri ID</th>
+                    <th className="text-left px-4 py-3 text-sm font-semibold">Tutar</th>
+                    <th className="text-left px-4 py-3 text-sm font-semibold">Yöntem</th>
+                    <th className="text-left px-4 py-3 text-sm font-semibold">Durum</th>
+                    <th className="text-left px-4 py-3 text-sm font-semibold">Tarih</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paymentsData.items.map((payment: any) => {
+                    const statusColors: Record<string, string> = {
+                      COMPLETED: "bg-green-100 text-green-700",
+                      PENDING: "bg-yellow-100 text-yellow-700",
+                      PROCESSING: "bg-blue-100 text-blue-700",
+                      FAILED: "bg-red-100 text-red-700",
+                      REFUNDED: "bg-purple-100 text-purple-700",
+                    };
+                    const methodLabels: Record<string, string> = {
+                      WALLET: "Cüzdan",
+                      CREDIT_CARD: "Kredi Kartı",
+                      BANK_TRANSFER: "Havale",
+                      MANUAL: "Manuel",
+                      STRIPE: "Stripe",
+                      IYZICO: "iyzico",
+                    };
+                    return (
+                      <tr key={payment.id} className="border-b hover:bg-muted/30">
+                        <td className="px-4 py-3">
+                          <p className="font-mono text-sm">{payment.invoice?.invoiceNumber || "-"}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <p className="text-sm font-mono text-muted-foreground">{payment.customerId?.slice(0, 8)}...</p>
+                        </td>
+                        <td className="px-4 py-3 font-semibold">
+                          €{parseFloat(payment.amount || "0").toFixed(2)}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {methodLabels[payment.paymentMethod] || payment.paymentMethod}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className={`text-xs px-2 py-1 rounded ${statusColors[payment.status] || "bg-slate-100 text-slate-600"}`}>
+                            {payment.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">
+                          {format(new Date(payment.createdAt), "d MMM yyyy HH:mm", { locale: tr })}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Card>
       )}
 
@@ -388,7 +463,7 @@ export default function AdminBillingPage() {
               <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
               <p className="text-muted-foreground mt-2">Yükleniyor...</p>
             </div>
-          ) : !subscriptionsData?.subscriptions || subscriptionsData.subscriptions.length === 0 ? (
+          ) : !subscriptionsData?.items || subscriptionsData.items.length === 0 ? (
             <div className="p-12 text-center">
               <RefreshCw className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">Aktif abonelik bulunamadı</p>
@@ -407,18 +482,16 @@ export default function AdminBillingPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {subscriptionsData.subscriptions.map((sub: any) => {
+                  {subscriptionsData.items.map((sub: any) => {
                     const config = subscriptionStatusConfig[sub.status] || { label: sub.status, color: "bg-slate-100 text-slate-600" };
                     return (
                       <tr key={sub.id} className="border-b hover:bg-muted/30">
                         <td className="px-4 py-3">
-                          <p className="text-sm font-mono text-muted-foreground">{sub.userId.slice(0, 8)}...</p>
+                          <p className="text-sm font-mono text-muted-foreground">{sub.customerId?.slice(0, 8) || "-"}...</p>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="font-medium">{sub.productName}</p>
-                          {sub.variantName && (
-                            <p className="text-xs text-muted-foreground">{sub.variantName}</p>
-                          )}
+                          <p className="font-medium">{sub.productId || sub.identifier || "Service"}</p>
+                          <p className="text-xs text-muted-foreground">{sub.vertical}</p>
                         </td>
                         <td className="px-4 py-3">
                           <span className={`text-xs px-2 py-1 rounded ${config.color}`}>
@@ -426,15 +499,15 @@ export default function AdminBillingPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm capitalize">
-                          {sub.billingPeriod === "monthly" ? "Aylık" :
-                           sub.billingPeriod === "quarterly" ? "3 Aylık" :
-                           sub.billingPeriod === "annually" ? "Yıllık" : sub.billingPeriod}
+                          {sub.billingCycle === "MONTHLY" ? "Aylık" :
+                           sub.billingCycle === "QUARTERLY" ? "3 Aylık" :
+                           sub.billingCycle === "ANNUALLY" ? "Yıllık" : sub.billingCycle}
                         </td>
                         <td className="px-4 py-3 text-sm">
-                          {sub.currentPeriodEnd ? format(new Date(sub.currentPeriodEnd), "d MMM yyyy", { locale: tr }) : "-"}
+                          {sub.nextDueDate ? format(new Date(sub.nextDueDate), "d MMM yyyy", { locale: tr }) : "-"}
                         </td>
                         <td className="px-4 py-3 font-semibold">
-                          €{parseFloat(sub.price).toFixed(2)}
+                          €{parseFloat(sub.amount || "0").toFixed(2)}
                         </td>
                       </tr>
                     );
@@ -493,7 +566,7 @@ function WalletsTab() {
 
   const utils = trpc.useUtils();
 
-  const addCreditMutation = trpc.wallet.adminAddTypedCredit.useMutation({
+  const addCreditMutation = trpc.billing.wallet.adminAdjust.useMutation({
     onSuccess: () => {
       utils.invalidate();
     },
@@ -515,13 +588,12 @@ function WalletsTab() {
     let successCount = 0;
     let failCount = 0;
 
-    for (const userId of userIds) {
+    for (const customerId of userIds) {
       try {
         await addCreditMutation.mutateAsync({
-          userId,
+          customerId,
           amount,
-          balanceType: bulkBalanceType,
-          description: bulkDescription || `Toplu ${bulkBalanceType} bakiye ekleme`,
+          reason: bulkDescription || `Toplu ${bulkBalanceType} bakiye ekleme`,
         });
         successCount++;
       } catch {

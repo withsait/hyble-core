@@ -39,29 +39,69 @@ function WalletContent() {
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [depositAmount, setDepositAmount] = useState(50);
 
-  // tRPC queries
-  const { data: balanceData, isLoading: balanceLoading, refetch: refetchBalance } = trpc.wallet.getBalance.useQuery();
-  const { data: txData, isLoading: txLoading, refetch: refetchTx } = trpc.wallet.getTransactions.useQuery({ limit: 20 });
-  const { data: verifyData } = trpc.wallet.verifyDeposit.useQuery(
-    { sessionId: sessionId! },
-    { enabled: !!sessionId && success === "true" }
-  );
+  // tRPC queries - using new HybleBilling router
+  const { data: balanceData, isLoading: balanceLoading, refetch: refetchBalance } = trpc.billing.wallet.balance.useQuery();
+  const { data: txData, isLoading: txLoading, refetch: refetchTx } = trpc.billing.wallet.transactions.useQuery({ limit: 20 });
 
-  // Deposit mutation
-  const depositMutation = trpc.wallet.createDepositSession.useMutation({
+  // Credit package purchase mutation
+  const purchaseCreditsMutation = trpc.billing.wallet.purchaseCredits.useMutation({
+    onSuccess: () => {
+      refetchBalance();
+      refetchTx();
+      setShowDepositModal(false);
+    },
+  });
+
+  // Create deposit session mutation
+  const createDepositSession = trpc.billing.wallet.createDepositSession.useMutation({
     onSuccess: (data) => {
       if (data.url) {
         window.location.href = data.url;
       }
     },
+    onError: (error) => {
+      console.error("Deposit session error:", error);
+      setIsProcessing(false);
+    },
   });
 
-  const handleDeposit = () => {
-    depositMutation.mutate({ amount: depositAmount });
+  // Verify deposit on success
+  const { data: verifyData } = trpc.billing.wallet.verifyDeposit.useQuery(
+    { sessionId: sessionId || "" },
+    {
+      enabled: success === "true" && !!sessionId,
+      refetchOnWindowFocus: false,
+    }
+  );
+
+  // Refetch balance after successful verification
+  if (verifyData?.success && !verifyData?.alreadyProcessed) {
+    refetchBalance();
+    refetchTx();
+  }
+
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleDeposit = async () => {
+    if (depositAmount < 5 || depositAmount > 10000) return;
+
+    setIsProcessing(true);
+    try {
+      await createDepositSession.mutateAsync({
+        amount: depositAmount,
+        currency: "EUR",
+      });
+    } catch (error) {
+      console.error("Deposit session error:", error);
+      alert("Ödeme işlemi başlatılamadı. Lütfen tekrar deneyin.");
+      setIsProcessing(false);
+    }
   };
 
-  const balance = balanceData?.mainBalance ?? 0;
-  const transactions = txData?.transactions ?? [];
+  const balance = balanceData?.balance ?? 0;
+  const promoBalance = balanceData?.promoBalance ?? 0;
+  const totalBalance = balanceData?.totalBalance ?? 0;
+  const transactions = txData?.items ?? [];
 
   return (
     <div className="space-y-6">
@@ -109,20 +149,12 @@ function WalletContent() {
             ) : (
               <p className="text-4xl font-bold mt-2">€{balance.toFixed(2)}</p>
             )}
-            {balanceData && (balanceData.bonusBalance > 0 || balanceData.promoBalance > 0) && (
+            {promoBalance > 0 && (
               <div className="flex gap-4 mt-3 text-sm text-blue-100">
-                {balanceData.bonusBalance > 0 && (
-                  <span className="flex items-center gap-1">
-                    <Gift className="h-4 w-4" />
-                    €{balanceData.bonusBalance.toFixed(2)} bonus
-                  </span>
-                )}
-                {balanceData.promoBalance > 0 && (
-                  <span className="flex items-center gap-1">
-                    <CreditCard className="h-4 w-4" />
-                    €{balanceData.promoBalance.toFixed(2)} promo
-                  </span>
-                )}
+                <span className="flex items-center gap-1">
+                  <Gift className="h-4 w-4" />
+                  €{promoBalance.toFixed(2)} promo
+                </span>
               </div>
             )}
           </div>
@@ -300,10 +332,10 @@ function WalletContent() {
                 </button>
                 <button
                   onClick={handleDeposit}
-                  disabled={depositMutation.isPending || depositAmount < 5}
+                  disabled={isProcessing || depositAmount < 5}
                   className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  {depositMutation.isPending ? (
+                  {isProcessing ? (
                     <>
                       <Loader2 className="h-5 w-5 animate-spin" />
                       İşleniyor...

@@ -35,16 +35,53 @@ const statusConfig: Record<InvoiceStatus, { label: string; color: string; icon: 
 
 export default function BillingPage() {
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "ALL">("ALL");
+  const [payingInvoiceId, setPayingInvoiceId] = useState<string | null>(null);
 
-  // tRPC queries
-  const { data: balanceData } = trpc.wallet.getBalance.useQuery();
-  const { data: invoicesData, isLoading, refetch } = trpc.wallet.getInvoices.useQuery({
+  // tRPC queries - using new HybleBilling router
+  const { data: balanceData, refetch: refetchBalance } = trpc.billing.wallet.balance.useQuery();
+  const { data: invoicesData, isLoading, refetch } = trpc.billing.invoice.list.useQuery({
     limit: 20,
     status: statusFilter !== "ALL" ? statusFilter : undefined,
   });
 
-  const invoices = invoicesData?.invoices ?? [];
-  const balance = balanceData?.mainBalance ?? 0;
+  // Payment mutation
+  const payInvoiceMutation = trpc.billing.payment.pay.useMutation({
+    onSuccess: () => {
+      refetch();
+      refetchBalance();
+      setPayingInvoiceId(null);
+    },
+    onError: (error) => {
+      alert(error.message || "Ödeme işlemi başarısız oldu.");
+      setPayingInvoiceId(null);
+    },
+  });
+
+  const handlePayInvoice = async (invoiceId: string, amount: number) => {
+    if (!balanceData || balanceData.totalBalance < amount) {
+      alert(`Yetersiz bakiye. Mevcut: €${balanceData?.totalBalance?.toFixed(2) || 0}, Gerekli: €${amount.toFixed(2)}`);
+      return;
+    }
+
+    if (!confirm(`€${amount.toFixed(2)} tutarındaki fatura cüzdan bakiyenizden ödenecek. Onaylıyor musunuz?`)) {
+      return;
+    }
+
+    setPayingInvoiceId(invoiceId);
+    try {
+      await payInvoiceMutation.mutateAsync({
+        invoiceId,
+        amount,
+        paymentMethod: "WALLET",
+      });
+    } catch (error) {
+      console.error("Payment error:", error);
+    }
+  };
+
+  const invoices = invoicesData?.items ?? [];
+  const balance = balanceData?.balance ?? 0;
+  const totalBalance = balanceData?.totalBalance ?? 0;
 
   // Calculate stats
   const totalPaid = invoices.filter((i) => i.status === "PAID").reduce((sum, i) => sum + parseFloat(i.total), 0);
@@ -191,8 +228,19 @@ export default function BillingPage() {
                         <Download className="h-4 w-4 text-slate-500" />
                       </button>
                       {invoice.status === "PENDING" && (
-                        <button className="ml-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                          Öde
+                        <button
+                          onClick={() => handlePayInvoice(invoice.id, parseFloat(invoice.total))}
+                          disabled={payingInvoiceId === invoice.id}
+                          className="ml-2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          {payingInvoiceId === invoice.id ? (
+                            <>
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Ödeniyor...
+                            </>
+                          ) : (
+                            "Öde"
+                          )}
                         </button>
                       )}
                     </div>
