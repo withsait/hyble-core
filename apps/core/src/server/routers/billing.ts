@@ -861,6 +861,99 @@ const billingTaxRouter = createTRPCRouter({
     }),
 });
 
+// ==================== REFUND ROUTER ====================
+
+const billingRefundRouter = createTRPCRouter({
+  // User: Request refund
+  request: protectedProcedure
+    .input(
+      z.object({
+        orderId: z.string(),
+        reason: z.string().min(10),
+        amount: z.number().positive().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const customer = await customerService.getByUserId(ctx.user.id);
+      if (!customer) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Customer not found" });
+      }
+
+      // TODO: Implement refund request logic
+      return {
+        success: true,
+        message: "Refund request submitted",
+        refundId: `REF-${Date.now()}`,
+      };
+    }),
+
+  // User: List own refunds
+  list: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(100).default(20),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const customer = await customerService.getByUserId(ctx.user.id);
+      if (!customer) {
+        return { refunds: [], total: 0 };
+      }
+
+      // TODO: Implement refund list query
+      return { refunds: [], total: 0 };
+    }),
+
+  // Admin: List all refunds
+  adminList: adminProcedure
+    .input(
+      z.object({
+        status: z.enum(["PENDING", "APPROVED", "PROCESSING", "COMPLETED", "REJECTED"]).optional(),
+        search: z.string().optional(),
+        limit: z.number().min(1).max(100).default(20),
+        offset: z.number().min(0).default(0),
+      })
+    )
+    .query(async ({ input }) => {
+      // TODO: Implement admin refund list query
+      return { refunds: [], total: 0 };
+    }),
+
+  // Admin: Get refund stats
+  adminStats: adminProcedure.query(async () => {
+    // TODO: Implement refund stats
+    return {
+      total: 0,
+      pending: 0,
+      approved: 0,
+      completed: 0,
+      totalAmount: 0,
+    };
+  }),
+
+  // Admin: Approve refund
+  approve: adminProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // TODO: Implement refund approval
+      return { success: true };
+    }),
+
+  // Admin: Reject refund
+  reject: adminProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        reason: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // TODO: Implement refund rejection
+      return { success: true };
+    }),
+});
+
 // ==================== MAIN BILLING ROUTER ====================
 
 export const billingRouter = createTRPCRouter({
@@ -871,4 +964,5 @@ export const billingRouter = createTRPCRouter({
   subscription: billingSubscriptionRouter,
   coupon: billingCouponRouter,
   tax: billingTaxRouter,
+  refund: billingRefundRouter,
 });

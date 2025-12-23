@@ -53,6 +53,12 @@ import { blogRouter } from "./blog";
 // Settings
 import { settingsRouter } from "./settings";
 
+// Order Management
+import { orderRouter } from "./order";
+
+// CMS
+import { cmsRouter } from "./cms";
+
 /**
  * Main tRPC router for hyble-panel
  * All routers are combined here
@@ -123,6 +129,12 @@ export const appRouter = createTRPCRouter({
 
   // Settings
   settings: settingsRouter,
+
+  // Order Management
+  order: orderRouter,
+
+  // CMS
+  cms: cmsRouter,
 });
 
 // Export type for client usage
@@ -192,4 +204,10 @@ export {
 
   // Settings
   settingsRouter,
+
+  // Order Management
+  orderRouter,
+
+  // CMS
+  cmsRouter,
 };

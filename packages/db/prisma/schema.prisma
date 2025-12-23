@@ -4119,6 +4119,39 @@ model BlogPost {
   @@index([isPinned])
 }
 
+// -------------------- CMS PAGE --------------------
+// Statik içerik sayfaları (About, Terms, Privacy, etc.)
+
+enum CmsPageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model CmsPage {
+  id              String        @id @default(cuid())
+  slug            String        @unique
+  status          CmsPageStatus @default(DRAFT)
+
+  // Content
+  title           String
+  description     String?       @db.Text
+  content         String        @db.Text
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  // Audit
+  authorId        String
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([slug])
+  @@index([status])
+}
+
 // ==================== HYBLEBILLING CORE ====================
 
 // -------------------- BILLING CUSTOMER --------------------

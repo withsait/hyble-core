@@ -147,14 +147,15 @@ export const securityRouter = createTRPCRouter({
     };
   }),
 
+  // Note: verify2FASetup is deprecated - use confirm2FASetup instead
   verify2FASetup: verifiedProcedure
     .input(z.object({ code: z.string().length(6) }))
-    .mutation(async ({ ctx }) => {
+    .mutation(async ({ ctx, input }) => {
       const twoFactor = await prisma.twoFactorAuth.findUnique({
         where: { userId: ctx.user.id },
       });
 
-      if (!twoFactor) {
+      if (!twoFactor || !twoFactor.secret) {
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Please start 2FA setup first",
@@ -168,11 +169,15 @@ export const securityRouter = createTRPCRouter({
         });
       }
 
-      // Note: We need to get the code from input
-      // This is a simplified version - in production, pass the code
+      // Verify the code
+      const isValid = authenticator.verify({
+        token: input.code,
+        secret: twoFactor.secret,
+      });
+
       return {
-        success: false,
-        message: "Please provide a verification code",
+        success: isValid,
+        message: isValid ? "Code verified successfully" : "Invalid verification code",
       };
     }),
 
