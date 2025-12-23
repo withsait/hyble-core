@@ -13,6 +13,17 @@ const CSRF_PROTECTED_PATHS = [
   "/api/settings/",
 ];
 
+// Auth paths excluded from CSRF (logout needs to work without CSRF)
+const AUTH_CSRF_EXCLUDED = [
+  "/api/auth/logout",
+  "/api/auth/callback",
+  "/api/auth/csrf",
+  "/api/auth/session",
+  "/api/auth/providers",
+  "/api/auth/signin",
+  "/api/auth/signout",
+];
+
 // Paths excluded from CSRF (webhooks, public APIs)
 const CSRF_EXCLUDED_PATHS = [
   "/api/webhooks/",
@@ -119,8 +130,9 @@ export function middleware(request: NextRequest) {
     // CSRF Token Validation for protected paths
     const needsCsrf = CSRF_PROTECTED_PATHS.some(path => pathname.startsWith(path));
     const isExcluded = CSRF_EXCLUDED_PATHS.some(path => pathname.startsWith(path));
+    const isAuthExcluded = AUTH_CSRF_EXCLUDED.some(path => pathname.startsWith(path));
 
-    if (needsCsrf && !isExcluded && !validateCsrfToken(request)) {
+    if (needsCsrf && !isExcluded && !isAuthExcluded && !validateCsrfToken(request)) {
       return NextResponse.json(
         { error: "Invalid or missing CSRF token" },
         { status: 403, headers: { "X-Request-Id": requestId } }
@@ -197,6 +209,9 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/verify-2fa") ||
     pathname.startsWith("/verify-email");
 
+  // Check if user just logged out (don't redirect them away from login page)
+  const justLoggedOut = request.nextUrl.searchParams.get("logout") === "success";
+
   const isPublicRoute = pathname === "/" || pathname === "/pricing" || pathname === "/about";
 
   // Create response with security headers
@@ -221,8 +236,16 @@ export function middleware(request: NextRequest) {
     return response;
   };
 
-  // Redirect logged-in users away from auth pages (except verify-2fa and logout)
-  if (isAuthPage && isLoggedIn && !pathname.startsWith("/verify-2fa") && pathname !== "/logout") {
+  // Allow logout page to proceed without redirect (user is actively signing out)
+  if (pathname === "/logout") {
+    const response = NextResponse.next();
+    return createSecureResponse(response);
+  }
+
+  // Redirect logged-in users away from auth pages (except verify-2fa and logout success)
+  // Note: /logout is handled above, so it won't reach here
+  // Don't redirect if user just logged out - let them see the login page with success message
+  if (isAuthPage && isLoggedIn && !pathname.startsWith("/verify-2fa") && !justLoggedOut) {
     const response = NextResponse.redirect(new URL("/account", request.url));
     return createSecureResponse(response);
   }
