@@ -8,6 +8,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure, adminProcedure } from "../trpc/trpc";
 import { prisma } from "@hyble/db";
 import { createSupportNotification } from "./notification";
+import { sendSupportTicketEmail } from "@hyble/email";
 
 // Generate ticket reference number
 function generateTicketRef(): string {
@@ -156,7 +157,21 @@ export const supportRouter = createTRPCRouter({
         },
       });
 
-      // TODO: Send email notification to support team
+      // Send email notification to user confirming ticket creation
+      const user = await prisma.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { email: true, name: true },
+      });
+
+      if (user?.email) {
+        sendSupportTicketEmail(
+          user.email,
+          user.name || "Kullanıcı",
+          referenceNo,
+          input.subject,
+          "created"
+        ).catch((err) => console.error("[Support] Failed to send ticket created email:", err));
+      }
 
       return { ticket, referenceNo };
     }),
@@ -215,7 +230,24 @@ export const supportRouter = createTRPCRouter({
         }),
       ]);
 
-      // TODO: Send email notification to assigned admin
+      // Send email notification to assigned admin if ticket has one
+      if (ticket.assignedTo) {
+        const admin = await prisma.user.findUnique({
+          where: { id: ticket.assignedTo },
+          select: { email: true, name: true },
+        });
+
+        if (admin?.email) {
+          // Use a simple notification email for admin
+          sendSupportTicketEmail(
+            admin.email,
+            admin.name || "Admin",
+            ticket.referenceNo,
+            ticket.subject,
+            "replied" // Signal that user replied
+          ).catch((err) => console.error("[Support] Failed to send admin notification email:", err));
+        }
+      }
 
       return { message: ticketMessage };
     }),
@@ -642,7 +674,21 @@ export const supportRouter = createTRPCRouter({
           ticket.referenceNo
         );
 
-        // TODO: Send email notification
+        // Send email notification to user
+        const ticketUser = await prisma.user.findUnique({
+          where: { id: ticket.userId },
+          select: { email: true, name: true },
+        });
+
+        if (ticketUser?.email) {
+          sendSupportTicketEmail(
+            ticketUser.email,
+            ticketUser.name || "Kullanıcı",
+            ticket.referenceNo,
+            ticket.subject,
+            "replied"
+          ).catch((err) => console.error("[Support] Failed to send reply notification email:", err));
+        }
       }
 
       return { message: ticketMessage };

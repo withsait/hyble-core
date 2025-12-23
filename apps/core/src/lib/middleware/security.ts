@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "crypto";
+import { prisma } from "@hyble/db";
 
 /**
  * Security headers configuration
@@ -111,26 +113,88 @@ export function addSecurityHeaders(
 }
 
 /**
+ * Hash API key for comparison
+ */
+function hashApiKey(key: string): string {
+  return createHash("sha256").update(key).digest("hex");
+}
+
+/**
  * Validate API key from request
  */
 export async function validateApiKey(
   request: NextRequest
-): Promise<{ valid: boolean; keyId?: string; scopes?: string[]; error?: string }> {
+): Promise<{ valid: boolean; keyId?: string; scopes?: string[]; userId?: string; error?: string }> {
   const apiKey = request.headers.get("x-api-key") || request.headers.get("authorization")?.replace("Bearer ", "");
 
   if (!apiKey) {
     return { valid: false, error: "API key required" };
   }
 
-  // Validate API key format
+  // Validate API key format (hbl_ for production, mbl_ for test)
   if (!apiKey.startsWith("hbl_") && !apiKey.startsWith("mbl_")) {
     return { valid: false, error: "Invalid API key format" };
   }
 
-  // TODO: Validate against database
-  // This would call the apiKey.verify procedure
+  try {
+    // Hash the API key for database lookup
+    const keyHash = hashApiKey(apiKey);
 
-  return { valid: true };
+    // Find API key in database
+    const dbKey = await prisma.apiKey.findUnique({
+      where: { keyHash },
+      select: {
+        id: true,
+        userId: true,
+        organizationId: true,
+        scopes: true,
+        ipWhitelist: true,
+        allowedIps: true,
+        expiresAt: true,
+        revokedAt: true,
+        rateLimitPerMinute: true,
+      },
+    });
+
+    if (!dbKey) {
+      return { valid: false, error: "Invalid API key" };
+    }
+
+    // Check if revoked
+    if (dbKey.revokedAt) {
+      return { valid: false, error: "API key has been revoked" };
+    }
+
+    // Check if expired
+    if (dbKey.expiresAt && new Date(dbKey.expiresAt) < new Date()) {
+      return { valid: false, error: "API key has expired" };
+    }
+
+    // Check IP whitelist if configured
+    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") || "";
+
+    const allowedIps = [...dbKey.ipWhitelist, ...dbKey.allowedIps];
+    if (allowedIps.length > 0 && !allowedIps.includes(clientIp)) {
+      return { valid: false, error: "IP not allowed for this API key" };
+    }
+
+    // Update last used timestamp (fire and forget)
+    prisma.apiKey.update({
+      where: { id: dbKey.id },
+      data: { lastUsedAt: new Date() },
+    }).catch(() => {}); // Ignore errors
+
+    return {
+      valid: true,
+      keyId: dbKey.id,
+      scopes: dbKey.scopes,
+      userId: dbKey.userId || undefined,
+    };
+  } catch (error) {
+    console.error("[API Key Validation] Error:", error);
+    return { valid: false, error: "API key validation failed" };
+  }
 }
 
 /**
