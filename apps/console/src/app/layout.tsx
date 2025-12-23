@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { APIProvider } from "@hyble/api";
 import { PanelSidebar } from "@/components/panel/PanelSidebar";
 import { PanelHeader } from "@/components/panel/PanelHeader";
+import { CommandPalette } from "@/components/CommandPalette";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -49,6 +50,7 @@ export default function RootLayout({
                 <PanelHeader />
                 <main className="p-6">{children}</main>
               </div>
+              <CommandPalette />
             </div>
           </APIProvider>
         </ThemeProvider>
