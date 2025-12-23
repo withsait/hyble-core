@@ -151,7 +151,7 @@ export default function ProductEditPage() {
 
   const [mediaUrl, setMediaUrl] = useState("");
   const [mediaAlt, setMediaAlt] = useState("");
-  const [mediaType, setMediaType] = useState<"image" | "thumbnail" | "banner">("image");
+  const [mediaType, setMediaType] = useState<"IMAGE" | "THUMBNAIL" | "BANNER" | "GALLERY">("IMAGE");
 
   const [seoForm, setSeoForm] = useState<SeoForm>(emptySeo);
   const [keywordInput, setKeywordInput] = useState("");
@@ -394,6 +394,7 @@ export default function ProductEditPage() {
     addMedia.mutate({
       productId,
       type: mediaType,
+      originalUrl: mediaUrl,
       url: mediaUrl,
       alt: mediaAlt || undefined,
       isPrimary: product?.media.length === 0,
@@ -979,9 +980,10 @@ export default function ProductEditPage() {
                   onChange={(e) => setMediaType(e.target.value as typeof mediaType)}
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                 >
-                  <option value="image">Görsel</option>
-                  <option value="thumbnail">Küçük Resim</option>
-                  <option value="banner">Banner</option>
+                  <option value="IMAGE">Görsel</option>
+                  <option value="GALLERY">Galeri</option>
+                  <option value="THUMBNAIL">Küçük Resim</option>
+                  <option value="BANNER">Banner</option>
                 </select>
               </div>
               <div className="flex items-end">

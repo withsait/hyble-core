@@ -59,6 +59,9 @@ import { orderRouter } from "./order";
 // CMS
 import { cmsRouter } from "./cms";
 
+// Product Media Management
+import { productMediaRouter } from "./product-media";
+
 /**
  * Main tRPC router for hyble-panel
  * All routers are combined here
@@ -135,6 +138,9 @@ export const appRouter = createTRPCRouter({
 
   // CMS
   cms: cmsRouter,
+
+  // Product Media Management
+  productMedia: productMediaRouter,
 });
 
 // Export type for client usage
@@ -210,4 +216,7 @@ export {
 
   // CMS
   cmsRouter,
+
+  // Product Media
+  productMediaRouter,
 };

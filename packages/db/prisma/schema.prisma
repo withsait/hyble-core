@@ -1016,6 +1016,8 @@ model Product {
   // Relations
   variants      ProductVariant[]
   media         ProductMedia[]
+  videos        ProductVideo[]
+  views360      Product360View[]
   meta          ProductMeta?
   relations     ProductRelation[] @relation("SourceProduct")
   relatedTo     ProductRelation[] @relation("RelatedProduct")
@@ -1077,28 +1079,237 @@ model ProductVariant {
   @@index([isActive])
 }
 
+// ==================== ADVANCED PRODUCT MEDIA SYSTEM ====================
+
+enum MediaType {
+  IMAGE           // Standart görsel
+  VIDEO           // Video içerik
+  THUMBNAIL       // Küçük resim
+  BANNER          // Banner görsel
+  ICON            // İkon
+  GALLERY         // Galeri görseli
+  VARIANT         // Varyant görseli
+  VIEW_360        // 360° görünüm
+  LIFESTYLE       // Yaşam tarzı görseli
+  SIZE_CHART      // Beden tablosu
+  INFOGRAPHIC     // İnfografik
+}
+
+enum MediaStatus {
+  PENDING         // Yükleniyor/İşleniyor
+  PROCESSING      // Optimizasyon aşamasında
+  READY           // Hazır
+  FAILED          // Başarısız
+  ARCHIVED        // Arşivlenmiş
+}
+
+enum MediaSource {
+  UPLOAD          // Manuel yükleme
+  URL             // Harici URL
+  AI_GENERATED    // AI tarafından oluşturulmuş
+  STUDIO          // Hyble Studios'dan
+}
+
 model ProductMedia {
-  id          String   @id @default(cuid())
+  id          String      @id @default(cuid())
   productId   String
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  type        String   // image, video, thumbnail, banner, icon
-  url         String   // R2 URL veya external URL
-  alt         String?  // SEO için alt text
-  title       String?  // Hover title
+  // Varyant ilişkisi (opsiyonel)
+  variantId   String?
+  variantValue String?    // "red", "blue", "xl" gibi varyant değeri
 
-  width       Int?     // Görsel boyutları
-  height      Int?
-  fileSize    Int?     // Byte cinsinden
+  // Temel Bilgiler
+  type        MediaType   @default(IMAGE)
+  status      MediaStatus @default(PENDING)
+  source      MediaSource @default(UPLOAD)
 
-  sortOrder   Int      @default(0)
-  isPrimary   Boolean  @default(false)
+  // URL'ler (farklı boyutlar için)
+  originalUrl String      // Orijinal yüklenen dosya
+  url         String      // Ana kullanım URL'i (optimized)
+  thumbnailUrl String?    // Küçük resim (150x150)
+  mediumUrl   String?     // Orta boy (600x600)
+  largeUrl    String?     // Büyük boy (1200x1200)
+  webpUrl     String?     // WebP formatı
+  avifUrl     String?     // AVIF formatı (en iyi sıkıştırma)
 
-  createdAt   DateTime @default(now())
+  // SEO & Erişilebilirlik
+  alt         String?     // Alt text
+  title       String?     // Hover title
+  caption     String?     // Görsel açıklaması
+
+  // Teknik Bilgiler
+  width       Int?        // Orijinal genişlik
+  height      Int?        // Orijinal yükseklik
+  fileSize    Int?        // Byte cinsinden
+  mimeType    String?     // image/jpeg, image/png, video/mp4
+  aspectRatio String?     // "16:9", "1:1", "4:3"
+
+  // Blur Hash (placeholder için)
+  blurHash    String?     // 20-30 karakter blur hash
+  dominantColor String?   // Hex renk kodu (#FF5733)
+  colorPalette String[]   // En çok kullanılan renkler
+
+  // AI Özellikleri
+  aiTags      String[]    // AI tarafından oluşturulan etiketler
+  aiDescription String?   // AI tarafından oluşturulan açıklama
+  qualityScore Int?       // 0-100 arası kalite skoru
+  isBackgroundRemoved Boolean @default(false)
+
+  // Sıralama & Öne Çıkarma
+  sortOrder   Int         @default(0)
+  isPrimary   Boolean     @default(false)
+  isHover     Boolean     @default(false) // Hover'da gösterilecek görsel
+  isFeatured  Boolean     @default(false) // Öne çıkan görsel
+
+  // R2 Storage
+  r2Key       String?     // Cloudflare R2 key
+  r2Bucket    String?     // Bucket adı
+
+  // Metadata
+  exifData    Json?       // EXIF bilgileri (kamera, tarih vb.)
+  metadata    Json?       // Ek metadata
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@index([productId])
+  @@index([variantId])
   @@index([type])
+  @@index([status])
   @@index([sortOrder])
+  @@index([isPrimary])
+}
+
+// 360° Görünüm için özel model
+model Product360View {
+  id          String    @id @default(cuid())
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Görünüm bilgileri
+  name        String?   // "Ürün 360° Görünümü"
+  frameCount  Int       // Toplam kare sayısı (örn: 36)
+  autoRotate  Boolean   @default(true)
+  rotationSpeed Int     @default(50) // ms cinsinden
+
+  // Kontrol ayarları
+  enableZoom  Boolean   @default(true)
+  maxZoom     Float     @default(3.0)
+  enableDrag  Boolean   @default(true)
+  dragSensitivity Float @default(1.0)
+
+  // Görsel bilgileri
+  baseUrl     String    // Temel URL (frame numarası eklenir)
+  format      String    @default("jpg") // jpg, png, webp
+  width       Int?
+  height      Int?
+
+  // Preload
+  preloadAll  Boolean   @default(false)
+  lowResUrls  String[]  // Düşük çözünürlüklü önizlemeler
+
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([productId])
+  @@index([isActive])
+}
+
+// Video içerik için özel model
+model ProductVideo {
+  id          String      @id @default(cuid())
+  productId   String
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Video bilgileri
+  title       String?
+  description String?     @db.Text
+
+  // URL'ler
+  url         String      // Ana video URL
+  hlsUrl      String?     // HLS streaming URL
+  dashUrl     String?     // DASH streaming URL
+  thumbnailUrl String?    // Video thumbnail
+  posterUrl   String?     // Poster image
+
+  // Platform entegrasyonları
+  youtubeId   String?     // YouTube video ID
+  vimeoId     String?     // Vimeo video ID
+  wistiaId    String?     // Wistia video ID
+
+  // Teknik bilgiler
+  duration    Int?        // Saniye cinsinden
+  width       Int?
+  height      Int?
+  fileSize    Int?
+  mimeType    String?
+  codec       String?     // h264, h265, vp9
+  bitrate     Int?        // kbps
+
+  // Ayarlar
+  autoPlay    Boolean     @default(false)
+  loop        Boolean     @default(false)
+  muted       Boolean     @default(true)
+  controls    Boolean     @default(true)
+
+  // Durumu
+  status      MediaStatus @default(PENDING)
+  processingProgress Int? // 0-100 arası işleme durumu
+
+  // Sıralama
+  isPrimary   Boolean     @default(false)
+  sortOrder   Int         @default(0)
+
+  // R2 Storage
+  r2Key       String?
+  r2Bucket    String?
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([productId])
+  @@index([status])
+  @@index([isPrimary])
+}
+
+// Görsel işleme kuyruğu
+model MediaProcessingJob {
+  id          String    @id @default(cuid())
+  mediaId     String    // ProductMedia ID
+  mediaType   String    // "ProductMedia", "ProductVideo", "Product360View"
+
+  // İşlem türleri
+  jobType     String    // resize, optimize, webp, avif, blur_hash, ai_tag, remove_bg
+  priority    Int       @default(5) // 1-10 arası öncelik
+
+  // Durum
+  status      String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  progress    Int       @default(0) // 0-100
+
+  // Hata takibi
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  lastError   String?
+
+  // Sonuç
+  result      Json?     // İşlem sonucu (URL'ler, hash'ler vb.)
+
+  // Zamanlama
+  scheduledAt DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status])
+  @@index([priority])
+  @@index([mediaId])
+  @@index([scheduledAt])
 }
 
 model ProductMeta {
