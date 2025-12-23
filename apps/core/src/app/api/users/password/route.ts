@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     await prisma.securityLog.create({
       data: {
         userId: session.user.id,
-        action: "PASSWORD_CHANGED",
+        action: "PASSWORD_CHANGE",
         ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null,
         userAgent: request.headers.get("user-agent") || null,
         metadata: {},
