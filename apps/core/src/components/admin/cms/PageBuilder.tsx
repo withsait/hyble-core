@@ -348,6 +348,8 @@ export function PageBuilder({ initialData, onSave }: PageBuilderProps) {
     if (blockIndex === -1) return;
 
     const block = page.blocks[blockIndex];
+    if (!block) return;
+
     const newBlock: ContentBlock = {
       ...block,
       id: `block_${Date.now()}`,
@@ -369,7 +371,9 @@ export function PageBuilder({ initialData, onSave }: PageBuilderProps) {
 
     const newBlocks = [...page.blocks];
     const targetIndex = direction === "up" ? index - 1 : index + 1;
-    [newBlocks[index], newBlocks[targetIndex]] = [newBlocks[targetIndex], newBlocks[index]];
+    const temp = newBlocks[index]!;
+    newBlocks[index] = newBlocks[targetIndex]!;
+    newBlocks[targetIndex] = temp;
 
     const newPage = { ...page, blocks: newBlocks };
     setPage(newPage);
@@ -402,9 +406,11 @@ export function PageBuilder({ initialData, onSave }: PageBuilderProps) {
 
     const draggedIndex = page.blocks.findIndex((b) => b.id === draggedBlock);
     const targetIndex = page.blocks.findIndex((b) => b.id === targetId);
+    if (draggedIndex === -1 || targetIndex === -1) return;
 
     const newBlocks = [...page.blocks];
     const [removed] = newBlocks.splice(draggedIndex, 1);
+    if (!removed) return;
     newBlocks.splice(targetIndex, 0, removed);
 
     const newPage = { ...page, blocks: newBlocks };
