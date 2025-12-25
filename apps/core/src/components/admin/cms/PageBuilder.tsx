@@ -287,14 +287,16 @@ export function PageBuilder({ initialData, onSave }: PageBuilderProps) {
   const undo = () => {
     if (historyIndex > 0) {
       setHistoryIndex(historyIndex - 1);
-      setPage(history[historyIndex - 1]);
+      const prevPage = history[historyIndex - 1];
+      if (prevPage) setPage(prevPage);
     }
   };
 
   const redo = () => {
     if (historyIndex < history.length - 1) {
       setHistoryIndex(historyIndex + 1);
-      setPage(history[historyIndex + 1]);
+      const nextPage = history[historyIndex + 1];
+      if (nextPage) setPage(nextPage);
     }
   };
 
