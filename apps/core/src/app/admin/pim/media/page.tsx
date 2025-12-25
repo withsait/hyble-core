@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback, Suspense } from "react";
+import { useState, useCallback, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { trpc } from "@/lib/trpc/client";
-import { Card, Button, Input } from "@hyble/ui";
+import { Card, Button, Input, Dropzone, type FileWithPreview, type DropzoneRef } from "@hyble/ui";
 import {
   Image as ImageIcon,
   Video,
@@ -37,6 +37,8 @@ import {
   Settings,
   FolderOpen,
   Tag,
+  Link as LinkIcon,
+  CloudUpload,
 } from "lucide-react";
 
 type MediaType = "IMAGE" | "VIDEO" | "THUMBNAIL" | "BANNER" | "ICON" | "GALLERY" | "VARIANT" | "VIEW_360" | "LIFESTYLE" | "SIZE_CHART" | "INFOGRAPHIC";
@@ -76,6 +78,9 @@ function ProductMediaPageContent() {
   const [selectedMedia, setSelectedMedia] = useState<Set<string>>(new Set());
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState<string | null>(null);
+  const [uploadMode, setUploadMode] = useState<"file" | "url">("file");
+  const [isUploading, setIsUploading] = useState(false);
+  const dropzoneRef = useRef<DropzoneRef | null>(null);
 
   // Upload form
   const [uploadForm, setUploadForm] = useState({
@@ -85,6 +90,9 @@ function ProductMediaPageContent() {
     type: "IMAGE" as MediaType,
     variantValue: "",
   });
+
+  // Selected files for upload
+  const [selectedFiles, setSelectedFiles] = useState<FileWithPreview[]>([]);
 
   // Queries
   const { data: product } = trpc.pim.getProductById.useQuery(
@@ -138,7 +146,102 @@ function ProductMediaPageContent() {
     onSuccess: () => refetch(),
   });
 
+  // Upload mutations
+  const getUploadUrl = trpc.upload.getUploadUrl.useMutation();
+  const confirmUpload = trpc.upload.confirmUpload.useMutation();
+
   const media = mediaData?.media ?? [];
+
+  // Handle file upload to S3/R2
+  const handleFileUpload = async (files: FileWithPreview[]) => {
+    if (!productId || files.length === 0) return;
+
+    setIsUploading(true);
+
+    try {
+      for (const file of files) {
+        // Update file status
+        if (dropzoneRef.current) {
+          dropzoneRef.current.updateFileProgress(file.id!, 0, "uploading");
+        }
+
+        try {
+          // 1. Get presigned URL
+          const { uploadUrl, uploadId, publicUrl, key } = await getUploadUrl.mutateAsync({
+            filename: file.name,
+            contentType: file.type,
+            size: file.size,
+            fileType: "image",
+            purpose: "product-image",
+          });
+
+          // 2. Upload to S3/R2
+          const xhr = new XMLHttpRequest();
+
+          await new Promise<void>((resolve, reject) => {
+            xhr.upload.addEventListener("progress", (event) => {
+              if (event.lengthComputable && dropzoneRef.current) {
+                const progress = Math.round((event.loaded / event.total) * 100);
+                dropzoneRef.current.updateFileProgress(file.id!, progress, "uploading");
+              }
+            });
+
+            xhr.addEventListener("load", () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                resolve();
+              } else {
+                reject(new Error(`Upload failed: ${xhr.status}`));
+              }
+            });
+
+            xhr.addEventListener("error", () => reject(new Error("Upload failed")));
+
+            xhr.open("PUT", uploadUrl);
+            xhr.setRequestHeader("Content-Type", file.type);
+            xhr.send(file);
+          });
+
+          // 3. Confirm upload
+          await confirmUpload.mutateAsync({ uploadId });
+
+          // 4. Create media entry
+          const finalUrl = publicUrl || `${key}`;
+          await createMedia.mutateAsync({
+            productId,
+            originalUrl: finalUrl,
+            url: finalUrl,
+            alt: uploadForm.alt || file.name.replace(/\.[^/.]+$/, ""),
+            title: uploadForm.title || undefined,
+            type: uploadForm.type,
+            variantValue: uploadForm.variantValue || undefined,
+            mimeType: file.type,
+            fileSize: file.size,
+            r2Key: key,
+          });
+
+          if (dropzoneRef.current) {
+            dropzoneRef.current.updateFileProgress(file.id!, 100, "success", finalUrl);
+          }
+        } catch (error) {
+          console.error("Upload error:", error);
+          if (dropzoneRef.current) {
+            dropzoneRef.current.updateFileProgress(
+              file.id!,
+              0,
+              "error",
+              undefined,
+              error instanceof Error ? error.message : "Yükleme hatası"
+            );
+          }
+        }
+      }
+
+      // Refresh after all uploads
+      refetch();
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleUpload = () => {
     if (!productId || !uploadForm.url) return;
@@ -648,93 +751,178 @@ function ProductMediaPageContent() {
       {/* Upload Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-xl">
+          <Card className="w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div className="p-6 border-b flex items-center justify-between">
               <h3 className="font-semibold text-lg">Görsel Ekle</h3>
-              <Button variant="ghost" size="icon" onClick={() => setShowUploadModal(false)}>
+              <Button variant="ghost" size="icon" onClick={() => {
+                setShowUploadModal(false);
+                setSelectedFiles([]);
+                setUploadMode("file");
+              }}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Görsel URL'si *</label>
-                <Input
-                  value={uploadForm.url}
-                  onChange={(e) => setUploadForm((p) => ({ ...p, url: e.target.value }))}
-                  placeholder="https://example.com/image.jpg"
-                />
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
+              {/* Upload Mode Toggle */}
+              <div className="flex rounded-lg border p-1 w-fit">
+                <button
+                  type="button"
+                  onClick={() => setUploadMode("file")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                    uploadMode === "file"
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-muted"
+                  }`}
+                >
+                  <CloudUpload className="h-4 w-4" />
+                  Dosya Yükle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUploadMode("url")}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+                    uploadMode === "url"
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-muted"
+                  }`}
+                >
+                  <LinkIcon className="h-4 w-4" />
+                  URL'den Ekle
+                </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              {/* File Upload Mode */}
+              {uploadMode === "file" && (
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">Alt Text</label>
-                  <Input
-                    value={uploadForm.alt}
-                    onChange={(e) => setUploadForm((p) => ({ ...p, alt: e.target.value }))}
-                    placeholder="Görsel açıklaması"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">Başlık</label>
-                  <Input
-                    value={uploadForm.title}
-                    onChange={(e) => setUploadForm((p) => ({ ...p, title: e.target.value }))}
-                    placeholder="Görsel başlığı"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">Tip</label>
-                  <select
-                    value={uploadForm.type}
-                    onChange={(e) => setUploadForm((p) => ({ ...p, type: e.target.value as MediaType }))}
-                    className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                  >
-                    {Object.entries(typeConfig).map(([key, config]) => (
-                      <option key={key} value={key}>{config.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1.5">Varyant Değeri</label>
-                  <Input
-                    value={uploadForm.variantValue}
-                    onChange={(e) => setUploadForm((p) => ({ ...p, variantValue: e.target.value }))}
-                    placeholder="red, blue, xl..."
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Varyant görselleri için</p>
-                </div>
-              </div>
-
-              {uploadForm.url && (
-                <div className="p-4 bg-muted rounded-lg">
-                  <p className="text-sm font-medium mb-2">Önizleme</p>
-                  <img
-                    src={uploadForm.url}
-                    alt="Preview"
-                    className="max-h-48 mx-auto rounded"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
+                  <Dropzone
+                    ref={dropzoneRef}
+                    onFilesSelected={(files) => setSelectedFiles(files)}
+                    accept={{
+                      "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"],
                     }}
+                    maxSize={10 * 1024 * 1024}
+                    maxFiles={20}
+                    multiple={true}
+                    showPreview={true}
+                    previewGridCols={4}
                   />
                 </div>
               )}
+
+              {/* URL Mode */}
+              {uploadMode === "url" && (
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">Görsel URL'si *</label>
+                  <Input
+                    value={uploadForm.url}
+                    onChange={(e) => setUploadForm((p) => ({ ...p, url: e.target.value }))}
+                    placeholder="https://example.com/image.jpg"
+                  />
+                  {uploadForm.url && (
+                    <div className="mt-4 p-4 bg-muted rounded-lg">
+                      <p className="text-sm font-medium mb-2">Önizleme</p>
+                      <img
+                        src={uploadForm.url}
+                        alt="Preview"
+                        className="max-h-48 mx-auto rounded"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Common Options */}
+              <div className="pt-4 border-t">
+                <p className="text-sm font-medium mb-3">Görsel Ayarları</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Alt Text</label>
+                    <Input
+                      value={uploadForm.alt}
+                      onChange={(e) => setUploadForm((p) => ({ ...p, alt: e.target.value }))}
+                      placeholder="Görsel açıklaması (SEO için önemli)"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Başlık</label>
+                    <Input
+                      value={uploadForm.title}
+                      onChange={(e) => setUploadForm((p) => ({ ...p, title: e.target.value }))}
+                      placeholder="Görsel başlığı"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Görsel Tipi</label>
+                    <select
+                      value={uploadForm.type}
+                      onChange={(e) => setUploadForm((p) => ({ ...p, type: e.target.value as MediaType }))}
+                      className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
+                    >
+                      {Object.entries(typeConfig).map(([key, config]) => (
+                        <option key={key} value={key}>{config.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1.5">Varyant Değeri</label>
+                    <Input
+                      value={uploadForm.variantValue}
+                      onChange={(e) => setUploadForm((p) => ({ ...p, variantValue: e.target.value }))}
+                      placeholder="red, blue, xl..."
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Varyant görselleri için</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="p-6 border-t flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowUploadModal(false)}>
-                İptal
-              </Button>
-              <Button
-                onClick={handleUpload}
-                disabled={!uploadForm.url || createMedia.isPending}
-              >
-                {createMedia.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Ekle
-              </Button>
+            <div className="p-6 border-t flex justify-between items-center">
+              <div className="text-sm text-muted-foreground">
+                {uploadMode === "file" && selectedFiles.length > 0 && (
+                  <span>{selectedFiles.length} dosya seçildi</span>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => {
+                  setShowUploadModal(false);
+                  setSelectedFiles([]);
+                }}>
+                  İptal
+                </Button>
+                {uploadMode === "file" ? (
+                  <Button
+                    onClick={() => handleFileUpload(selectedFiles)}
+                    disabled={selectedFiles.length === 0 || isUploading}
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Yükleniyor...
+                      </>
+                    ) : (
+                      <>
+                        <CloudUpload className="h-4 w-4 mr-2" />
+                        {selectedFiles.length > 1 ? `${selectedFiles.length} Görsel Yükle` : "Yükle"}
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleUpload}
+                    disabled={!uploadForm.url || createMedia.isPending}
+                  >
+                    {createMedia.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Ekle
+                  </Button>
+                )}
+              </div>
             </div>
           </Card>
         </div>

@@ -1495,10 +1495,14 @@ model Order {
   // Billing Address (snapshot)
   billingAddress  Json?
 
+  // Shipping
+  shippingInfo    Json?         // Carrier, tracking number, status etc.
+
   // Meta
   notes           String?
   ipAddress       String?
   userAgent       String?
+  metadata        Json?         // Additional data
 
   paidAt          DateTime?
   completedAt     DateTime?
@@ -5020,4 +5024,169 @@ model SystemSetting {
   updatedAt DateTime @updatedAt
 
   @@index([key])
+}
+
+// ==================== INFRASTRUCTURE & DEPLOYMENT ====================
+
+// Backup management
+model Backup {
+  id          String   @id @default(cuid())
+  type        String   // full, incremental, database, files, config
+  status      String   // pending, in_progress, completed, failed
+  startedAt   DateTime
+  completedAt DateTime?
+  size        Int?     // bytes
+  path        String?  // storage path
+  error       String?
+  metadata    Json?
+  fingerprint String?  @unique
+
+  createdAt   DateTime @default(now())
+
+  @@index([type])
+  @@index([status])
+  @@index([startedAt])
+}
+
+// Error logging
+model ErrorLog {
+  id          String   @id @default(cuid())
+  message     String   @db.Text
+  stack       String?  @db.Text
+  category    String   // runtime, database, network, auth, validation, payment, external, unknown
+  severity    String   // low, medium, high, critical
+  context     Json?    // request context
+  fingerprint String   @unique
+  occurredAt  DateTime
+  resolved    Boolean  @default(false)
+  resolvedAt  DateTime?
+  count       Int      @default(1)
+  metadata    Json?
+
+  @@index([category])
+  @@index([severity])
+  @@index([resolved])
+  @@index([occurredAt])
+  @@index([fingerprint])
+}
+
+// Audit logging
+model AuditLog {
+  id           String   @id @default(cuid())
+  eventType    String   // auth.login, data.create, admin.action, etc.
+  severity     String   // info, warning, error, critical
+  userId       String?
+  actorType    String?  // user, admin, system, api
+  resourceType String?
+  resourceId   String?
+  action       String?
+  details      Json?
+  previousData Json?
+  newData      Json?
+  ipAddress    String?
+  userAgent    String?
+  sessionId    String?
+  correlationId String?
+
+  createdAt    DateTime @default(now())
+
+  @@index([eventType])
+  @@index([userId])
+  @@index([resourceType, resourceId])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+// Rate limit tracking
+model RateLimitEntry {
+  id          String   @id @default(cuid())
+  identifier  String   // IP or user ID
+  windowStart DateTime
+  count       Int      @default(0)
+  blocked     Boolean  @default(false)
+  blockedAt   DateTime?
+  blockedUntil DateTime?
+
+  @@unique([identifier, windowStart])
+  @@index([identifier])
+  @@index([blocked])
+}
+
+// Deployment history
+model Deployment {
+  id           String   @id @default(cuid())
+  status       String   // pending, building, deploying, running, failed, rolled_back, completed
+  target       String   // production, staging, preview
+  apps         String[] // core, gateway, digital, studios, console
+  branch       String?
+  commit       String?
+  previousVersion String?
+  logs         String[] @default([])
+  errors       String[] @default([])
+  startedAt    DateTime
+  completedAt  DateTime?
+  duration     Int?     // ms
+
+  triggeredBy  String?  // user ID or 'system'
+
+  createdAt    DateTime @default(now())
+
+  @@index([status])
+  @@index([target])
+  @@index([startedAt])
+}
+
+// Health check results
+model HealthCheck {
+  id          String   @id @default(cuid())
+  status      String   // healthy, degraded, unhealthy
+  app         String   // core, gateway, etc.
+  checks      Json     // individual check results
+  responseTime Int?    // ms
+
+  checkedAt   DateTime @default(now())
+
+  @@index([app])
+  @@index([status])
+  @@index([checkedAt])
+}
+
+// Feature flags
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  enabled     Boolean  @default(false)
+  environments String[] @default([]) // production, staging, development
+  rules       Json?    // targeting rules
+  rolloutPercentage Int @default(0)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+  @@index([enabled])
+}
+
+// Scheduled jobs
+model ScheduledJob {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String?
+  schedule     String   // cron expression
+  handler      String   // function/handler name
+  enabled      Boolean  @default(true)
+  lastRun      DateTime?
+  lastStatus   String?  // success, failed
+  lastError    String?
+  nextRun      DateTime?
+  metadata     Json?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([name])
+  @@index([enabled])
+  @@index([nextRun])
 }

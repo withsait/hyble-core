@@ -1,0 +1,270 @@
+version: "3.9"
+
+# Hyble Core - Production Docker Compose
+# Usage: docker-compose -f docker-compose.prod.yml up -d
+
+services:
+  # ==========================================
+  # Core Application (Backend & Admin)
+  # ==========================================
+  core:
+    build:
+      context: ../..
+      dockerfile: tooling/docker/Dockerfile.core
+    container_name: hyble-core
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://redis:6379
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hyble-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.core.rule=Host(`secret.hyble.net`) || Host(`id.hyble.co`) || Host(`api.hyble.co`)"
+      - "traefik.http.routers.core.tls=true"
+      - "traefik.http.routers.core.tls.certresolver=letsencrypt"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ==========================================
+  # Gateway (Landing & Portfolio)
+  # ==========================================
+  gateway:
+    build:
+      context: ../..
+      dockerfile: tooling/docker/Dockerfile.gateway
+    container_name: hyble-gateway
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - API_URL=http://core:3000
+    depends_on:
+      - core
+    networks:
+      - hyble-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.gateway.rule=Host(`hyble.co`) || Host(`www.hyble.co`)"
+      - "traefik.http.routers.gateway.tls=true"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ==========================================
+  # Digital (Corporate Vertical)
+  # ==========================================
+  digital:
+    build:
+      context: ../..
+      dockerfile: tooling/docker/Dockerfile.digital
+    container_name: hyble-digital
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - API_URL=http://core:3000
+    depends_on:
+      - core
+    networks:
+      - hyble-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.digital.rule=Host(`digital.hyble.co`)"
+      - "traefik.http.routers.digital.tls=true"
+
+  # ==========================================
+  # Studios (Gaming Vertical)
+  # ==========================================
+  studios:
+    build:
+      context: ../..
+      dockerfile: tooling/docker/Dockerfile.studios
+    container_name: hyble-studios
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=production
+      - PORT=3003
+      - API_URL=http://core:3000
+    depends_on:
+      - core
+    networks:
+      - hyble-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.studios.rule=Host(`studios.hyble.co`)"
+      - "traefik.http.routers.studios.tls=true"
+
+  # ==========================================
+  # Console (User Panel)
+  # ==========================================
+  console:
+    build:
+      context: ../..
+      dockerfile: tooling/docker/Dockerfile.console
+    container_name: hyble-console
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=production
+      - PORT=3004
+      - API_URL=http://core:3000
+    depends_on:
+      - core
+    networks:
+      - hyble-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.console.rule=Host(`console.hyble.co`)"
+      - "traefik.http.routers.console.tls=true"
+
+  # ==========================================
+  # PostgreSQL Database
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: hyble-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-hyble}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-hyble_core}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - hyble-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hyble} -d ${POSTGRES_DB:-hyble_core}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Redis Cache
+  # ==========================================
+  redis:
+    image: redis:7-alpine
+    container_name: hyble-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy volatile-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - hyble-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Traefik Reverse Proxy
+  # ==========================================
+  traefik:
+    image: traefik:v3.0
+    container_name: hyble-traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_certs:/letsencrypt
+    networks:
+      - hyble-network
+
+  # ==========================================
+  # Prometheus Monitoring
+  # ==========================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: hyble-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - hyble-network
+
+  # ==========================================
+  # Grafana Dashboards
+  # ==========================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: hyble-grafana
+    restart: unless-stopped
+    ports:
+      - "3100:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - hyble-network
+
+# ==========================================
+# Networks
+# ==========================================
+networks:
+  hyble-network:
+    driver: bridge
+
+# ==========================================
+# Volumes
+# ==========================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  traefik_certs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local

@@ -39,6 +39,7 @@
     "react-hook-form": "^7.68.0",
     "recharts": "^2.15.3",
     "resend": "^4.8.0",
+    "sharp": "^0.34.5",
     "stripe": "^20.0.0",
     "superjson": "^2.2.1",
     "svix": "^1.44.0",

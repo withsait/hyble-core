@@ -45,14 +45,14 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Console URL for redirect after login
-  const consoleUrl = process.env.NODE_ENV === "production"
-    ? "https://console.hyble.co/dashboard"
-    : "http://localhost:3004/dashboard";
-
-  // Default redirect to console dashboard after login
-  const callbackUrl = searchParams.get("callbackUrl") || searchParams.get("redirect") || consoleUrl;
+  // Get callback URL - only use if explicitly provided, otherwise stay on id.hyble.co
+  const explicitCallback = searchParams.get("callbackUrl") || searchParams.get("redirect");
+  // Only redirect to account page after login if no explicit callback
+  const callbackUrl = explicitCallback || "/account";
   const errorParam = searchParams.get("error");
+
+  // Check if user just logged out
+  const justLoggedOut = searchParams.get("logout") === "success";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -138,6 +138,12 @@ function LoginContent() {
           <p className="text-slate-600 dark:text-slate-400 text-center mb-8">
             Hesabınıza giriş yapın
           </p>
+
+          {justLoggedOut && (
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 rounded-xl text-green-600 dark:text-green-400 text-sm">
+              Oturumunuz basariyla kapatildi.
+            </div>
+          )}
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-sm">

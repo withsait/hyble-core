@@ -62,6 +62,14 @@ import { cmsRouter } from "./cms";
 // Product Media Management
 import { productMediaRouter } from "./product-media";
 
+// AI Assistant & Wizard
+import { hylaRouter } from "./hyla";
+import { wizardRouter } from "./wizard";
+import { adminDashboardRouter } from "./admin-dashboard";
+
+// Funnel & Cart Analytics
+import { funnelRouter } from "./funnel";
+
 /**
  * Main tRPC router for hyble-panel
  * All routers are combined here
@@ -141,6 +149,14 @@ export const appRouter = createTRPCRouter({
 
   // Product Media Management
   productMedia: productMediaRouter,
+
+  // AI Assistant & Wizard
+  hyla: hylaRouter,
+  wizard: wizardRouter,
+  adminDashboard: adminDashboardRouter,
+
+  // Funnel & Cart Analytics
+  funnel: funnelRouter,
 });
 
 // Export type for client usage
@@ -219,4 +235,12 @@ export {
 
   // Product Media
   productMediaRouter,
+
+  // AI Assistant & Wizard
+  hylaRouter,
+  wizardRouter,
+  adminDashboardRouter,
+
+  // Funnel & Cart Analytics
+  funnelRouter,
 };

@@ -22,3 +22,9 @@ export {
 export { ThemeToggle } from "./components/theme-toggle";
 export { ThemeProvider } from "./components/theme-provider";
 export { UniversalBar, type AppType } from "./components/universal-bar";
+export {
+  Dropzone,
+  type DropzoneProps,
+  type DropzoneRef,
+  type FileWithPreview,
+} from "./components/dropzone";

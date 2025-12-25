@@ -718,4 +718,134 @@ export const productMediaRouter = createTRPCRouter({
 
       return updated;
     }),
+
+  // Admin: Process media (optimize, resize, generate variants)
+  adminProcessMedia: adminProcedure
+    .input(z.object({
+      mediaId: z.string(),
+      jobType: z.enum(["optimize", "resize", "blur_hash", "all"]).default("all"),
+      priority: z.number().min(1).max(10).default(5),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const media = await prisma.productMedia.findUnique({
+        where: { id: input.mediaId },
+      });
+
+      if (!media) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Media not found" });
+      }
+
+      // Create processing job
+      const job = await prisma.mediaProcessingJob.create({
+        data: {
+          mediaId: input.mediaId,
+          mediaType: "ProductMedia",
+          jobType: input.jobType,
+          priority: input.priority,
+          status: "PENDING",
+        },
+      });
+
+      // Update media status to pending
+      await prisma.productMedia.update({
+        where: { id: input.mediaId },
+        data: { status: "PENDING" },
+      });
+
+      await prisma.adminAction.create({
+        data: {
+          adminId: ctx.user.id,
+          action: "PRODUCT_MEDIA_PROCESS",
+          details: {
+            targetType: "ProductMedia",
+            targetId: input.mediaId,
+            jobId: job.id,
+            jobType: input.jobType,
+          },
+        },
+      });
+
+      return { success: true, jobId: job.id };
+    }),
+
+  // Admin: Process all pending media for a product
+  adminProcessAllMedia: adminProcedure
+    .input(z.object({
+      productId: z.string(),
+      jobType: z.enum(["optimize", "resize", "blur_hash", "all"]).default("all"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Find all media that needs processing
+      const pendingMedia = await prisma.productMedia.findMany({
+        where: {
+          productId: input.productId,
+          OR: [
+            { status: "PENDING" },
+            { thumbnailUrl: null },
+            { blurHash: null },
+          ],
+        },
+        select: { id: true },
+      });
+
+      if (pendingMedia.length === 0) {
+        return { success: true, jobsCreated: 0 };
+      }
+
+      // Create jobs for each media
+      const jobs = await prisma.mediaProcessingJob.createMany({
+        data: pendingMedia.map((m, index) => ({
+          mediaId: m.id,
+          mediaType: "ProductMedia" as const,
+          jobType: input.jobType,
+          priority: 5,
+          status: "PENDING",
+        })),
+      });
+
+      // Update all media status to pending
+      await prisma.productMedia.updateMany({
+        where: { id: { in: pendingMedia.map((m) => m.id) } },
+        data: { status: "PENDING" },
+      });
+
+      await prisma.adminAction.create({
+        data: {
+          adminId: ctx.user.id,
+          action: "PRODUCT_MEDIA_BULK_PROCESS",
+          details: {
+            targetType: "Product",
+            targetId: input.productId,
+            mediaCount: pendingMedia.length,
+            jobType: input.jobType,
+          },
+        },
+      });
+
+      return { success: true, jobsCreated: jobs.count };
+    }),
+
+  // Admin: Run processing jobs (for cron or manual trigger)
+  adminRunProcessingJobs: adminProcedure
+    .input(z.object({
+      batchSize: z.number().min(1).max(20).default(5),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Import dynamically to avoid edge runtime issues
+      const { processPendingJobs } = await import("@/lib/services/media-processor");
+      const processed = await processPendingJobs(input.batchSize);
+
+      await prisma.adminAction.create({
+        data: {
+          adminId: ctx.user.id,
+          action: "MEDIA_PROCESSING_RUN",
+          details: {
+            batchSize: input.batchSize,
+            processed,
+          },
+        },
+      });
+
+      return { success: true, processed };
+    }),
 });

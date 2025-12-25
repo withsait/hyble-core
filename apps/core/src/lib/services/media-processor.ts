@@ -7,7 +7,7 @@
 
 import { prisma } from "@hyble/db";
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { Readable } from "stream";
+import sharp from "sharp";
 
 // Types
 interface ImageDimensions {
@@ -50,13 +50,15 @@ interface ProcessingResult {
 const CONFIG = {
   sizes: {
     thumbnail: { width: 150, height: 150 },
+    small: { width: 300, height: 300 },
     medium: { width: 600, height: 600 },
     large: { width: 1200, height: 1200 },
+    xlarge: { width: 2000, height: 2000 },
   },
   quality: {
     jpeg: 85,
     webp: 80,
-    avif: 75,
+    avif: 70,
     png: 85,
   },
   maxFileSize: 10 * 1024 * 1024, // 10MB
@@ -97,12 +99,9 @@ function calculateAspectRatio(width: number, height: number): string {
 /**
  * Generate a unique storage key
  */
-function generateKey(folder: string, filename: string, suffix?: string): string {
-  const date = new Date().toISOString().slice(0, 10).replace(/-/g, "/");
-  const id = Math.random().toString(36).substring(2, 15);
-  const ext = filename.split(".").pop()?.toLowerCase() || "jpg";
-  const name = suffix ? `${id}-${suffix}` : id;
-  return `${folder}/${date}/${name}.${ext}`;
+function generateKey(folder: string, originalKey: string, suffix: string, ext: string): string {
+  const baseName = originalKey.split("/").pop()?.replace(/\.[^/.]+$/, "") || "image";
+  return `${folder}/${baseName}-${suffix}.${ext}`;
 }
 
 /**
@@ -125,9 +124,28 @@ async function uploadToStorage(
 }
 
 /**
- * Fetch image from URL
+ * Fetch image from URL or S3
  */
 async function fetchImage(url: string): Promise<Buffer> {
+  // If it's an S3/R2 key, fetch from storage
+  if (url.startsWith("images/") || url.startsWith("products/")) {
+    const command = new GetObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: url,
+    });
+    const response = await getS3Client().send(command);
+    const stream = response.Body;
+    if (!stream) {
+      throw new Error("No body in S3 response");
+    }
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream as AsyncIterable<Buffer>) {
+      chunks.push(Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+  }
+
+  // Otherwise fetch from URL
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to fetch image: ${response.statusText}`);
@@ -137,35 +155,133 @@ async function fetchImage(url: string): Promise<Buffer> {
 }
 
 /**
- * Simple blur hash placeholder generator
- * Returns a base64 encoded tiny image for placeholder
+ * Extract dominant color from image using Sharp
  */
-function generatePlaceholder(width: number, height: number, color: string): string {
-  // Create a simple 4x4 color block as placeholder
-  // This is a simplified version - real blur hash would use the blurhash library
-  const hexColor = color.replace("#", "");
-  const r = parseInt(hexColor.substring(0, 2), 16);
-  const g = parseInt(hexColor.substring(2, 4), 16);
-  const b = parseInt(hexColor.substring(4, 6), 16);
+async function extractColors(buffer: Buffer): Promise<ColorInfo> {
+  try {
+    // Resize to small size for faster color extraction
+    const resized = await sharp(buffer)
+      .resize(100, 100, { fit: "cover" })
+      .raw()
+      .toBuffer({ resolveWithObject: true });
 
-  // Create a simple placeholder hash based on dimensions and color
-  return `L00000fQ~qfQ~qfQ~qfQ00ay-;fQ`;
+    const { data, info } = resized;
+    const pixels: [number, number, number][] = [];
+
+    // Sample pixels
+    for (let i = 0; i < data.length; i += info.channels * 10) {
+      const r = data[i] ?? 0;
+      const g = data[i + 1] ?? 0;
+      const b = data[i + 2] ?? 0;
+      pixels.push([r, g, b]);
+    }
+
+    // Simple k-means-like clustering for palette
+    const colorCounts: Map<string, number> = new Map();
+    pixels.forEach(([r, g, b]) => {
+      // Quantize to reduce color space
+      const qr = Math.round(r / 32) * 32;
+      const qg = Math.round(g / 32) * 32;
+      const qb = Math.round(b / 32) * 32;
+      const key = `${qr},${qg},${qb}`;
+      colorCounts.set(key, (colorCounts.get(key) || 0) + 1);
+    });
+
+    // Sort by frequency
+    const sortedColors = Array.from(colorCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([color]) => {
+        const parts = color.split(",").map(Number);
+        const r = parts[0] ?? 0;
+        const g = parts[1] ?? 0;
+        const b = parts[2] ?? 0;
+        return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+      });
+
+    return {
+      dominantColor: sortedColors[0] || "#808080",
+      palette: sortedColors,
+    };
+  } catch {
+    return {
+      dominantColor: "#808080",
+      palette: ["#808080", "#606060", "#a0a0a0", "#404040", "#c0c0c0"],
+    };
+  }
 }
 
 /**
- * Extract dominant color from image (simplified)
- * In production, use sharp or a color extraction library
+ * Generate a simple blur placeholder using Sharp
  */
-function extractColors(): ColorInfo {
-  // Placeholder - in production use sharp.stats() or color-thief
+async function generateBlurPlaceholder(buffer: Buffer): Promise<string> {
+  try {
+    const blurredBuffer = await sharp(buffer)
+      .resize(32, 32, { fit: "inside" })
+      .blur(2)
+      .toFormat("jpeg", { quality: 20 })
+      .toBuffer();
+
+    // Return as base64 data URI
+    return `data:image/jpeg;base64,${blurredBuffer.toString("base64")}`;
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Resize and optimize image
+ */
+async function resizeImage(
+  buffer: Buffer,
+  width: number,
+  height: number,
+  format: "jpeg" | "webp" | "avif" | "png" = "jpeg"
+): Promise<ProcessedImage> {
+  let pipeline = sharp(buffer)
+    .resize(width, height, {
+      fit: "inside",
+      withoutEnlargement: true,
+    });
+
+  let outputFormat: string;
+  let contentType: string;
+
+  switch (format) {
+    case "webp":
+      pipeline = pipeline.webp({ quality: CONFIG.quality.webp });
+      outputFormat = "webp";
+      contentType = "image/webp";
+      break;
+    case "avif":
+      pipeline = pipeline.avif({ quality: CONFIG.quality.avif });
+      outputFormat = "avif";
+      contentType = "image/avif";
+      break;
+    case "png":
+      pipeline = pipeline.png({ quality: CONFIG.quality.png });
+      outputFormat = "png";
+      contentType = "image/png";
+      break;
+    default:
+      pipeline = pipeline.jpeg({ quality: CONFIG.quality.jpeg, progressive: true });
+      outputFormat = "jpeg";
+      contentType = "image/jpeg";
+  }
+
+  const { data, info } = await pipeline.toBuffer({ resolveWithObject: true });
+
   return {
-    dominantColor: "#4A90A4",
-    palette: ["#4A90A4", "#2E5A6B", "#7BB3C4", "#1A3A45", "#9ED4E5"],
+    buffer: data,
+    width: info.width,
+    height: info.height,
+    format: outputFormat,
+    size: data.length,
   };
 }
 
 /**
- * Process a single media item
+ * Process a single media item with Sharp
  */
 export async function processMediaItem(mediaId: string): Promise<void> {
   const media = await prisma.productMedia.findUnique({
@@ -183,34 +299,105 @@ export async function processMediaItem(mediaId: string): Promise<void> {
   });
 
   try {
-    // For now, we'll do basic metadata extraction
-    // Full processing would require Sharp installation
+    // Fetch original image
+    const sourceUrl = media.r2Key || media.originalUrl || media.url;
+    const originalBuffer = await fetchImage(sourceUrl);
 
-    // Extract colors (simplified)
-    const colors = extractColors();
+    // Get image metadata
+    const metadata = await sharp(originalBuffer).metadata();
+    const width = metadata.width || 0;
+    const height = metadata.height || 0;
 
-    // Generate blur hash placeholder
-    const blurHash = generatePlaceholder(
-      media.width || 100,
-      media.height || 100,
-      colors.dominantColor
-    );
+    // Extract colors
+    const colors = await extractColors(originalBuffer);
+
+    // Generate blur placeholder
+    const blurHash = await generateBlurPlaceholder(originalBuffer);
 
     // Calculate aspect ratio
-    const aspectRatio = media.width && media.height
-      ? calculateAspectRatio(media.width, media.height)
-      : undefined;
+    const aspectRatio = width && height ? calculateAspectRatio(width, height) : undefined;
+
+    // Determine base folder from original key
+    const baseFolder = media.r2Key?.split("/").slice(0, -1).join("/") || "products/processed";
+    const baseKey = media.r2Key || media.id;
+
+    // Generate optimized versions
+    const updates: {
+      status: "READY";
+      width: number;
+      height: number;
+      aspectRatio?: string;
+      blurHash: string;
+      dominantColor: string;
+      colorPalette: string[];
+      mimeType: string;
+      fileSize: number;
+      thumbnailUrl?: string;
+      mediumUrl?: string;
+      largeUrl?: string;
+      webpUrl?: string;
+      avifUrl?: string;
+    } = {
+      status: "READY",
+      width,
+      height,
+      aspectRatio,
+      blurHash,
+      dominantColor: colors.dominantColor,
+      colorPalette: colors.palette,
+      mimeType: `image/${metadata.format}`,
+      fileSize: originalBuffer.length,
+    };
+
+    // Generate thumbnail (150x150)
+    try {
+      const thumbnail = await resizeImage(originalBuffer, CONFIG.sizes.thumbnail.width, CONFIG.sizes.thumbnail.height, "jpeg");
+      const thumbnailKey = generateKey(baseFolder, baseKey, "thumb", "jpg");
+      updates.thumbnailUrl = await uploadToStorage(thumbnail.buffer, thumbnailKey, "image/jpeg");
+    } catch (e) {
+      console.error("Failed to generate thumbnail:", e);
+    }
+
+    // Generate medium (600x600)
+    try {
+      const medium = await resizeImage(originalBuffer, CONFIG.sizes.medium.width, CONFIG.sizes.medium.height, "jpeg");
+      const mediumKey = generateKey(baseFolder, baseKey, "medium", "jpg");
+      updates.mediumUrl = await uploadToStorage(medium.buffer, mediumKey, "image/jpeg");
+    } catch (e) {
+      console.error("Failed to generate medium:", e);
+    }
+
+    // Generate large (1200x1200)
+    try {
+      const large = await resizeImage(originalBuffer, CONFIG.sizes.large.width, CONFIG.sizes.large.height, "jpeg");
+      const largeKey = generateKey(baseFolder, baseKey, "large", "jpg");
+      updates.largeUrl = await uploadToStorage(large.buffer, largeKey, "image/jpeg");
+    } catch (e) {
+      console.error("Failed to generate large:", e);
+    }
+
+    // Generate WebP version
+    try {
+      const webp = await resizeImage(originalBuffer, CONFIG.sizes.large.width, CONFIG.sizes.large.height, "webp");
+      const webpKey = generateKey(baseFolder, baseKey, "webp", "webp");
+      updates.webpUrl = await uploadToStorage(webp.buffer, webpKey, "image/webp");
+    } catch (e) {
+      console.error("Failed to generate webp:", e);
+    }
+
+    // Generate AVIF version (best compression)
+    try {
+      const avif = await resizeImage(originalBuffer, CONFIG.sizes.large.width, CONFIG.sizes.large.height, "avif");
+      const avifKey = generateKey(baseFolder, baseKey, "avif", "avif");
+      updates.avifUrl = await uploadToStorage(avif.buffer, avifKey, "image/avif");
+    } catch (e) {
+      console.error("Failed to generate avif:", e);
+    }
 
     // Update media with processed data
     await prisma.productMedia.update({
       where: { id: mediaId },
-      data: {
-        status: "READY",
-        blurHash,
-        dominantColor: colors.dominantColor,
-        colorPalette: colors.palette,
-        aspectRatio,
-      },
+      data: updates,
     });
   } catch (error) {
     console.error(`Failed to process media ${mediaId}:`, error);
@@ -220,6 +407,68 @@ export async function processMediaItem(mediaId: string): Promise<void> {
     });
     throw error;
   }
+}
+
+/**
+ * Optimize an image without full processing
+ */
+export async function optimizeImage(
+  buffer: Buffer,
+  options: {
+    maxWidth?: number;
+    maxHeight?: number;
+    quality?: number;
+    format?: "jpeg" | "webp" | "avif" | "png";
+  } = {}
+): Promise<Buffer> {
+  const {
+    maxWidth = 2000,
+    maxHeight = 2000,
+    quality = 85,
+    format = "jpeg",
+  } = options;
+
+  let pipeline = sharp(buffer)
+    .resize(maxWidth, maxHeight, {
+      fit: "inside",
+      withoutEnlargement: true,
+    });
+
+  switch (format) {
+    case "webp":
+      pipeline = pipeline.webp({ quality });
+      break;
+    case "avif":
+      pipeline = pipeline.avif({ quality });
+      break;
+    case "png":
+      pipeline = pipeline.png({ quality });
+      break;
+    default:
+      pipeline = pipeline.jpeg({ quality, progressive: true });
+  }
+
+  return pipeline.toBuffer();
+}
+
+/**
+ * Get image metadata
+ */
+export async function getImageMetadata(buffer: Buffer): Promise<{
+  width: number;
+  height: number;
+  format: string;
+  size: number;
+  hasAlpha: boolean;
+}> {
+  const metadata = await sharp(buffer).metadata();
+  return {
+    width: metadata.width || 0,
+    height: metadata.height || 0,
+    format: metadata.format || "unknown",
+    size: buffer.length,
+    hasAlpha: metadata.hasAlpha || false,
+  };
 }
 
 /**
@@ -249,6 +498,8 @@ export async function processJob(jobId: string): Promise<void> {
     switch (job.jobType) {
       case "blur_hash":
       case "optimize":
+      case "resize":
+      case "all":
         await processMediaItem(job.mediaId);
         break;
       // Add more job types as needed
