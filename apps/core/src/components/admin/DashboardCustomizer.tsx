@@ -42,7 +42,9 @@ export function DashboardCustomizer() {
       if (newIndex < 0 || newIndex >= prev.length) return prev;
 
       const newWidgets = [...prev];
-      [newWidgets[index], newWidgets[newIndex]] = [newWidgets[newIndex], newWidgets[index]];
+      const temp = newWidgets[index]!;
+      newWidgets[index] = newWidgets[newIndex]!;
+      newWidgets[newIndex] = temp;
       return newWidgets.map((w, i) => ({ ...w, order: i }));
     });
     setHasChanges(true);
