@@ -367,7 +367,7 @@ export function UserManagement() {
                           <img src={user.profile.avatar} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                            {user.name?.[0] || user.email[0].toUpperCase()}
+                            {user.name?.[0] || user.email?.[0]?.toUpperCase() || "?"}
                           </span>
                         )}
                       </div>
