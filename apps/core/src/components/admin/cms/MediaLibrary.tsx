@@ -266,6 +266,8 @@ export function MediaLibrary({
 
     for (let i = 0; i < uploadedFiles.length; i++) {
       const file = uploadedFiles[i];
+      if (!file) continue;
+
       const fileId = `upload_${Date.now()}_${i}`;
 
       setUploadProgress((prev) => ({ ...prev, [fileId]: 0 }));
