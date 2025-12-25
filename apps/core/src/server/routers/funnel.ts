@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { router, protectedProcedure, adminProcedure } from "../trpc/trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "../trpc/trpc";
 import { prisma } from "@hyble/db";
 import { TRPCError } from "@trpc/server";
 
@@ -59,7 +59,7 @@ const cartAbandonmentSchema = z.object({
   lastActivityAt: z.date().optional(),
 });
 
-export const funnelRouter = router({
+export const funnelRouter = createTRPCRouter({
   // Track funnel event
   trackEvent: protectedProcedure
     .input(trackEventSchema)

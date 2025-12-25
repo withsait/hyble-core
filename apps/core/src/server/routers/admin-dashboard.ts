@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { router, adminProcedure } from "../trpc/trpc";
+import { createTRPCRouter, adminProcedure } from "../trpc/trpc";
 import { prisma } from "@hyble/db";
 import { TRPCError } from "@trpc/server";
 
@@ -23,7 +23,7 @@ const alertThresholdSchema = z.object({
   notifySlack: z.boolean().default(false),
 });
 
-export const adminDashboardRouter = router({
+export const adminDashboardRouter = createTRPCRouter({
   // Get dashboard settings
   getSettings: adminProcedure.query(async ({ ctx }) => {
     const settings = await prisma.systemSetting.findUnique({

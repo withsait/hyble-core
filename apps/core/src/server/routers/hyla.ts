@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { router, protectedProcedure, adminProcedure } from "../trpc/trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "../trpc/trpc";
 import { prisma } from "@hyble/db";
 import { TRPCError } from "@trpc/server";
 import * as claude from "../../lib/ai/claude";
@@ -59,7 +59,7 @@ API entegrasyonları, teknik dokümantasyon ve kod örnekleri konusunda yardımc
 Kod örnekleri verirken açıklayıcı ol ve best practice'leri takip et.`,
 };
 
-export const hylaRouter = router({
+export const hylaRouter = createTRPCRouter({
   // Create a new conversation
   createConversation: protectedProcedure
     .input(createConversationSchema)

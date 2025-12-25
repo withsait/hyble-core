@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { router, protectedProcedure, adminProcedure } from "../trpc/trpc";
+import { createTRPCRouter, protectedProcedure, adminProcedure } from "../trpc/trpc";
 import { prisma } from "@hyble/db";
 import { TRPCError } from "@trpc/server";
 import * as claude from "../../lib/ai/claude";
@@ -77,7 +77,7 @@ const businessTypes = [
   { id: "other", name: "Diğer", icon: "📌" },
 ];
 
-export const wizardRouter = router({
+export const wizardRouter = createTRPCRouter({
   // Get business types
   getBusinessTypes: protectedProcedure.query(async () => {
     return businessTypes;

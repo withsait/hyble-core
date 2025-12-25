@@ -302,9 +302,9 @@ export function UserManagement() {
               <select
                 value={`${sortBy}-${sortOrder}`}
                 onChange={(e) => {
-                  const [field, order] = e.target.value.split("-");
-                  setSortBy(field);
-                  setSortOrder(order as "asc" | "desc");
+                  const parts = e.target.value.split("-");
+                  setSortBy(parts[0] || "createdAt");
+                  setSortOrder((parts[1] || "desc") as "asc" | "desc");
                 }}
                 className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-[#0a0a0f] text-slate-900 dark:text-white"
               >
